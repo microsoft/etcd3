@@ -1,0 +1,50 @@
+{
+  "name": "etcd3",
+  "version": "0.1.0",
+  "description": "Node client for etcd3",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "npm-run-all --parallel test:lint test:unit",
+    "test:unit": "mocha --compilers ts:ts-node/register --timeout 20000 test/*.test.ts",
+    "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
+    "update-proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connor4312/etcd3.git"
+  },
+  "keywords": [
+    "etcd3",
+    "etcd",
+    "node",
+    "client",
+    "protobuf",
+    "proto"
+  ],
+  "author": "Connor Peet <connor@peet.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/connor4312/etcd3/issues"
+  },
+  "homepage": "https://github.com/connor4312/etcd3#readme",
+  "devDependencies": {
+    "@types/chai": "^3.4.35",
+    "@types/mocha": "^2.2.40",
+    "@types/node": "^7.0.12",
+    "@types/sinon": "^2.1.2",
+    "chai": "^3.5.0",
+    "lodash": "^4.17.4",
+    "mocha": "^3.2.0",
+    "node-fetch": "^1.6.3",
+    "npm-run-all": "^4.0.2",
+    "protobufjs": "^6.7.3",
+    "sinon": "^2.1.0",
+    "ts-node": "^3.0.2",
+    "tslint": "^4.0.0",
+    "tslint-microsoft-contrib": "^4.0.0",
+    "typescript": "^2.2.2"
+  },
+  "dependencies": {
+    "grpc": "^1.2.3"
+  }
+}

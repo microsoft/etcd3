@@ -1,0 +1,207 @@
+'use strict';
+
+/**
+ * This script parses downloaded protobuf files to output TypeScript typings
+ * and methods to call declared the declared types.
+ *
+ * Usage:
+ *
+ *  > node bin/generate-methods proto/rpc.proto > src/methods.ts
+ *
+ * protobufjs does have a TypeScript generator but its output isn't very useful
+ * for grpc, much less this client. Rather than reprocessing it, let's just
+ * create the output ourselves since it's pretty simple (~100 lines of code).
+ */
+
+const pbjs = require('protobufjs');
+const _ = require('lodash');
+
+const contents = require('fs').readFileSync(process.argv[2]).toString();
+const lines = contents.split('\n');
+
+const singleLineCommentRe = /\/\/\s*(.+)$/;
+const singleLineCommentStandaloneRe = /^\s*\/\/\s*/;
+const indentation = '  ';
+
+const enums = [];
+const emptyMessages = [];
+const pbTypes = {
+  // Built-in types:
+  double: 'number',
+  float: 'number',
+  int32: 'number',
+  int64: 'number',
+  uint32: 'number',
+  uint64: 'number',
+  sint32: 'number',
+  sint64: 'number',
+  fixed32: 'number',
+  fixed64: 'number',
+  sfixed32: 'number',
+  sfixed64: 'number',
+  bool: 'boolean',
+  string: 'string',
+  bytes: 'string | Buffer | Uint8Array',
+  // Aliases:
+  Type: 'PermissionType',
+};
+
+function emit(string) {
+  if (string) {
+    process.stdout.write(string + '\n');
+  }
+
+  return emit;
+}
+
+function firstToLower(str) {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+function formatType(type) {
+  if (type in pbTypes) {
+    return pbTypes[type];
+  }
+
+  if (type.includes('.')) {
+    type = type.replace(/^.+\./, '');
+  }
+
+  if (enums.includes(type)) {
+    return type;
+  }
+
+  return `I${type}`;
+}
+
+function getLineContaining(substring, from = 0) {
+  return lines.findIndex((l, i) => i >= from && l.includes(substring));
+}
+
+function indent(level) {
+  let out = '';
+  for (let i = 0; i < level; i++) {
+    out += indentation;
+  }
+  return out;
+}
+
+function getCommentPrefixing(substring, from = 0, indentation = 1) {
+  // This is a hack! Protobufjs doesn't parse comments into its AST, and it
+  // looks like when it does it won't parse the format of
+  // comments that etcd uses: https://git.io/vSKU0
+
+  const comments = [];
+  const end = getLineContaining(substring, from);
+  if (singleLineCommentRe.test(lines[end])) {
+    const [, contents] = singleLineCommentRe.exec(lines[end]);
+    comments.push(` * ${contents}`);
+  } else {
+    for (let i = end - 1; singleLineCommentStandaloneRe.test(lines[i]); i--) {
+      comments.unshift(lines[i].replace(singleLineCommentStandaloneRe, ' * '));
+    }
+  }
+
+  if (comments.length === 0) {
+    return '';
+  }
+
+  return ['/**', ...comments, ' */']
+    .map(line => `${indent(indentation)}${line}`)
+    .join('\n');
+}
+
+function generateMethodCalls(node, name) {
+  emit(`export class ${name}Client extends Client {\n`)
+    (`${indent(1)}constructor(client: SharedPool<IRawGRPC>) {`)
+    (`${indent(2)}super(client);`)
+    (`${indent(1)}}\n`);
+
+  _.forOwn(node.methods, (method, name) => {
+    const emptyReq = emptyMessages.includes(method.requestType);
+    const emptyRes = emptyMessages.includes(method.responseType);
+
+    emit(getCommentPrefixing(`rpc ${name}(`));
+    emit(`${indent(1)}public ${firstToLower(name)}(`
+      + (emptyReq ? '' : `req: ${formatType(method.requestType)}`)
+      + '): Promise<' + (emptyRes ? 'void' : formatType(method.responseType)) + '> {')
+      (`${indent(2)}return this.exec('${name}', ${emptyReq ? '{}' : 'req'});`)
+      (`${indent(1)}}\n`);
+  });
+
+  emit('}\n');
+}
+
+function generateInterface(node, name) {
+  if (emptyMessages.includes(name)) {
+    return;
+  }
+
+  emit(`export interface I${name} {`);
+  _.forOwn(node.fields, (field, fname) => {
+    emit(getCommentPrefixing(fname, getLineContaining(`message ${name}`)));
+    emit(`${indent(1)}${fname}?: ${formatType(field.type)};`);
+  });
+  emit('}\n');
+}
+
+function generateEnum(node, name) {
+  enums.push(name);
+  emit(`export enum ${name in pbTypes ? pbTypes[name] : name} {`);
+  _.forOwn(node.values, (count, fname) => {
+    emit(getCommentPrefixing(fname, getLineContaining(`enum ${fname}`)));
+    emit(`${indent(1)}${fname} = ${count},`);
+  });
+  emit('}\n');
+}
+
+function walk(ast, iterator, path = []) {
+  _.forOwn(ast, (node, name) => {
+    if (!node) {
+      return;
+    }
+    if (node.nested) {
+      walk(node.nested, iterator, path.concat(name));
+    }
+
+    iterator(node, name, path);
+  });
+}
+
+function prepareForGeneration(ast) {
+  walk(ast, (node, name) => {
+    if (node.values) {
+      enums.push(name);
+    }
+
+    if (node.fields) {
+      if (_.isEmpty(node.fields)) {
+        emptyMessages.push(name);
+      }
+    }
+  });
+}
+
+function codeGen(ast) {
+  walk(ast, (node, name) => {
+    if (node.methods) {
+      generateMethodCalls(node, name);
+    }
+    if (node.fields) {
+      generateInterface(node, name);
+    }
+    if (node.values) {
+      generateEnum(node, name);
+    }
+  });
+}
+
+pbjs.load(process.argv[2]).then(ast => {
+  emit('// AUTOGENERATED CODE, DO NOT EDIT')
+    ('// tslint:disable')
+    (`import { Client, IRawGRPC } from './client';`)
+    (`import { SharedPool } from './shared-pool';\n`);
+
+  prepareForGeneration(ast.nested);
+  codeGen(ast.nested);
+});
