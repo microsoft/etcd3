@@ -33,11 +33,25 @@ export interface IOptions {
 
   /**
    * Duration in milliseconds to wait while connecting before timing out.
+   * Defaults to 30 seconds.
    */
   dialTimeout?: number;
 
   /**
-   * Backoff strategy to use for connecting to hosts.
+   * Backoff strategy to use for connecting to hosts. Defaults to an
+   * exponential strategy, starting at a 500 millisecond
+   * retry with a 30 second max.
    */
   backoffStrategy?: IBackoffStrategy;
+
+  /**
+   * Whether, if a query fails as a result of a primitive GRPC error, to retry
+   * it on a different server (provided one is available). This can make
+   * service disruptions less-severe but can cause a domino effect if a
+   * particular operation causes a failure that grpc reports as some sort of
+   * internal or network error.
+   *
+   * Defaults to false.
+   */
+  retry?: boolean;
 }

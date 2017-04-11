@@ -18,9 +18,6 @@ describe('shared pool', () => {
     pool.add(0);
     pool.add(1);
     pool.add(2);
-
-    // force determinism for testing
-    (<any> pool).resources.forEach((r: any, i: number) => r.lastChosenAt = i);
   });
 
   afterEach(() => clock.restore());

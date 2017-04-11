@@ -23,8 +23,8 @@ const singleLineCommentRe = /\/\/\s*(.+)$/;
 const singleLineCommentStandaloneRe = /^\s*\/\/\s*/;
 const indentation = '  ';
 
+const messages = {};
 const enums = [];
-const emptyMessages = [];
 const services = {};
 const pbTypes = {
   // Built-in types:
@@ -42,7 +42,7 @@ const pbTypes = {
   sfixed64: 'number',
   bool: 'boolean',
   string: 'string',
-  bytes: 'string | Buffer | Uint8Array',
+  bytes: 'Buffer',
   // Aliases:
   Type: 'PermissionType',
 };
@@ -118,14 +118,15 @@ function generateMethodCalls(node, name) {
     (`${indent(1)}constructor(private client: ICallable) {}\n`)
 
   _.forOwn(node.methods, (method, mname) => {
-    const emptyReq = emptyMessages.includes(method.requestType);
-    const emptyRes = emptyMessages.includes(method.responseType);
+    const req = messages[method.requestType];
+    const res = messages[method.responseType];
+    const loweredName = firstToLower(mname);
 
     emit(getCommentPrefixing(`rpc ${mname}(`));
-    emit(`${indent(1)}public ${firstToLower(mname)}(`
-      + (emptyReq ? '' : `req: ${formatType(method.requestType)}`)
-      + '): Promise<' + (emptyRes ? 'void' : formatType(method.responseType)) + '> {')
-      (`${indent(2)}return this.client.exec('${name}', '${mname}', ${emptyReq ? '{}' : 'req'});`)
+    emit(`${indent(1)}public ${loweredName}(`
+      + (req.empty ? '' : `req: ${formatType(method.requestType)}`)
+      + '): Promise<' + (res.empty ? 'void' : formatType(method.responseType)) + '> {')
+      (`${indent(2)}return this.client.exec('${name}', '${loweredName}', ${req.empty ? '{}' : 'req'});`)
       (`${indent(1)}}\n`);
   });
 
@@ -133,14 +134,15 @@ function generateMethodCalls(node, name) {
 }
 
 function generateInterface(node, name) {
-  if (emptyMessages.includes(name)) {
+  const message = messages[name];
+  if (message.empty) {
     return;
   }
 
   emit(`export interface I${name} {`);
   _.forOwn(node.fields, (field, fname) => {
     emit(getCommentPrefixing(fname, getLineContaining(`message ${name}`)));
-    emit(`${indent(1)}${fname}?: ${formatType(field.type)};`);
+    emit(`${indent(1)}${fname}${message.response ? '' : '?'}: ${formatType(field.type)};`);
   });
   emit('}\n');
 }
@@ -168,6 +170,16 @@ function walk(ast, iterator, path = []) {
   });
 }
 
+function markResponsesFor(message) {
+  message.response = true;
+
+  _(message.fields)
+    .values()
+    .map(f => message[f.type])
+    .filter(Boolean)
+    .forEach(markResponsesFor);
+}
+
 function prepareForGeneration(ast) {
   walk(ast, (node, name) => {
     if (node.values) {
@@ -175,9 +187,21 @@ function prepareForGeneration(ast) {
     }
 
     if (node.fields) {
-      if (_.isEmpty(node.fields)) {
-        emptyMessages.push(name);
-      }
+      messages[name] = {
+        empty: _.isEmpty(node.fields),
+        node,
+        response: false,
+      };
+    }
+  });
+
+  walk(ast, (node, name) => {
+    if (node.methods) {
+      _(node.methods)
+        .values()
+        .map(m => messages[m.responseType])
+        .filter(Boolean)
+        .forEach(markResponsesFor);
     }
   });
 }
@@ -213,4 +237,4 @@ pbjs.load(process.argv[2]).then(ast => {
   prepareForGeneration(ast.nested);
   emit(prefix);
   codeGen(ast.nested);
-});
+}).catch(err => console.error(err.stack));

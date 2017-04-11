@@ -31,3 +31,13 @@ export function sample<T>(items: T[]): T {
 export function delay(duration: number): Promise<void> {
   return new Promise<void>(resolve => setTimeout(() => resolve(), duration));
 }
+
+/**
+ * Implementation of lodash forOwn, with stronger typings and no dependency ;)
+ */
+export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key: K) => void): void {
+  const keys = <(keyof T)[]> Object.keys(obj);
+  for (let i = 0; i < keys.length; i += 1) {
+    iterator(obj[keys[i]], keys[i]);
+  }
+}

@@ -12,7 +12,7 @@ export class KVClient {
    * Range gets the keys in the range from the key-value store.
    */
   public range(req: IRangeRequest): Promise<IRangeResponse> {
-    return this.client.exec('KV', 'Range', req);
+    return this.client.exec('KV', 'range', req);
   }
 
   /**
@@ -21,7 +21,7 @@ export class KVClient {
    * and generates one event in the event history.
    */
   public put(req: IPutRequest): Promise<IPutResponse> {
-    return this.client.exec('KV', 'Put', req);
+    return this.client.exec('KV', 'put', req);
   }
 
   /**
@@ -30,7 +30,7 @@ export class KVClient {
    * and generates a delete event in the event history for every deleted key.
    */
   public deleteRange(req: IDeleteRangeRequest): Promise<IDeleteRangeResponse> {
-    return this.client.exec('KV', 'DeleteRange', req);
+    return this.client.exec('KV', 'deleteRange', req);
   }
 
   /**
@@ -40,7 +40,7 @@ export class KVClient {
    * It is not allowed to modify the same key several times within one txn.
    */
   public txn(req: ITxnRequest): Promise<ITxnResponse> {
-    return this.client.exec('KV', 'Txn', req);
+    return this.client.exec('KV', 'txn', req);
   }
 
   /**
@@ -49,7 +49,7 @@ export class KVClient {
    * indefinitely.
    */
   public compact(req: ICompactionRequest): Promise<ICompactionResponse> {
-    return this.client.exec('KV', 'Compact', req);
+    return this.client.exec('KV', 'compact', req);
   }
 
 }
@@ -66,7 +66,7 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(req: IWatchRequest): Promise<IWatchResponse> {
-    return this.client.exec('Watch', 'Watch', req);
+    return this.client.exec('Watch', 'watch', req);
   }
 
 }
@@ -81,14 +81,14 @@ export class LeaseClient {
    * deleted if the lease expires. Each expired key generates a delete event in the event history.
    */
   public leaseGrant(req: ILeaseGrantRequest): Promise<ILeaseGrantResponse> {
-    return this.client.exec('Lease', 'LeaseGrant', req);
+    return this.client.exec('Lease', 'leaseGrant', req);
   }
 
   /**
    * LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted.
    */
   public leaseRevoke(req: ILeaseRevokeRequest): Promise<ILeaseRevokeResponse> {
-    return this.client.exec('Lease', 'LeaseRevoke', req);
+    return this.client.exec('Lease', 'leaseRevoke', req);
   }
 
   /**
@@ -96,14 +96,14 @@ export class LeaseClient {
    * to the server and streaming keep alive responses from the server to the client.
    */
   public leaseKeepAlive(req: ILeaseKeepAliveRequest): Promise<ILeaseKeepAliveResponse> {
-    return this.client.exec('Lease', 'LeaseKeepAlive', req);
+    return this.client.exec('Lease', 'leaseKeepAlive', req);
   }
 
   /**
    * LeaseTimeToLive retrieves lease information.
    */
   public leaseTimeToLive(req: ILeaseTimeToLiveRequest): Promise<ILeaseTimeToLiveResponse> {
-    return this.client.exec('Lease', 'LeaseTimeToLive', req);
+    return this.client.exec('Lease', 'leaseTimeToLive', req);
   }
 
 }
@@ -116,28 +116,28 @@ export class ClusterClient {
    * MemberAdd adds a member into the cluster.
    */
   public memberAdd(req: IMemberAddRequest): Promise<IMemberAddResponse> {
-    return this.client.exec('Cluster', 'MemberAdd', req);
+    return this.client.exec('Cluster', 'memberAdd', req);
   }
 
   /**
    * MemberRemove removes an existing member from the cluster.
    */
   public memberRemove(req: IMemberRemoveRequest): Promise<IMemberRemoveResponse> {
-    return this.client.exec('Cluster', 'MemberRemove', req);
+    return this.client.exec('Cluster', 'memberRemove', req);
   }
 
   /**
    * MemberUpdate updates the member configuration.
    */
   public memberUpdate(req: IMemberUpdateRequest): Promise<IMemberUpdateResponse> {
-    return this.client.exec('Cluster', 'MemberUpdate', req);
+    return this.client.exec('Cluster', 'memberUpdate', req);
   }
 
   /**
    * MemberList lists all the members in the cluster.
    */
   public memberList(): Promise<IMemberListResponse> {
-    return this.client.exec('Cluster', 'MemberList', {});
+    return this.client.exec('Cluster', 'memberList', {});
   }
 
 }
@@ -150,21 +150,21 @@ export class MaintenanceClient {
    * Alarm activates, deactivates, and queries alarms regarding cluster health.
    */
   public alarm(req: IAlarmRequest): Promise<IAlarmResponse> {
-    return this.client.exec('Maintenance', 'Alarm', req);
+    return this.client.exec('Maintenance', 'alarm', req);
   }
 
   /**
    * Status gets the status of the member.
    */
   public status(): Promise<IStatusResponse> {
-    return this.client.exec('Maintenance', 'Status', {});
+    return this.client.exec('Maintenance', 'status', {});
   }
 
   /**
    * Defragment defragments a member's backend database to recover storage space.
    */
   public defragment(): Promise<IDefragmentResponse> {
-    return this.client.exec('Maintenance', 'Defragment', {});
+    return this.client.exec('Maintenance', 'defragment', {});
   }
 
   /**
@@ -173,14 +173,14 @@ export class MaintenanceClient {
    * are ongoing transactions.
    */
   public hash(): Promise<IHashResponse> {
-    return this.client.exec('Maintenance', 'Hash', {});
+    return this.client.exec('Maintenance', 'hash', {});
   }
 
   /**
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(): Promise<ISnapshotResponse> {
-    return this.client.exec('Maintenance', 'Snapshot', {});
+    return this.client.exec('Maintenance', 'snapshot', {});
   }
 
 }
@@ -193,112 +193,112 @@ export class AuthClient {
    * AuthEnable enables authentication.
    */
   public authEnable(): Promise<IAuthEnableResponse> {
-    return this.client.exec('Auth', 'AuthEnable', {});
+    return this.client.exec('Auth', 'authEnable', {});
   }
 
   /**
    * AuthDisable disables authentication.
    */
   public authDisable(): Promise<IAuthDisableResponse> {
-    return this.client.exec('Auth', 'AuthDisable', {});
+    return this.client.exec('Auth', 'authDisable', {});
   }
 
   /**
    * Authenticate processes an authenticate request.
    */
   public authenticate(req: IAuthenticateRequest): Promise<IAuthenticateResponse> {
-    return this.client.exec('Auth', 'Authenticate', req);
+    return this.client.exec('Auth', 'authenticate', req);
   }
 
   /**
    * UserAdd adds a new user.
    */
   public userAdd(req: IAuthUserAddRequest): Promise<IAuthUserAddResponse> {
-    return this.client.exec('Auth', 'UserAdd', req);
+    return this.client.exec('Auth', 'userAdd', req);
   }
 
   /**
    * UserGet gets detailed user information.
    */
   public userGet(req: IAuthUserGetRequest): Promise<IAuthUserGetResponse> {
-    return this.client.exec('Auth', 'UserGet', req);
+    return this.client.exec('Auth', 'userGet', req);
   }
 
   /**
    * UserList gets a list of all users.
    */
   public userList(): Promise<IAuthUserListResponse> {
-    return this.client.exec('Auth', 'UserList', {});
+    return this.client.exec('Auth', 'userList', {});
   }
 
   /**
    * UserDelete deletes a specified user.
    */
   public userDelete(req: IAuthUserDeleteRequest): Promise<IAuthUserDeleteResponse> {
-    return this.client.exec('Auth', 'UserDelete', req);
+    return this.client.exec('Auth', 'userDelete', req);
   }
 
   /**
    * UserChangePassword changes the password of a specified user.
    */
   public userChangePassword(req: IAuthUserChangePasswordRequest): Promise<IAuthUserChangePasswordResponse> {
-    return this.client.exec('Auth', 'UserChangePassword', req);
+    return this.client.exec('Auth', 'userChangePassword', req);
   }
 
   /**
    * UserGrant grants a role to a specified user.
    */
   public userGrantRole(req: IAuthUserGrantRoleRequest): Promise<IAuthUserGrantRoleResponse> {
-    return this.client.exec('Auth', 'UserGrantRole', req);
+    return this.client.exec('Auth', 'userGrantRole', req);
   }
 
   /**
    * UserRevokeRole revokes a role of specified user.
    */
   public userRevokeRole(req: IAuthUserRevokeRoleRequest): Promise<IAuthUserRevokeRoleResponse> {
-    return this.client.exec('Auth', 'UserRevokeRole', req);
+    return this.client.exec('Auth', 'userRevokeRole', req);
   }
 
   /**
    * RoleAdd adds a new role.
    */
   public roleAdd(req: IAuthRoleAddRequest): Promise<IAuthRoleAddResponse> {
-    return this.client.exec('Auth', 'RoleAdd', req);
+    return this.client.exec('Auth', 'roleAdd', req);
   }
 
   /**
    * RoleGet gets detailed role information.
    */
   public roleGet(req: IAuthRoleGetRequest): Promise<IAuthRoleGetResponse> {
-    return this.client.exec('Auth', 'RoleGet', req);
+    return this.client.exec('Auth', 'roleGet', req);
   }
 
   /**
    * RoleList gets lists of all roles.
    */
   public roleList(): Promise<IAuthRoleListResponse> {
-    return this.client.exec('Auth', 'RoleList', {});
+    return this.client.exec('Auth', 'roleList', {});
   }
 
   /**
    * RoleDelete deletes a specified role.
    */
   public roleDelete(req: IAuthRoleDeleteRequest): Promise<IAuthRoleDeleteResponse> {
-    return this.client.exec('Auth', 'RoleDelete', req);
+    return this.client.exec('Auth', 'roleDelete', req);
   }
 
   /**
    * RoleGrantPermission grants a permission of a specified key or range to a specified role.
    */
   public roleGrantPermission(req: IAuthRoleGrantPermissionRequest): Promise<IAuthRoleGrantPermissionResponse> {
-    return this.client.exec('Auth', 'RoleGrantPermission', req);
+    return this.client.exec('Auth', 'roleGrantPermission', req);
   }
 
   /**
    * RoleRevokePermission revokes a key or range permission of a specified role.
    */
   public roleRevokePermission(req: IAuthRoleRevokePermissionRequest): Promise<IAuthRoleRevokePermissionResponse> {
-    return this.client.exec('Auth', 'RoleRevokePermission', req);
+    return this.client.exec('Auth', 'roleRevokePermission', req);
   }
 
 }
@@ -343,8 +343,8 @@ export interface IRangeRequest {
   /**
    * key is the first key for the range. If range_end is not given, the request only looks up key.
    */
-  key?: string | Buffer | Uint8Array;
-  rangeEnd?: string | Buffer | Uint8Array;
+  key?: Buffer;
+  rangeEnd?: Buffer;
   /**
    * limit is a limit on the number of keys returned for the request. When limit is set to 0,
    */
@@ -368,30 +368,30 @@ export interface IRangeRequest {
 }
 
 export interface IRangeResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * kvs is the list of key-value pairs matched by the range request.
    */
-  kvs?: IKeyValue;
+  kvs: IKeyValue;
   /**
    * more indicates if there are more keys to return in the requested range.
    */
-  more?: boolean;
+  more: boolean;
   /**
    * kvs is empty when count is requested.
    */
-  count?: number;
+  count: number;
 }
 
 export interface IPutRequest {
   /**
    * key is the key, in bytes, to put into the key-value store.
    */
-  key?: string | Buffer | Uint8Array;
+  key?: Buffer;
   /**
    * key is the key, in bytes, to put into the key-value store.
    */
-  value?: string | Buffer | Uint8Array;
+  value?: Buffer;
   /**
    * lease is the lease ID to associate with the key in the key-value store. A lease
    */
@@ -402,26 +402,26 @@ export interface IPutRequest {
 }
 
 export interface IPutResponse {
-  header?: IResponseHeader;
-  prevKv?: IKeyValue;
+  header: IResponseHeader;
+  prevKv: IKeyValue;
 }
 
 export interface IDeleteRangeRequest {
   /**
    * key is the first key to delete in the range.
    */
-  key?: string | Buffer | Uint8Array;
-  rangeEnd?: string | Buffer | Uint8Array;
+  key?: Buffer;
+  rangeEnd?: Buffer;
   prevKv?: boolean;
 }
 
 export interface IDeleteRangeResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * deleted is the number of keys deleted by the delete range request.
    */
-  deleted?: number;
-  prevKvs?: IKeyValue;
+  deleted: number;
+  prevKvs: IKeyValue;
 }
 
 export interface IRequestOp {
@@ -462,7 +462,7 @@ export interface ICompare {
   /**
    * target is the key-value field to inspect for the comparison.
    */
-  key?: string | Buffer | Uint8Array;
+  key?: Buffer;
   /**
    * version is the version of the given key
    */
@@ -472,7 +472,7 @@ export interface ICompare {
   /**
    * target is the key-value field to inspect for the comparison.
    */
-  value?: string | Buffer | Uint8Array;
+  value?: Buffer;
 }
 
 export interface ITxnRequest {
@@ -491,15 +491,15 @@ export interface ITxnRequest {
 }
 
 export interface ITxnResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * succeeded is set to true if the compare evaluated to true or false otherwise.
    */
-  succeeded?: boolean;
+  succeeded: boolean;
   /**
    * responses is a list of responses corresponding to the results from applying
    */
-  responses?: IResponseOp;
+  responses: IResponseOp;
 }
 
 export interface ICompactionRequest {
@@ -514,27 +514,27 @@ export interface ICompactionRequest {
 }
 
 export interface ICompactionResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IHashResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * hash is the hash value computed from the responding member's key-value store.
    */
-  hash?: number;
+  hash: number;
 }
 
 export interface ISnapshotResponse {
   /**
    * header has the current key-value store information. The first header in the snapshot
    */
-  header?: IResponseHeader;
-  remainingBytes?: number;
+  header: IResponseHeader;
+  remainingBytes: number;
   /**
    * remaining_bytes is the number of blob bytes to be sent after this message
    */
-  blob?: string | Buffer | Uint8Array;
+  blob: Buffer;
 }
 
 export interface IWatchRequest {
@@ -557,8 +557,8 @@ export interface IWatchCreateRequest {
   /**
    * key is the key to register for watching.
    */
-  key?: string | Buffer | Uint8Array;
-  rangeEnd?: string | Buffer | Uint8Array;
+  key?: Buffer;
+  rangeEnd?: Buffer;
   startRevision?: number;
   progressNotify?: boolean;
   /**
@@ -573,21 +573,21 @@ export interface IWatchCancelRequest {
 }
 
 export interface IWatchResponse {
-  header?: IResponseHeader;
-  watchId?: number;
+  header: IResponseHeader;
+  watchId: number;
   /**
    * created is set to true if the response is for a create watch request.
    */
-  created?: boolean;
+  created: boolean;
   /**
    * canceled is set to true if the response is for a cancel watch request.
    */
-  canceled?: boolean;
-  compactRevision?: number;
+  canceled: boolean;
+  compactRevision: number;
   /**
    * The client should record the watch_id and expect to receive events for
    */
-  events?: IEvent;
+  events: IEvent;
 }
 
 export interface ILeaseGrantRequest {
@@ -602,16 +602,16 @@ export interface ILeaseGrantRequest {
 }
 
 export interface ILeaseGrantResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * ID is the lease ID for the granted lease.
    */
-  ID?: number;
+  ID: number;
   /**
    * TTL is the server chosen lease time-to-live in seconds.
    */
-  TTL?: number;
-  error?: string;
+  TTL: number;
+  error: string;
 }
 
 export interface ILeaseRevokeRequest {
@@ -622,7 +622,7 @@ export interface ILeaseRevokeRequest {
 }
 
 export interface ILeaseRevokeResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface ILeaseKeepAliveRequest {
@@ -633,15 +633,15 @@ export interface ILeaseKeepAliveRequest {
 }
 
 export interface ILeaseKeepAliveResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * ID is the lease ID from the keep alive request.
    */
-  ID?: number;
+  ID: number;
   /**
    * TTL is the new time-to-live for the lease.
    */
-  TTL?: number;
+  TTL: number;
 }
 
 export interface ILeaseTimeToLiveRequest {
@@ -656,23 +656,23 @@ export interface ILeaseTimeToLiveRequest {
 }
 
 export interface ILeaseTimeToLiveResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * ID is the lease ID from the keep alive request.
    */
-  ID?: number;
+  ID: number;
   /**
    * TTL is the remaining TTL in seconds for the lease; the lease will expire in under TTL+1 seconds.
    */
-  TTL?: number;
+  TTL: number;
   /**
    * GrantedTTL is the initial granted time in seconds upon lease creation/renewal.
    */
-  grantedTTL?: number;
+  grantedTTL: number;
   /**
    * Keys is the list of keys attached to this lease.
    */
-  keys?: string | Buffer | Uint8Array;
+  keys: Buffer;
 }
 
 export interface IMember {
@@ -702,11 +702,11 @@ export interface IMemberAddRequest {
 }
 
 export interface IMemberAddResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * member is the member information for the added member.
    */
-  member?: IMember;
+  member: IMember;
 }
 
 export interface IMemberRemoveRequest {
@@ -717,7 +717,7 @@ export interface IMemberRemoveRequest {
 }
 
 export interface IMemberRemoveResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IMemberUpdateRequest {
@@ -732,19 +732,19 @@ export interface IMemberUpdateRequest {
 }
 
 export interface IMemberUpdateResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IMemberListResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * members is a list of all members associated with the cluster.
    */
-  members?: IMember;
+  members: IMember;
 }
 
 export interface IDefragmentResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export enum AlarmType {
@@ -791,35 +791,35 @@ export interface IAlarmMember {
 }
 
 export interface IAlarmResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * alarms is a list of alarms associated with the alarm request.
    */
-  alarms?: IAlarmMember;
+  alarms: IAlarmMember;
 }
 
 export interface IStatusResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * version is the cluster protocol version used by the responding member.
    */
-  version?: string;
+  version: string;
   /**
    * dbSize is the size of the backend database, in bytes, of the responding member.
    */
-  dbSize?: number;
+  dbSize: number;
   /**
    * leader is the member ID which the responding member believes is the current leader.
    */
-  leader?: number;
+  leader: number;
   /**
    * raftIndex is the current raft index of the responding member.
    */
-  raftIndex?: number;
+  raftIndex: number;
   /**
    * raftTerm is the current raft term of the responding member.
    */
-  raftTerm?: number;
+  raftTerm: number;
 }
 
 export interface IAuthenticateRequest {
@@ -903,82 +903,120 @@ export interface IAuthRoleRevokePermissionRequest {
 }
 
 export interface IAuthEnableResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthDisableResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthenticateResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
   /**
    * token is an authorized token that can be used in succeeding RPCs
    */
-  token?: string;
+  token: string;
 }
 
 export interface IAuthUserAddResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthUserGetResponse {
-  header?: IResponseHeader;
-  roles?: string;
+  header: IResponseHeader;
+  roles: string;
 }
 
 export interface IAuthUserDeleteResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthUserChangePasswordResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthUserGrantRoleResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthUserRevokeRoleResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthRoleAddResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthRoleGetResponse {
-  header?: IResponseHeader;
-  perm?: IPermission;
+  header: IResponseHeader;
+  perm: IPermission;
 }
 
 export interface IAuthRoleListResponse {
-  header?: IResponseHeader;
-  roles?: string;
+  header: IResponseHeader;
+  roles: string;
 }
 
 export interface IAuthUserListResponse {
-  header?: IResponseHeader;
-  users?: string;
+  header: IResponseHeader;
+  users: string;
 }
 
 export interface IAuthRoleDeleteResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthRoleGrantPermissionResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
 }
 
 export interface IAuthRoleRevokePermissionResponse {
-  header?: IResponseHeader;
+  header: IResponseHeader;
+}
+
+export interface IUser {
+  /**
+   * name is the human-readable name of the member. If the member is not started, the name will be an empty string.
+   */
+  name?: Buffer;
+  /**
+   * UserChangePassword changes the password of a specified user.
+   */
+  password?: Buffer;
+  /**
+   * RoleList gets lists of all roles.
+   */
+  roles?: string;
+}
+
+export enum PermissionType {
+  READ = 0,
+  WRITE = 1,
+  READWRITE = 2,
+}
+
+export interface IPermission {
+  permType?: PermissionType;
+  /**
+   * Range gets the keys in the range from the key-value store.
+   */
+  key?: Buffer;
+  rangeEnd?: Buffer;
+}
+
+export interface IRole {
+  /**
+   * name is the human-readable name of the member. If the member is not started, the name will be an empty string.
+   */
+  name?: Buffer;
+  keyPermission?: IPermission;
 }
 
 export interface IKeyValue {
   /**
    * Range gets the keys in the range from the key-value store.
    */
-  key?: string | Buffer | Uint8Array;
+  key?: Buffer;
   createRevision?: number;
   modRevision?: number;
   /**
@@ -988,7 +1026,7 @@ export interface IKeyValue {
   /**
    * Range gets the keys in the range from the key-value store.
    */
-  value?: string | Buffer | Uint8Array;
+  value?: Buffer;
   /**
    * LeaseGrant creates a lease which expires if the server does not receive a keepAlive
    */
@@ -1013,44 +1051,6 @@ export interface IEvent {
   type?: EventType;
   kv?: IKeyValue;
   prevKv?: IKeyValue;
-}
-
-export interface IUser {
-  /**
-   * name is the human-readable name of the member. If the member is not started, the name will be an empty string.
-   */
-  name?: string | Buffer | Uint8Array;
-  /**
-   * UserChangePassword changes the password of a specified user.
-   */
-  password?: string | Buffer | Uint8Array;
-  /**
-   * RoleList gets lists of all roles.
-   */
-  roles?: string;
-}
-
-export enum PermissionType {
-  READ = 0,
-  WRITE = 1,
-  READWRITE = 2,
-}
-
-export interface IPermission {
-  permType?: PermissionType;
-  /**
-   * Range gets the keys in the range from the key-value store.
-   */
-  key?: string | Buffer | Uint8Array;
-  rangeEnd?: string | Buffer | Uint8Array;
-}
-
-export interface IRole {
-  /**
-   * name is the human-readable name of the member. If the member is not started, the name will be an empty string.
-   */
-  name?: string | Buffer | Uint8Array;
-  keyPermission?: IPermission;
 }
 
 export const Services = {

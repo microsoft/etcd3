@@ -18,6 +18,11 @@ interface IResourceRecord<T> {
  * node-influx.
  */
 export class SharedPool<T> {
+  // Whether, when inserting resources, they should be inserted such that
+  // they get chosen in a consistent order. This is mainly used to make
+  // tests simpler.
+  private static deterministicInsertion: false;
+
   private resources: IResourceRecord<T>[] = [];
   private contentionCount = 0;
 
@@ -29,7 +34,7 @@ export class SharedPool<T> {
   public add(resource: T) {
     this.resources.push({
       resource,
-      lastChosenAt: 0,
+      lastChosenAt: SharedPool.deterministicInsertion ? this.resources.length : 0,
       backoff: this.strategy,
       availableAfter: 0,
     });
@@ -87,6 +92,31 @@ export class SharedPool<T> {
    */
   public contention(): number {
     return this.contentionCount;
+  }
+
+  /**
+   * Returns the resources currently available.
+   */
+  public available(now: number = Date.now()): T[] {
+    return this.resources
+      .filter(r => r.availableAfter <= now)
+      .map(r => r.resource);
+  }
+
+  /**
+   * Returns the resources currently unavailable in backoff.
+   */
+  public unavailable(now: number = Date.now()): T[] {
+    return this.resources
+      .filter(r => r.availableAfter <= now)
+      .map(r => r.resource);
+  }
+
+  /**
+   * Returns all resources in the pool.
+   */
+  public all(): T[] {
+    return this.resources.map(r => r.resource);
   }
 
   private recordFor(resource: T): IResourceRecord<T> {
