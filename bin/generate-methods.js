@@ -15,9 +15,10 @@
 
 const changeCase = require('change-case');
 const pbjs = require('protobufjs');
+const fs = require('fs');
 const _ = require('lodash');
 
-const contents = require('fs').readFileSync(process.argv[2]).toString();
+const contents = fs.readFileSync(process.argv[2]).toString();
 const lines = contents.split('\n');
 
 const singleLineCommentRe = /\/\/\s*(.+)$/;
@@ -67,7 +68,7 @@ const messages = new MessageCollection();
 
 function emit(string) {
   if (string) {
-    process.stdout.write(string + '\n');
+    process.stdout.write(string);
   }
 
   return emit;
@@ -115,10 +116,6 @@ function indent(level) {
   return out;
 }
 
-function formatFieldName(str) {
-  return changeCase.snakeCase(str);
-}
-
 function getCommentPrefixing(substring, from = 0, indentation = 1) {
   // This is a hack! Protobufjs doesn't parse comments into its AST, and it
   // looks like when it does it won't parse the format of
@@ -141,7 +138,7 @@ function getCommentPrefixing(substring, from = 0, indentation = 1) {
 
   return ['/**', ...comments, ' */']
     .map(line => `${indent(indentation)}${line}`)
-    .join('\n');
+    .join('\n') + '\n';
 }
 
 function generateMethodCalls(node, name) {
@@ -154,15 +151,39 @@ function generateMethodCalls(node, name) {
     const res = messages.find(method.responseType);
     const loweredName = firstToLower(mname);
 
+    const requestTsType = req.empty ? 'void' : formatType(method.requestType);
+    const responseTsType = res.empty ? 'void' : formatType(method.responseType);
+    const streaming = method.responseStream || method.requestStream;
+
     emit(getCommentPrefixing(`rpc ${mname}(`));
-    emit(`${indent(1)}public ${loweredName}(`
-      + (req.empty ? '' : `req: ${formatType(method.requestType)}`)
-      + '): Promise<' + (res.empty ? 'void' : formatType(method.responseType)) + '> {')
-      (`${indent(2)}return this.client.exec('${name}', '${loweredName}', ${req.empty ? '{}' : 'req'});`)
-      (`${indent(1)}}\n`);
+    emit(`${indent(1)}public ${loweredName}(`);
+    if (!method.requestStream && !req.empty) {
+      emit(`req: ${requestTsType}`);
+    }
+    emit('): ');
+
+    if (method.responseStream && !method.requestStream) {
+      emit(`Promise<IResponseStream<${responseTsType}>> {\n`)
+        (`${indent(2)}return this.client.getConnection('${name}').then(cnx => {\n`)
+        (`${indent(3)}return cnx.${loweredName}(${req.empty ? '{}' : 'req'});\n`)
+        (`${indent(2)}});\n`)
+    } else if (method.responseStream && method.requestStream) {
+      emit(`Promise<IDuplexStream<${requestTsType}, ${responseTsType}>> {\n`)
+        (`${indent(2)}return this.client.getConnection('${name}').then(cnx => {\n`)
+        (`${indent(3)}const stream = cnx.${loweredName}();\n`)
+        (`${indent(3)}return stream;\n`)
+        (`${indent(2)}});\n`)
+    } else if (method.requestStream && !method.responseStream) {
+      throw new Error('request-only stream requets are not supported');
+    } else {
+      emit(`Promise<${responseTsType}> {\n`)
+        (`${indent(2)}return this.client.exec('${name}', '${loweredName}', ${req.empty ? '{}' : 'req'});\n`);
+    }
+
+    emit(`${indent(1)}}\n\n`);
   });
 
-  emit('}\n');
+  emit('}\n\n');
 }
 
 function generateInterface(node, name) {
@@ -171,24 +192,23 @@ function generateInterface(node, name) {
     return;
   }
 
-  emit(`export interface I${name} {`);
+  emit(`export interface I${name} {\n`);
   _.forOwn(node.fields, (field, fname) => {
-    fname = formatFieldName(fname);
-    emit(getCommentPrefixing(fname, getLineContaining(`message ${name}`)));
-    emit(`${indent(1)}${fname}${message.response ? '' : '?'}: `
-      + `${formatType(field.type, message.response)}${field.rule === 'repeated' ? '[]' : '' };`);
+    emit(getCommentPrefixing(`${fname} = ${field.id}`, getLineContaining(`message ${name}`)))
+      (`${indent(1)}${fname}${message.response ? '' : '?'}: `)
+      (`${formatType(field.type, message.response)}${field.rule === 'repeated' ? '[]' : '' };\n`);
   });
-  emit('}\n');
+  emit('}\n\n');
 }
 
 function generateEnum(node, name) {
   enums.push(name);
-  emit(`export enum ${name in pbTypeAliases ? pbTypeAliases[name] : name} {`);
+  emit(`export enum ${name in pbTypeAliases ? pbTypeAliases[name] : name} {\n`);
   _.forOwn(node.values, (count, fname) => {
-    emit(getCommentPrefixing(fname, getLineContaining(`enum ${fname}`)));
-    emit(`${indent(1)}${fname} = ${count},`);
+    emit(getCommentPrefixing(`${fname} = ${count}`, getLineContaining(`enum ${fname}`)))
+      (`${indent(1)}${fname} = ${count},\n`);
   });
-  emit('}\n');
+  emit('}\n\n');
 }
 
 function walk(ast, iterator, path = []) {
@@ -253,22 +273,16 @@ function codeGen(ast) {
     }
   });
 
-  emit('export const Services = {');
+  emit('export const Services = {\n');
   _.forOwn(services, (ctor, name) => {
-    emit(`${indent(1)}${name}: ${ctor},`);
+    emit(`${indent(1)}${name}: ${ctor},\n`);
   });
-  emit('};');
+  emit('};\n');
 }
 
-const prefix = `// AUTOGENERATED CODE, DO NOT EDIT
-// tslint:disable
-
-export interface ICallable {
-  exec(service: keyof typeof Services, method: string, params: any): Promise<any>;
-}`;
-
-pbjs.load(process.argv[2]).then(ast => {
+new pbjs.Root().load(process.argv[2], { keepCase: true }).then(ast => {
   prepareForGeneration(ast.nested);
-  emit(prefix);
+  emit(fs.readFileSync(`${__dirname}/fixture/rpc-prefix.txt`, 'utf8'));
+  emit('\n');
   codeGen(ast.nested);
 }).catch(err => console.error(err.stack));

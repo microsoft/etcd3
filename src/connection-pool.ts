@@ -43,7 +43,9 @@ class Host {
     }
 
     return this.cachedServices[name] = this.cachedCredentials.then(credentials => {
-      return new services.etcdserverpb[name](this.host, credentials);
+      const s = new services.etcdserverpb[name](this.host, credentials);
+      s.etcdHost = this;
+      return s;
     });
   }
 
@@ -114,28 +116,33 @@ export class ConnectionPool implements ICallable {
    * @override
    */
   public exec(service: keyof typeof Services, method: string, payload: any): Promise<any> {
-    return this.pool.pull().then(client => {
-      return client.getService(service).then(grpcService => {
-        return new Promise((resolve, reject) => {
-          grpcService[method](payload, (err, res) => {
-            if (!err) {
-              this.pool.succeed(client);
-              return resolve(res);
-            }
-            err = castGrpcError(err);
-            if (err instanceof GRPCGenericError) {
-              this.pool.fail(client);
-              client.close();
+    return this.getConnection(service).then(grpcService => {
+      return new Promise((resolve, reject) => {
+        grpcService[method](payload, (err: Error, res: any) => {
+          if (!err) {
+            this.pool.succeed(grpcService.etcdHost);
+            return resolve(res);
+          }
+          err = castGrpcError(err);
+          if (err instanceof GRPCGenericError) {
+            this.pool.fail(grpcService.etcdHost);
+            grpcService.etcdHost.close();
 
-              if (this.pool.available().length && this.options.retry) {
-                return resolve(this.exec(service, method, payload));
-              }
+            if (this.pool.available().length && this.options.retry) {
+              return resolve(this.exec(service, method, payload));
             }
+          }
 
-            reject(err);
-          });
+          reject(err);
         });
       });
     });
+  }
+
+  /**
+   * @override
+   */
+  public getConnection(service: keyof typeof Services): Promise<any> {
+    return this.pool.pull().then(client => client.getService(service));
   }
 }

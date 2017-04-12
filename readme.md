@@ -1,5 +1,28 @@
-# TBA
+# etcd3
 
+etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes load balancing, reconnections, high-level query builders and lease management, and is type-safe for TypeScript consumers.
+
+### Quickstart
+
+Install via:
+
+```
+npm install --save etcd3
+```
+
+Start CRUD-ing!
+
+```js
+const { Etcd3 } = require('etcd3');
+const client = new Etcd3();
+
+client.put('foo').value('bar')
+  .then(() => client.get('foo').string())
+  .then(value => console.log('foo was:', value))
+  .then(() => client.getAll().prefix('f').strings())
+  .then(keys => console.log('all our keys starting with "f":', keys))
+  .then(() => client.delete().all());
+```
 
 ### Contributing
 
