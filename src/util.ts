@@ -41,3 +41,29 @@ export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key
     iterator(obj[keys[i]], keys[i]);
   }
 }
+
+/**
+ * PromiseWrap provides promise-like functions that auto-invoke an exec
+ * method when called.
+ */
+export abstract class PromiseWrap<T> implements PromiseLike<T> {
+
+  /**
+   * exec should be override to run the promised action.
+   */
+  public abstract exec(): Promise<T>;
+
+  /**
+   * then implements Promiselike.then()
+   */
+  public then<R, V>(onFulfilled: (value: T) => R | Promise<R>, onRejected?: (err: any) => V | Promise<V>): Promise<R | V> {
+    return this.exec().then(onFulfilled, <any> onRejected);
+  }
+
+  /**
+   * catch implements Promiselike.catch()
+   */
+  public catch<R>(onRejected: (err: any) => R | Promise<R>): Promise<R> {
+    return this.exec().catch(onRejected);
+  }
+}

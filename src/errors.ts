@@ -52,10 +52,24 @@ export class GRPCCancelledError extends GRPCGenericError {
 }
 
 /**
+ * EtcdError is an application error returned by etcd.
+ */
+export class EtcdError extends Error {
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, EtcdError.prototype);
+  }
+}
+
+interface IErrorCtor {
+  new (message: string): Error;
+}
+
+/**
  * Mapping of GRPC error messages to typed error. GRPC errors are untyped
  * by default and sourced from within a mess of C code.
  */
-const grpcMessageToError: { [message: string]: new (message: string) => GRPCGenericError } = {
+const grpcMessageToError: { [message: string]: IErrorCtor } = {
   'Connect Failed': GRPCConnectFailedError,
   'Channel Disconnected': GRPCConnectFailedError,
   'Endpoint read failed': GRPCProtocolError,
@@ -86,14 +100,21 @@ function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): str
 }
 
 /**
- * Tries to convert GRPC's generic, untyped errors to typed errors we can consume.
+ * Tries to convert GRPC's generic, untyped errors to typed errors we can
+ * consume. Yes, this method is abhorrent.
  */
 export function castGrpcError(err: Error): Error {
   if ((<any> err).constructor !== Error) {
     return err; // it looks like it's already some kind of typed error
   }
 
-  const ctor = grpcMessageToError[err.message] || GRPCGenericError;
+  let ctor: IErrorCtor = GRPCGenericError;
+  if (grpcMessageToError.hasOwnProperty(err.message)) {
+    ctor = grpcMessageToError[err.message];
+  } else if (err.message.includes('etcdserver:')) {
+    ctor = EtcdError;
+  }
+
   const castError = new ctor(rewriteErrorName(err.message, ctor));
   castError.stack = rewriteErrorName(String(err.stack), ctor);
   return castError;

@@ -25,6 +25,8 @@
     "no-typeof-undefined": false,
     "no-var-requires": false,
     "insecure-random": false,
+    "no-reserved-keywords": false,
+    "no-backbone-get-set-outside-model": false,
     "trailing-comma": [true, {"multiline": "always", "singleline": "never"}],
     "underscore-consistent-invocation": false
   }

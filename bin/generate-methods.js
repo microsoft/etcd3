@@ -13,6 +13,7 @@
  * create the output ourselves since it's pretty simple (~100 lines of code).
  */
 
+const changeCase = require('change-case');
 const pbjs = require('protobufjs');
 const _ = require('lodash');
 
@@ -23,7 +24,6 @@ const singleLineCommentRe = /\/\/\s*(.+)$/;
 const singleLineCommentStandaloneRe = /^\s*\/\/\s*/;
 const indentation = '  ';
 
-const messages = {};
 const enums = [];
 const services = {};
 const pbTypes = {
@@ -47,6 +47,22 @@ const pbTypes = {
   Type: 'PermissionType',
 };
 
+class MessageCollection {
+  constructor() {
+    this._messages = {};
+  }
+
+  add(name, node) {
+    this._messages[stripPackageNameFrom(name)] = node;
+  }
+
+  find(name) {
+    return this._messages[stripPackageNameFrom(name)];
+  }
+}
+
+const messages = new MessageCollection();
+
 function emit(string) {
   if (string) {
     process.stdout.write(string + '\n');
@@ -59,14 +75,20 @@ function firstToLower(str) {
   return str.charAt(0).toLowerCase() + str.slice(1);
 }
 
+function stripPackageNameFrom(name) {
+  if (name.includes('.')) {
+    name = name.replace(/^.+\./, '');
+  }
+
+  return name;
+}
+
 function formatType(type) {
   if (type in pbTypes) {
     return pbTypes[type];
   }
 
-  if (type.includes('.')) {
-    type = type.replace(/^.+\./, '');
-  }
+  type = stripPackageNameFrom(type);
 
   if (enums.includes(type)) {
     return type;
@@ -85,6 +107,10 @@ function indent(level) {
     out += indentation;
   }
   return out;
+}
+
+function formatFieldName(str) {
+  return changeCase.snakeCase(str);
 }
 
 function getCommentPrefixing(substring, from = 0, indentation = 1) {
@@ -118,8 +144,8 @@ function generateMethodCalls(node, name) {
     (`${indent(1)}constructor(private client: ICallable) {}\n`)
 
   _.forOwn(node.methods, (method, mname) => {
-    const req = messages[method.requestType];
-    const res = messages[method.responseType];
+    const req = messages.find(method.requestType);
+    const res = messages.find(method.responseType);
     const loweredName = firstToLower(mname);
 
     emit(getCommentPrefixing(`rpc ${mname}(`));
@@ -134,15 +160,17 @@ function generateMethodCalls(node, name) {
 }
 
 function generateInterface(node, name) {
-  const message = messages[name];
+  const message = messages.find(name);
   if (message.empty) {
     return;
   }
 
   emit(`export interface I${name} {`);
   _.forOwn(node.fields, (field, fname) => {
+    fname = formatFieldName(fname);
     emit(getCommentPrefixing(fname, getLineContaining(`message ${name}`)));
-    emit(`${indent(1)}${fname}${message.response ? '' : '?'}: ${formatType(field.type)};`);
+    emit(`${indent(1)}${fname}${message.response ? '' : '?'}: `
+      + `${formatType(field.type)}${field.rule === 'repeated' ? '[]' : '' };`);
   });
   emit('}\n');
 }
@@ -173,9 +201,9 @@ function walk(ast, iterator, path = []) {
 function markResponsesFor(message) {
   message.response = true;
 
-  _(message.fields)
+  _(message.node.fields)
     .values()
-    .map(f => message[f.type])
+    .map(f => messages.find(f.type))
     .filter(Boolean)
     .forEach(markResponsesFor);
 }
@@ -187,11 +215,11 @@ function prepareForGeneration(ast) {
     }
 
     if (node.fields) {
-      messages[name] = {
+      messages.add(name, {
         empty: _.isEmpty(node.fields),
         node,
         response: false,
-      };
+      });
     }
   });
 
@@ -199,7 +227,7 @@ function prepareForGeneration(ast) {
     if (node.methods) {
       _(node.methods)
         .values()
-        .map(m => messages[m.responseType])
+        .map(m => messages.find(m.responseType))
         .filter(Boolean)
         .forEach(markResponsesFor);
     }

@@ -1,7 +1,15 @@
 import { ConnectionPool } from './connection-pool';
+import { DeleteBuilder, MultiRangeBuilder, PutBuilder, SingleRangeBuilder } from './kv-builder';
 import { IOptions } from './options';
 import * as RPC from './rpc';
 
+export * from './rpc';
+export * from './kv-builder';
+
+/**
+ * Etcd3 is a high-level interface for interacting and calling etcd endpoints.
+ * It also provides several lower-level clients for directly calling methods.
+ */
 export class Etcd3 {
 
   private pool = new ConnectionPool(this.options);
@@ -14,4 +22,39 @@ export class Etcd3 {
   public readonly cluster = new RPC.ClusterClient(this.pool);
 
   constructor(private options: IOptions) {}
+
+  /**
+   * `.get` starts a query to look up a single key from etcd.
+   */
+  public get(key: string): SingleRangeBuilder {
+    return new SingleRangeBuilder(this.kv, key);
+  }
+
+  /**
+   * `.getAll` starts a query to look up multiple keys from etcd.
+   */
+  public getAll(): MultiRangeBuilder {
+    return new MultiRangeBuilder(this.kv);
+  }
+
+  /**
+   * `.put` starts making a put request against etcd.
+   */
+  public put(key: string | Buffer): PutBuilder {
+    return new PutBuilder(this.kv, key);
+  }
+
+  /**
+   * `.delete` starts making a delete request against etcd.
+   */
+  public delete(): DeleteBuilder {
+    return new DeleteBuilder(this.kv);
+  }
+
+  /**
+   * Frees resources associated with the client.
+   */
+  public close() {
+    this.pool.close();
+  }
 }
