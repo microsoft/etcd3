@@ -307,19 +307,19 @@ export interface IResponseHeader {
   /**
    * cluster_id is the ID of the cluster which sent the response.
    */
-  cluster_id: number;
+  cluster_id: string;
   /**
    * member_id is the ID of the member which sent the response.
    */
-  member_id: number;
+  member_id: string;
   /**
    * revision is the key-value store revision when the request was applied.
    */
-  revision: number;
+  revision: string;
   /**
    * raft_term is the raft term when the request was applied.
    */
-  raft_term: number;
+  raft_term: string;
 }
 
 export enum SortOrder {
@@ -357,11 +357,11 @@ export interface IRangeRequest {
   /**
    * limit is a limit on the number of keys returned for the request. When limit is set to 0,
    */
-  limit?: number;
+  limit?: string | number;
   /**
    * revision is the point-in-time of the key-value store to use for the range.
    */
-  revision?: number;
+  revision?: string | number;
   /**
    * sort_order is the order for returned sorted results.
    */
@@ -385,19 +385,19 @@ export interface IRangeRequest {
   /**
    * min_mod_revision is the lower bound for returned key mod revisions; all keys with
    */
-  min_mod_revision?: number;
+  min_mod_revision?: string | number;
   /**
    * max_mod_revision is the upper bound for returned key mod revisions; all keys with
    */
-  max_mod_revision?: number;
+  max_mod_revision?: string | number;
   /**
    * min_create_revision is the lower bound for returned key create revisions; all keys with
    */
-  min_create_revision?: number;
+  min_create_revision?: string | number;
   /**
    * max_create_revision is the upper bound for returned key create revisions; all keys with
    */
-  max_create_revision?: number;
+  max_create_revision?: string | number;
 }
 
 export interface IRangeResponse {
@@ -413,7 +413,7 @@ export interface IRangeResponse {
   /**
    * kvs is empty when count is requested.
    */
-  count: number;
+  count: string;
 }
 
 export interface IPutRequest {
@@ -428,7 +428,7 @@ export interface IPutRequest {
   /**
    * lease is the lease ID to associate with the key in the key-value store. A lease
    */
-  lease?: number;
+  lease?: string | number;
   /**
    * If prev_kv is set, etcd gets the previous key-value pair before changing it.
    */
@@ -471,7 +471,7 @@ export interface IDeleteRangeResponse {
   /**
    * deleted is the number of keys deleted by the delete range request.
    */
-  deleted: number;
+  deleted: string;
   /**
    * if prev_kv is set in the request, the previous key-value pairs will be returned.
    */
@@ -520,15 +520,15 @@ export interface ICompare {
   /**
    * version is the version of the given key
    */
-  version?: number;
+  version?: string | number;
   /**
    * create_revision is the creation revision of the given key
    */
-  create_revision?: number;
+  create_revision?: string | number;
   /**
    * mod_revision is the last modified revision of the given key.
    */
-  mod_revision?: number;
+  mod_revision?: string | number;
   /**
    * target is the key-value field to inspect for the comparison.
    */
@@ -566,7 +566,7 @@ export interface ICompactionRequest {
   /**
    * revision is the key-value store revision for the compaction operation. 
    */
-  revision?: number;
+  revision?: string | number;
   /**
    * physical is set so the RPC will wait until the compaction is physically
    */
@@ -582,7 +582,7 @@ export interface IHashResponse {
   /**
    * hash is the hash value computed from the responding member's key-value store.
    */
-  hash: number;
+  hash: string;
 }
 
 export interface ISnapshotResponse {
@@ -593,7 +593,7 @@ export interface ISnapshotResponse {
   /**
    * remaining_bytes is the number of blob bytes to be sent after this message
    */
-  remaining_bytes: number;
+  remaining_bytes: string;
   /**
    * remaining_bytes is the number of blob bytes to be sent after this message
    */
@@ -628,7 +628,7 @@ export interface IWatchCreateRequest {
   /**
    * start_revision is an optional revision to watch from (inclusive). No start_revision is "now".
    */
-  start_revision?: number;
+  start_revision?: string | number;
   /**
    * progress_notify is set so that the etcd server will periodically send a WatchResponse with
    */
@@ -647,7 +647,7 @@ export interface IWatchCancelRequest {
   /**
    * watch_id is the watcher id to cancel so that no more events are transmitted.
    */
-  watch_id?: number;
+  watch_id?: string | number;
 }
 
 export interface IWatchResponse {
@@ -655,7 +655,7 @@ export interface IWatchResponse {
   /**
    * watch_id is the ID of the watcher that corresponds to the response.
    */
-  watch_id: number;
+  watch_id: string;
   /**
    * created is set to true if the response is for a create watch request.
    */
@@ -667,7 +667,7 @@ export interface IWatchResponse {
   /**
    * compact_revision is set to the minimum index if a watcher tries to watch
    */
-  compact_revision: number;
+  compact_revision: string;
   /**
    * The client should record the watch_id and expect to receive events for
    */
@@ -675,11 +675,11 @@ export interface IWatchResponse {
 }
 
 export interface ILeaseGrantRequest {
-  ttl?: number;
+  ttl?: string | number;
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
 }
 
 export interface ILeaseGrantResponse {
@@ -687,8 +687,8 @@ export interface ILeaseGrantResponse {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id: number;
-  ttl: number;
+  id: string;
+  ttl: string;
   error: string;
 }
 
@@ -696,7 +696,7 @@ export interface ILeaseRevokeRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
 }
 
 export interface ILeaseRevokeResponse {
@@ -707,7 +707,7 @@ export interface ILeaseKeepAliveRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
 }
 
 export interface ILeaseKeepAliveResponse {
@@ -715,15 +715,15 @@ export interface ILeaseKeepAliveResponse {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id: number;
-  ttl: number;
+  id: string;
+  ttl: string;
 }
 
 export interface ILeaseTimeToLiveRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
   /**
    * keys is true to query all the keys attached to this lease.
    */
@@ -735,9 +735,9 @@ export interface ILeaseTimeToLiveResponse {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id: number;
-  ttl: number;
-  granted_ttl: number;
+  id: string;
+  ttl: string;
+  granted_ttl: string;
   /**
    * Keys is the list of keys attached to this lease.
    */
@@ -748,7 +748,7 @@ export interface IMember {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id: number;
+  id: string;
   /**
    * name is the human-readable name of the member. If the member is not started, the name will be an empty string.
    */
@@ -773,7 +773,7 @@ export interface IMemberRemoveRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
 }
 
 export interface IMemberRemoveResponse {
@@ -784,7 +784,7 @@ export interface IMemberUpdateRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  id?: number;
+  id?: string | number;
   peer_ur_ls?: string[];
 }
 
@@ -826,7 +826,7 @@ export interface IAlarmRequest {
    * action is the kind of alarm request to issue. The action
    */
   action?: AlarmAction;
-  member_id?: number;
+  member_id?: string | number;
   /**
    * action is the kind of alarm request to issue. The action
    */
@@ -834,7 +834,7 @@ export interface IAlarmRequest {
 }
 
 export interface IAlarmMember {
-  member_id: number;
+  member_id: string;
   /**
    * memberID is the ID of the member associated with the raised alarm.
    */
@@ -855,13 +855,13 @@ export interface IStatusResponse {
    * version is the cluster protocol version used by the responding member.
    */
   version: string;
-  db_size: number;
+  db_size: string;
   /**
    * leader is the member ID which the responding member believes is the current leader.
    */
-  leader: number;
-  raft_index: number;
-  raft_term: number;
+  leader: string;
+  raft_index: string;
+  raft_term: string;
 }
 
 export interface IAuthenticateRequest {
@@ -1065,15 +1065,15 @@ export interface IKeyValue {
   /**
    * min_create_revision is the lower bound for returned key create revisions; all keys with
    */
-  create_revision: number;
+  create_revision: string;
   /**
    * min_mod_revision is the lower bound for returned key mod revisions; all keys with
    */
-  mod_revision: number;
+  mod_revision: string;
   /**
    * version is the version of the given key
    */
-  version: number;
+  version: string;
   /**
    * Range gets the keys in the range from the key-value store.
    */
@@ -1081,7 +1081,7 @@ export interface IKeyValue {
   /**
    * LeaseGrant creates a lease which expires if the server does not receive a keepAlive
    */
-  lease: number;
+  lease: string;
 }
 
 export enum EventType {

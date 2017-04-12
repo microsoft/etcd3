@@ -26,26 +26,28 @@ const indentation = '  ';
 
 const enums = [];
 const services = {};
-const pbTypes = {
-  // Built-in types:
-  double: 'number',
-  float: 'number',
-  int32: 'number',
-  int64: 'number',
-  uint32: 'number',
-  uint64: 'number',
-  sint32: 'number',
-  sint64: 'number',
-  fixed32: 'number',
-  fixed64: 'number',
-  sfixed32: 'number',
-  sfixed64: 'number',
+
+const pbTypeAliases = {
   bool: 'boolean',
   string: 'string',
   bytes: 'Buffer',
-  // Aliases:
   Type: 'PermissionType',
 };
+
+const numericTypes = [
+  'double',
+  'float',
+  'int32',
+  'int64',
+  'uint32',
+  'uint64',
+  'sint32',
+  'sint64',
+  'fixed32',
+  'fixed64',
+  'sfixed32',
+  'sfixed64',
+];
 
 class MessageCollection {
   constructor() {
@@ -83,13 +85,17 @@ function stripPackageNameFrom(name) {
   return name;
 }
 
-function formatType(type) {
-  if (type in pbTypes) {
-    return pbTypes[type];
+function formatType(type, isInResponse = false) {
+  if (type in pbTypeAliases) {
+    return pbTypeAliases[type];
+  }
+
+  // grpc unmarshals number as strings, but we want to let people provide them as Numbers.
+  if (numericTypes.includes(type)) {
+    return isInResponse ? 'string' : 'string | number';
   }
 
   type = stripPackageNameFrom(type);
-
   if (enums.includes(type)) {
     return type;
   }
@@ -170,14 +176,14 @@ function generateInterface(node, name) {
     fname = formatFieldName(fname);
     emit(getCommentPrefixing(fname, getLineContaining(`message ${name}`)));
     emit(`${indent(1)}${fname}${message.response ? '' : '?'}: `
-      + `${formatType(field.type)}${field.rule === 'repeated' ? '[]' : '' };`);
+      + `${formatType(field.type, message.response)}${field.rule === 'repeated' ? '[]' : '' };`);
   });
   emit('}\n');
 }
 
 function generateEnum(node, name) {
   enums.push(name);
-  emit(`export enum ${name in pbTypes ? pbTypes[name] : name} {`);
+  emit(`export enum ${name in pbTypeAliases ? pbTypeAliases[name] : name} {`);
   _.forOwn(node.values, (count, fname) => {
     emit(getCommentPrefixing(fname, getLineContaining(`enum ${fname}`)));
     emit(`${indent(1)}${fname} = ${count},`);

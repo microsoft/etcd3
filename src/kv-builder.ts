@@ -65,7 +65,7 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   /**
    * revision is the point-in-time of the key-value store to use for the range.
    */
-  public revision(rev: number): this {
+  public revision(rev: number | string): this {
     this.request.revision = rev;
     return this;
   }
@@ -81,7 +81,7 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   /**
    * minModRevision sets the minimum modified revision of keys to return.
    */
-  public minModRevision(minModRevision: number): this {
+  public minModRevision(minModRevision: number | string): this {
     this.request.min_mod_revision = minModRevision;
     return this;
   }
@@ -89,7 +89,7 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   /**
    * maxModRevision sets the maximum modified revision of keys to return.
    */
-  public maxModRevision(maxModRevision: number): this {
+  public maxModRevision(maxModRevision: number | string): this {
     this.request.max_mod_revision = maxModRevision;
     return this;
   }
@@ -97,7 +97,7 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   /**
    * minCreateRevision sets the minimum create revision of keys to return.
    */
-  public minCreateRevision(minCreateRevision: number): this {
+  public minCreateRevision(minCreateRevision: number | string): this {
     this.request.min_create_revision = minCreateRevision;
     return this;
   }
@@ -105,7 +105,7 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   /**
    * maxCreateRevision sets the maximum create revision of keys to return.
    */
-  public maxCreateRevision(maxCreateRevision: number): this {
+  public maxCreateRevision(maxCreateRevision: number | string): this {
     this.request.max_create_revision = maxCreateRevision;
     return this;
   }
@@ -209,7 +209,7 @@ export class MultiRangeBuilder extends RangeBuilder {
    */
   public count(): Promise<number> {
     this.request.count_only = true;
-    return this.exec().then(res => res.count);
+    return this.exec().then(res => Number(res.count));
   }
 
   /**
@@ -300,9 +300,9 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    * key before setting it. One may not always be available if a compaction
    * takes place.
    */
-  public getPrevious(): this {
+  public getPrevious(): Promise<RPC.IKeyValue[]> {
     this.request.prev_kv = true;
-    return this;
+    return this.exec().then(res => res.prev_kvs);
   }
   /**
    * exec runs the delete put request.
@@ -335,18 +335,8 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * Sets the lease value to use for storing the key. You usually don't
    * need to use this directly, use `client.lease()` instead!
    */
-  public lease(lease: number): this {
+  public lease(lease: number | string): this {
     this.request.lease = lease;
-    return this;
-  }
-
-  /**
-   * getPrevious instructs etcd to *try* to get the previous value of the
-   * key before setting it. One may not always be available if a compaction
-   * takes place.
-   */
-  public getPrevious(): this {
-    this.request.prev_kv = true;
     return this;
   }
 
@@ -356,6 +346,16 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   public ignoreLease(): this {
     this.request.ignore_lease = true;
     return this;
+  }
+
+  /**
+   * getPrevious instructs etcd to *try* to get the previous value of the
+   * key before setting it. One may not always be available if a compaction
+   * takes place.
+   */
+  public getPrevious(): Promise<RPC.IKeyValue & { header: RPC.IResponseHeader }> {
+    this.request.prev_kv = true;
+    return this.exec().then(res => ({ ...res.prev_kv, header: res.header }));
   }
 
   /**
