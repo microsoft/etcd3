@@ -5,4 +5,5 @@ node_js:
 services:
   - docker
 before_install:
+  - npm i -g npm
   - docker run --name etcd-v3.0.9 -d -v /data/etcd/:/data -p 2379:2379 xieyanze/etcd3:latest
