@@ -36,12 +36,12 @@ class LeaseClientWrapper implements RPC.ICallable {
       });
   }
 
-  public getConnection(): Promise<any> {
+  public getConnection(): never {
     throw new Error('not supported');
   }
 }
 
-enum State {
+const enum State {
   Alive,
   Revoked,
 }

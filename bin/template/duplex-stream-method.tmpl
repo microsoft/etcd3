@@ -1,0 +1,4 @@
+--<%= getCommentPrefixing(`rpc ${name}(`) %>
+  public <%= _.lowerFirst(name) %>(): Promise<IDuplexStream<<%= requestTsType %>, <%= responseTsType %>>> {
+    return this.client.getConnection('<%= service %>').then(cnx => cnx.<%= _.lowerFirst(name) %>());
+  }
