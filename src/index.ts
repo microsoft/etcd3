@@ -75,7 +75,7 @@ export class Etcd3 {
    * Removes any previously-inserted mock.
    */
   public unmock(): void {
-    return this.pool.unmock();
+    this.pool.unmock();
   }
 
   /**
