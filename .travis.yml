@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+  - 6
+env:
+  - ETCD_VER=v3.1.5
+before_install:
+  - curl -L https://github.com/coreos/etcd/releases/download/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+  - mkdir -p /tmp/etcd
+  - tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
+  - /tmp/etcd/etcd > /dev/null &
+  - npm i -g npm

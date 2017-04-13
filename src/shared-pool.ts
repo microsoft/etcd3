@@ -72,7 +72,15 @@ export class SharedPool<T> {
    */
   public fail(resource: T) {
     const record = this.recordFor(resource);
-    record.availableAfter = Date.now() + record.backoff.getDelay();
+    const now = Date.now();
+
+    // If multiple callers are using a resource when it fails, they'll
+    // probably all fail it at once. Only take the first one.
+    if (record.availableAfter > now) {
+      return;
+    }
+
+    record.availableAfter = now + record.backoff.getDelay();
     record.backoff = record.backoff.next();
   }
 
