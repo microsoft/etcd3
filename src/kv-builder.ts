@@ -125,8 +125,8 @@ export class SingleRangeBuilder extends RangeBuilder {
    * Runs the built request and parses the returned key as JSON,
    * or returns `null` if it isn't found.
    */
-  public json(): Promise<any> {
-    return this.string().then(value => value === null ? null : JSON.parse(value));
+  public json(): Promise<object> {
+    return this.string().then(JSON.parse);
   }
 
   /**
@@ -225,8 +225,8 @@ export class MultiRangeBuilder extends RangeBuilder {
   /**
    * Runs the built request and parses the returned keys as JSON.
    */
-  public json(): Promise<any> {
-    return this.buffers().then(res => res.map(value => JSON.stringify(value)));
+  public json(): Promise<object> {
+    return this.buffers().then(res => res.map(value => JSON.parse(value.toString())));
   }
 
   /**
