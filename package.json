@@ -9,12 +9,13 @@
     "test:unit": "mocha --compilers ts:ts-node/register --timeout 20000 -r test/_setup.ts test/*.test.ts",
     "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
     "update-proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
-    "build": "tsc && cp -R proto lib",
-    "prepublish": "npm run -s build"
+    "build:doc": "typedoc --exclude \"**/test/*\" --excludePrivate --entryPoint index.Etcd3 --out ./doc ./src/index.ts",
+    "build:ts": "tsc && cp -R proto lib",
+    "prepublish": "npm run -s build:ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/connor4312/etcd3.git"
+    "url": "git+https://github.com/WatchBeam/etcd3.git"
   },
   "keywords": [
     "etcd3",
@@ -27,9 +28,9 @@
   "author": "Connor Peet <connor@peet.io>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/connor4312/etcd3/issues"
+    "url": "https://github.com/WatchBeam/etcd3/issues"
   },
-  "homepage": "https://github.com/connor4312/etcd3#readme",
+  "homepage": "https://github.com/WatchBeam/etcd3#readme",
   "devDependencies": {
     "@types/chai": "^3.4.35",
     "@types/chai-subset": "^1.3.0",
@@ -47,6 +48,7 @@
     "ts-node": "^3.0.2",
     "tslint": "^4.0.0",
     "tslint-microsoft-contrib": "4.0.0",
+    "typedoc": "^0.5.10",
     "typescript": "^2.2.2"
   },
   "dependencies": {

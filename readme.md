@@ -1,4 +1,4 @@
-# etcd3
+# etcd3 [![Build Status](https://travis-ci.org/WatchBeam/etcd3.svg?branch=master)](https://travis-ci.org/WatchBeam/etcd3)
 
 etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes load balancing, reconnections, high-level query builders and lease management, mocking, and is type-safe for TypeScript consumers.
 

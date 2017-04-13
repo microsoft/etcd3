@@ -1,20 +1,28 @@
 {
-	"compilerOptions": {
-		"declaration": true,
+  "compilerOptions": {
+    "declaration": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
-		"module": "commonjs",
-		"target": "es6",
-		"outDir": "lib",
+    "module": "commonjs",
+    "target": "es6",
+    "outDir": "lib",
     "lib": [
       "es5",
       "es6"
+    ],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "types": [
+      "chai-subset",
+      "mocha",
+      "node"
     ]
-	},
+  },
   "exclude": [
     "node_modules",
     "lib"
