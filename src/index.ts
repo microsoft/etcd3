@@ -1,10 +1,13 @@
 import { ConnectionPool } from './connection-pool';
 import { DeleteBuilder, MultiRangeBuilder, PutBuilder, SingleRangeBuilder } from './kv-builder';
+import { Lease } from './lease';
 import { IOptions } from './options';
 import * as RPC from './rpc';
 
-export * from './rpc';
+export * from './errors';
 export * from './kv-builder';
+export * from './lease';
+export * from './rpc';
 
 /**
  * Etcd3 is a high-level interface for interacting and calling etcd endpoints.
@@ -15,13 +18,13 @@ export class Etcd3 {
   private pool = new ConnectionPool(this.options);
 
   public readonly kv = new RPC.KVClient(this.pool);
-  public readonly lease = new RPC.LeaseClient(this.pool);
+  public readonly leaseClient = new RPC.LeaseClient(this.pool);
   public readonly auth = new RPC.AuthClient(this.pool);
   public readonly maintenance = new RPC.MaintenanceClient(this.pool);
   public readonly watch = new RPC.WatchClient(this.pool);
   public readonly cluster = new RPC.ClusterClient(this.pool);
 
-  constructor(private options: IOptions) {}
+  constructor(private options: IOptions = { hosts: '127.0.0.1:2379' }) {}
 
   /**
    * `.get` starts a query to look up a single key from etcd.
@@ -49,6 +52,13 @@ export class Etcd3 {
    */
   public delete(): DeleteBuilder {
     return new DeleteBuilder(this.kv);
+  }
+
+  /**
+   * lease grants and returns a new Lease instance.
+   */
+  public lease(ttl: number): Lease {
+    return new Lease(this.pool, ttl);
   }
 
   /**

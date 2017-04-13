@@ -1,0 +1,4 @@
+--<%= getCommentPrefixing(`rpc ${name}(`) %>
+  public <%= _.lowerFirst(name) %>(<%= req.empty ? '' : `req: ${requestTsType}` %>): Promise<IResponseStream<<%= responseTsType %>>> {
+    return this.client.getConnection('<%= service %>').then(cnx => cnx.<%= _.lowerFirst(name) %>(<%= req.empty ? '{}' : 'req' %>));
+  }

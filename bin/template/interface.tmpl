@@ -1,0 +1,6 @@
+export interface I<%= name %> {
+--<% _.forOwn(node.fields, (field, fname) => { %>
+--<%= getCommentPrefixing(`${fname} = ${field.id}`, getLineContaining(`message ${name}`)) %>
+  <%= fname %><%= (message.response ? '' : '?') %>: <%= formatType(field.type, message.response) %><%= field.rule === 'repeated' ? '[]' : '' %>;
+--<% }) %>
+}

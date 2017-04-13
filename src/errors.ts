@@ -61,6 +61,17 @@ export class EtcdError extends Error {
   }
 }
 
+/**
+ * EtcdLeaseTimeoutError is thrown when trying to renew a lease that's
+ * expired.
+ */
+export class EtcdLeaseInvalidError extends Error {
+  constructor(leaseID: string) {
+    super(`Lease ${leaseID} is expired or revoked`);
+    Object.setPrototypeOf(this, EtcdLeaseInvalidError.prototype);
+  }
+}
+
 interface IErrorCtor {
   new (message: string): Error;
 }
@@ -69,31 +80,47 @@ interface IErrorCtor {
  * Mapping of GRPC error messages to typed error. GRPC errors are untyped
  * by default and sourced from within a mess of C code.
  */
-const grpcMessageToError: { [message: string]: IErrorCtor } = {
-  'Connect Failed': GRPCConnectFailedError,
-  'Channel Disconnected': GRPCConnectFailedError,
-  'Endpoint read failed': GRPCProtocolError,
-  'Got config after disconnection': GRPCProtocolError,
-  'Failed to create subchannel': GRPCProtocolError,
-  'Attempt to send initial metadata after stream was closed': GRPCProtocolError,
-  'Attempt to send message after stream was closed': GRPCProtocolError,
-  'Last stream closed after sending GOAWAY': GRPCProtocolError,
-  'Failed parsing HTTP/2': GRPCProtocolError,
-  'TCP stream shutting down': GRPCProtocolError,
-  'Secure read failed': GRPCProtocolError,
-  'Handshake read failed': GRPCProtocolError,
-  'Handshake write failed': GRPCProtocolError,
-  'FD shutdown': GRPCInternalError,
-  'Failed to load file': GRPCInternalError,
-  'Unable to configure socket': GRPCInternalError,
-  'Failed to add port to server': GRPCInternalError,
-  'Failed to prepare server socket': GRPCInternalError,
-  'Call batch failed': GRPCInternalError,
-  'Missing :authority or :path': GRPCInternalError,
-  'Cancelled before creating subchannel': GRPCCancelledError,
-  'Pick cancelled': GRPCCancelledError,
-  Disconnected: GRPCCancelledError,
-};
+const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
+  ['Connect Failed', GRPCConnectFailedError],
+  ['Channel Disconnected', GRPCConnectFailedError],
+  ['Endpoint read failed', GRPCProtocolError],
+  ['Got config after disconnection', GRPCProtocolError],
+  ['Failed to create subchannel', GRPCProtocolError],
+  ['Attempt to send initial metadata after stream was closed', GRPCProtocolError],
+  ['Attempt to send message after stream was closed', GRPCProtocolError],
+  ['Last stream closed after sending GOAWAY', GRPCProtocolError],
+  ['Failed parsing HTTP/2', GRPCProtocolError],
+  ['TCP stream shutting down', GRPCProtocolError],
+  ['Secure read failed', GRPCProtocolError],
+  ['Handshake read failed', GRPCProtocolError],
+  ['Handshake write failed', GRPCProtocolError],
+  ['FD shutdown', GRPCInternalError],
+  ['Failed to load file', GRPCInternalError],
+  ['Unable to configure socket', GRPCInternalError],
+  ['Failed to add port to server', GRPCInternalError],
+  ['Failed to prepare server socket', GRPCInternalError],
+  ['Call batch failed', GRPCInternalError],
+  ['Missing :authority or :path', GRPCInternalError],
+  ['Cancelled before creating subchannel', GRPCCancelledError],
+  ['Pick cancelled', GRPCCancelledError],
+  ['Disconnected', GRPCCancelledError],
+]);
+
+function getMatchingGrpcError(err: Error): IErrorCtor | null {
+  for (const [key, value] of grpcMessageToError) {
+    if (typeof key === 'string') {
+      if (err.message.includes(key)) {
+        return value;
+      }
+    } else {
+      if (key.test(err.message)) {
+        return value;
+      }
+    }
+  }
+
+  return null;
+}
 
 function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): string {
   return str.replace(/^Error:/, `${ctor.name}:`);
@@ -108,10 +135,8 @@ export function castGrpcError(err: Error): Error {
     return err; // it looks like it's already some kind of typed error
   }
 
-  let ctor: IErrorCtor = GRPCGenericError;
-  if (grpcMessageToError.hasOwnProperty(err.message)) {
-    ctor = grpcMessageToError[err.message];
-  } else if (err.message.includes('etcdserver:')) {
+  let ctor: IErrorCtor = getMatchingGrpcError(err) || GRPCGenericError;
+  if (err.message.includes('etcdserver:')) {
     ctor = EtcdError;
   }
 
