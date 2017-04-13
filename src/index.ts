@@ -62,6 +62,23 @@ export class Etcd3 {
   }
 
   /**
+   * mock allows you to insert an interface that will be called into instead
+   * of calling out to the "real" service. `unmock` should be called after
+   * mocking is finished.
+   */
+  public mock<T extends RPC.ICallable>(callable: T): T {
+    this.pool.mock(callable);
+    return callable;
+  }
+
+  /**
+   * Removes any previously-inserted mock.
+   */
+  public unmock(): void {
+    return this.pool.unmock();
+  }
+
+  /**
    * Frees resources associated with the client.
    */
   public close() {

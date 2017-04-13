@@ -93,6 +93,7 @@ class Host {
 export class ConnectionPool implements ICallable {
 
   private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
+  private mockImpl: ICallable | null;
 
   constructor(private options: IOptions) {
     if (typeof options.hosts === 'string') {
@@ -106,6 +107,20 @@ export class ConnectionPool implements ICallable {
   }
 
   /**
+   * Sets a mock interface to use instead of hitting real services.
+   */
+  public mock(callable: ICallable) {
+    this.mockImpl = callable;
+  }
+
+  /**
+   * Removes any existing mock.
+   */
+  public unmock() {
+    this.mockImpl = null;
+  }
+
+  /**
    * Tears down all ongoing connections and resoruces.
    */
   public close() {
@@ -116,6 +131,10 @@ export class ConnectionPool implements ICallable {
    * @override
    */
   public exec(service: keyof typeof Services, method: string, payload: any): Promise<any> {
+    if (this.mockImpl) {
+      return this.mockImpl.exec(service, method, payload);
+    }
+
     return this.getConnection(service).then(grpcService => {
       return new Promise((resolve, reject) => {
         grpcService[method](payload, (err: Error, res: any) => {
@@ -143,6 +162,10 @@ export class ConnectionPool implements ICallable {
    * @override
    */
   public getConnection(service: keyof typeof Services): Promise<any> {
+    if (this.mockImpl) {
+      return this.mockImpl.getConnection(service);
+    }
+
     return this.pool.pull().then(client => client.getService(service));
   }
 }

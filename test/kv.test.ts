@@ -30,6 +30,19 @@ describe('connection pool', () => {
     badClient.close();
   });
 
+  it('allows mocking', async () => {
+    const mock = client.mock({
+      exec: sinon.stub(),
+      getConnection: sinon.stub(),
+    });
+
+    mock.exec.resolves({ kvs: [] });
+    expect(await client.get('foo1').string()).to.be.null;
+    expect(mock.exec.calledWith('KV', 'range')).to.be.true;
+    client.unmock();
+    expect(await client.get('foo1').string()).to.equal('bar1');
+  });
+
   describe('get() / getAll()', () => {
     it('lists all values', async () => {
       expect(await client.getAll().strings()).to.containSubset(['bar1', 'bar2', 'bar5']);
