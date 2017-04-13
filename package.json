@@ -2,12 +2,14 @@
   "name": "etcd3",
   "version": "0.1.0",
   "description": "Node client for etcd3",
-  "main": "dist/index.js",
+  "main": "lib/src/index.js",
   "scripts": {
     "test": "npm-run-all --parallel test:lint test:unit",
     "test:unit": "mocha --compilers ts:ts-node/register --timeout 20000 -r test/_setup.ts test/*.test.ts",
     "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
-    "update-proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts"
+    "update-proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
+    "build": "tsc",
+    "prepublish": "tsc"
   },
   "repository": {
     "type": "git",
