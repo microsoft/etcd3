@@ -61,7 +61,7 @@ describe('connection pool', () => {
     });
 
     it('gets keys', async () => {
-      expect(await client.getAll().keys()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
+      expect(await client.getAll().keys().strings()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
     });
 
     it('counts', async () => {
@@ -73,14 +73,16 @@ describe('connection pool', () => {
         .prefix('foo')
         .sort('key', 'asc')
         .limit(2)
-        .keys(),
+        .keys()
+        .strings(),
       ).to.deep.equal(['foo1', 'foo2']);
 
       expect(await client.getAll()
         .prefix('foo')
         .sort('key', 'desc')
         .limit(2)
-        .keys(),
+        .keys()
+        .strings(),
       ).to.deep.equal(['foo3', 'foo2']);
     });
   });
@@ -93,7 +95,7 @@ describe('connection pool', () => {
 
     it('deletes prefix', async () => {
       await client.delete().prefix('foo');
-      expect(await client.getAll().keys()).to.deep.equal(['baz']);
+      expect(await client.getAll().keys().strings()).to.deep.equal(['baz']);
     });
 
     it('gets previous', async () => {

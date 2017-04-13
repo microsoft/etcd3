@@ -133,8 +133,8 @@ export class SingleRangeBuilder extends RangeBuilder {
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public string(): Promise<string | null> {
-    return this.exec().then(res => res.kvs.length === 0 ? null : res.kvs[0].value.toString());
+  public string(encoding: string = 'utf8'): Promise<string | null> {
+    return this.exec().then(res => res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding));
   }
 
   /**
@@ -213,26 +213,28 @@ export class MultiRangeBuilder extends RangeBuilder {
   }
 
   /**
-   * keys returns the keys in etcd that match the query.
+   * Keys instructs the query to get only the matching keys, not values.
+   * json(), strings(), and buffers() will return the keys instead of values
+   * when this is called.
    */
-  public keys(): Promise<string[]> {
+  public keys(): this {
     this.request.keys_only = true;
-    return this.exec().then(res => res.kvs.map(kv => kv.key.toString()));
+    return this;
   }
 
   /**
    * Runs the built request and parses the returned keys as JSON.
    */
   public json(): Promise<any> {
-    return this.exec().then(res => res.kvs.map(kv => JSON.stringify(kv.value)));
+    return this.buffers().then(res => res.map(value => JSON.stringify(value)));
   }
 
   /**
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public strings(): Promise<string[]> {
-    return this.exec().then(res => res.kvs.map(kv => kv.value.toString()));
+  public strings(encoding: string = 'utf8'): Promise<string[]> {
+    return this.buffers().then(res => res.map(value => value.toString(encoding)));
   }
 
   /**
@@ -240,7 +242,7 @@ export class MultiRangeBuilder extends RangeBuilder {
    * buffers.
    */
   public buffers(): Promise<Buffer[]> {
-    return this.exec().then(res => res.kvs.map(kv => kv.value));
+    return this.exec().then(res => res.kvs.map(kv => this.request.keys_only ? kv.key : kv.value));
   }
 
   /**
