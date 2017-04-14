@@ -24,6 +24,12 @@ client.put('foo').value('bar')
   .then(() => client.delete().all());
 ```
 
+### API Documentation
+
+Our [TypeDoc docs are available here](https://watchbeam.github.io/etcd3/classes/index_.etcd3.html).
+
+Our [test cases](https://github.com/WatchBeam/etcd3/blob/master/test/kv.test.ts) are also quite readable.
+
 ### Contributing
 
 Running tests for this module requires running an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the `ETCD_ADDR` environment variable, like `export ETCD_ADDR=localhost:12345`.
