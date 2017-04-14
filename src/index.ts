@@ -1,6 +1,7 @@
 import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
 import { Lease } from './lease';
+import { Lock } from './lock';
 import { IOptions } from './options';
 import * as RPC from './rpc';
 
@@ -77,12 +78,20 @@ export class Etcd3 {
   }
 
   /**
+   * `lock()` is a helper to provide distributed locking capability. See
+   * the documentation on the Lock class for more information and examples.
+   */
+  public lock(key: string | Buffer): Lock {
+    return new Lock(this.pool, key);
+  }
+
+  /**
    * `if()` starts a new etcd transaction, which allows you to execute complex
    * statements atomically. See documentation on the ComparatorBuilder for
    * more information.
    */
   public if(key: string | Buffer, column: keyof typeof Builder.compareTarget,
-      cmp: keyof typeof Builder.comparator, value: string | Buffer): Builder.ComparatorBuilder {
+      cmp: keyof typeof Builder.comparator, value: string | Buffer | number): Builder.ComparatorBuilder {
     return new Builder.ComparatorBuilder(this.kv).and(key, column, cmp, value);
   }
 

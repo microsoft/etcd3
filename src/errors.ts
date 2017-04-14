@@ -72,6 +72,16 @@ export class EtcdLeaseInvalidError extends Error {
   }
 }
 
+/**
+ * EtcdLockFailedError is thrown when we fail to aquire a lock.
+ */
+export class EtcdLockFailedError extends Error {
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, EtcdLockFailedError.prototype);
+  }
+}
+
 interface IErrorCtor {
   new (message: string): Error;
 }

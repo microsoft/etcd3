@@ -485,7 +485,7 @@ export class ComparatorBuilder {
    * Adds a new clause to the transaction.
    */
   public and(key: string | Buffer, column: keyof typeof compareTarget,
-      cmp: keyof typeof comparator, value: string | Buffer): this {
+      cmp: keyof typeof comparator, value: string | Buffer | number): this {
     assertWithin(compareTarget, column, 'comparison target in client.and(...)');
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
     this.request.compare = this.request.compare || [];
@@ -493,7 +493,7 @@ export class ComparatorBuilder {
       key: toBuffer(key),
       result: comparator[cmp],
       target: compareTarget[column].value,
-      [compareTarget[column].key]: toBuffer(value),
+      [compareTarget[column].key]: typeof value === 'number' ? value : toBuffer(value),
     });
     return this;
   }
