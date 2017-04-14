@@ -1,11 +1,11 @@
+import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
-import { DeleteBuilder, MultiRangeBuilder, PutBuilder, SingleRangeBuilder } from './kv-builder';
 import { Lease } from './lease';
 import { IOptions } from './options';
 import * as RPC from './rpc';
 
 export * from './errors';
-export * from './kv-builder';
+export * from './builder';
 export * from './lease';
 export * from './rpc';
 
@@ -21,7 +21,7 @@ export * from './rpc';
  * console.log('foo is:', await client.get('foo').string());
  *
  * const keys = await client.getAll().prefix('f').strings();
- * console.log('all keys starting with "f": keys);
+ * console.log('all keys starting with "f"': keys);
  *
  * await client.delete().all();
  * ```
@@ -42,63 +42,48 @@ export class Etcd3 {
   /**
    * `.get()` starts a query to look up a single key from etcd.
    */
-  public get(key: string): SingleRangeBuilder {
-    return new SingleRangeBuilder(this.kv, key);
+  public get(key: string): Builder.SingleRangeBuilder {
+    return new Builder.SingleRangeBuilder(this.kv, key);
   }
 
   /**
    * `.getAll()` starts a query to look up multiple keys from etcd.
    */
-  public getAll(): MultiRangeBuilder {
-    return new MultiRangeBuilder(this.kv);
+  public getAll(): Builder.MultiRangeBuilder {
+    return new Builder.MultiRangeBuilder(this.kv);
   }
 
   /**
    * `.put()` starts making a put request against etcd.
    */
-  public put(key: string | Buffer): PutBuilder {
-    return new PutBuilder(this.kv, key);
+  public put(key: string | Buffer): Builder.PutBuilder {
+    return new Builder.PutBuilder(this.kv, key);
   }
 
   /**
    * `.delete()` starts making a delete request against etcd.
    */
-  public delete(): DeleteBuilder {
-    return new DeleteBuilder(this.kv);
+  public delete(): Builder.DeleteBuilder {
+    return new Builder.DeleteBuilder(this.kv);
   }
 
   /**
    * `lease()` grants and returns a new Lease instance. The Lease is
-   * automatically kept alive for you until it is revoked.
-   *
-   * Leases are great for things like service discovery:
-   *
-   * ```
-   * const os = require('os');
-   * const { Etcd3 } = require('etcd3');
-   * const client = new Etcd3();
-   *
-   * const hostPrefix = 'available-hosts/';
-   * function grantLease() {
-   *   const lease = client.lease();
-   *
-   *   lease.on('lost', err => {
-   *     console.log('We lost our lease as a result of this error:', err);
-   *     console.log('Trying to re-grant it...');
-   *     grantLease();
-   *   })
-   *
-   *   await lease.put(hostPrefix + os.hostname()).value('');
-   * }
-   *
-   * function getAvailableHosts() {
-   *   const keys = await client.get().keys().strings();
-   *   return keys.map(key => key.slice(hostPrefix.length));
-   * }
-   * ```
+   * automatically kept alive for you until it is revoked. See the
+   * documentation on the Lease class for some examples.
    */
   public lease(ttl: number): Lease {
     return new Lease(this.pool, ttl);
+  }
+
+  /**
+   * `if()` starts a new etcd transaction, which allows you to execute complex
+   * statements atomically. See documentation on the ComparatorBuilder for
+   * more information.
+   */
+  public if(key: string | Buffer, column: keyof typeof Builder.compareTarget,
+      cmp: keyof typeof Builder.comparator, value: string | Buffer): Builder.ComparatorBuilder {
+    return new Builder.ComparatorBuilder(this.kv).and(key, column, cmp, value);
   }
 
   /**

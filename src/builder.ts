@@ -35,6 +35,68 @@ export function prefixEnd(key: Buffer): Buffer {
   return zeroKey;
 }
 
+export const sortMap = {
+  key: RPC.SortTarget.KEY,
+  version: RPC.SortTarget.VERSION,
+  createdAt: RPC.SortTarget.CREATE,
+  modifiedAt: RPC.SortTarget.MOD,
+  value: RPC.SortTarget.VALUE,
+};
+
+/**
+ * Comparators can be passed to various operations in the ComparatorBuilder.
+ */
+export const comparator = {
+  '==': RPC.CompareResult.EQUAL,
+  '===': RPC.CompareResult.EQUAL,
+  '>': RPC.CompareResult.GREATER,
+  '<': RPC.CompareResult.LESS,
+  '!=': RPC.CompareResult.NOT_EQUAL,
+  '!==': RPC.CompareResult.NOT_EQUAL,
+};
+
+export interface ICompareTarget {
+  value: RPC.CompareTarget;
+  key: keyof RPC.ICompare;
+}
+
+export interface IOperation {
+  op(): RPC.IRequestOp;
+}
+
+/**
+ * compareTarget are the types of things that can be compared against.
+ */
+export const compareTarget = {
+  value: {
+    value: RPC.CompareTarget.VALUE,
+    key: 'value',
+  },
+  version: {
+    value: RPC.CompareTarget.VERSION,
+    key: 'value',
+  },
+  createdAt: {
+    value: RPC.CompareTarget.CREATE,
+    key: 'create_revision',
+  },
+  modifiedAt: {
+    value: RPC.CompareTarget.MOD,
+    key: 'mod_revision',
+  },
+};
+
+/**
+ * assertWithin throws a helpful error message if the value provided isn't
+ * a key in the given map.
+ */
+function assertWithin<T>(map: T, value: keyof T, thing: string) {
+  if (!(value in map)) {
+    const keys = Object.keys(map).join('" "');
+    throw new Error(`Unexpected "${value}" in ${thing}. Possible values are: "${keys}"`);
+  }
+}
+
 /**
  * Converts the input to a buffer, if it is not already.
  */
@@ -46,20 +108,12 @@ function toBuffer(input: string | Buffer): Buffer {
   return Buffer.from(input);
 }
 
-export const sortMap = {
-  key: RPC.SortTarget.KEY,
-  version: RPC.SortTarget.VERSION,
-  createdAt: RPC.SortTarget.CREATE,
-  modifiedAt: RPC.SortTarget.MOD,
-  value: RPC.SortTarget.VALUE,
-};
-
 /**
  * RangeBuilder is a primitive builder for range queries on the kv store.
  * It's extended by the Single and MultiRangeBuilders, which contain
  * the concrete methods to execute the built query.
  */
-export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
+export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> implements IOperation {
   protected request: RPC.IRangeRequest = {};
 
   /**
@@ -108,6 +162,13 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> {
   public maxCreateRevision(maxCreateRevision: number | string): this {
     this.request.max_create_revision = maxCreateRevision;
     return this;
+  }
+
+  /**
+   * Returns the request op for this builder, used in transactions.
+   */
+  public op(): RPC.IRequestOp {
+    return { request_range: this.request };
   }
 }
 
@@ -199,6 +260,7 @@ export class MultiRangeBuilder extends RangeBuilder {
    * Sort specifies how the result should be sorted.
    */
   public sort(target: keyof typeof sortMap, order: 'asc' | 'desc'): this {
+    assertWithin(sortMap, target, 'sort order in client.get().sort(...)');
     this.request.sort_target = sortMap[target];
     this.request.sort_order = order.toLowerCase() === 'asc' ? RPC.SortOrder.ASCEND : RPC.SortOrder.DESCEND;
     return this;
@@ -312,6 +374,13 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   public exec(): Promise<RPC.IDeleteRangeResponse> {
     return this.kv.deleteRange(this.request);
   }
+
+  /**
+   * Returns the request op for this builder, used in transactions.
+   */
+  public op(): RPC.IRequestOp {
+    return { request_delete_range: this.request };
+  }
 }
 
 /**
@@ -375,5 +444,82 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    */
   public exec(): Promise<RPC.IPutResponse> {
     return this.kv.put(this.request);
+  }
+
+  /**
+   * Returns the request op for this builder, used in transactions.
+   */
+  public op(): RPC.IRequestOp {
+    return { request_put: this.request };
+  }
+}
+
+/**
+ * ComparatorBuilder builds a comparison between keys. This can be used
+ * for atomic operations in etcd, such as locking:
+ *
+ * ```
+ * const id = uuid.v4();
+ *
+ * function lock() {
+ *   return client.if('my_lock', 'createdAt', '==', 0)
+ *     .then(client.put('my_lock').value(id))
+ *     .else(client.get('my_lock'))
+ *     .commit()
+ *     .then(result => console.log(result.succeeded === id ? 'lock acquired' : 'already locked'));
+ * }
+ *
+ * function unlock() {
+ *   return client.if('my_lock', 'value', '==', 0)
+ *     .then(client.delete().key('my_lock'))
+ *     .commit();
+ * }
+ * ```
+ */
+export class ComparatorBuilder {
+  private request: RPC.ITxnRequest = {};
+
+  constructor(private kv: RPC.KVClient) {}
+
+  /**
+   * Adds a new clause to the transaction.
+   */
+  public and(key: string | Buffer, column: keyof typeof compareTarget,
+      cmp: keyof typeof comparator, value: string | Buffer): this {
+    assertWithin(compareTarget, column, 'comparison target in client.and(...)');
+    assertWithin(comparator, cmp, 'comparator in client.and(...)');
+    this.request.compare = this.request.compare || [];
+    this.request.compare.push({
+      key: toBuffer(key),
+      result: comparator[cmp],
+      target: compareTarget[column].value,
+      [compareTarget[column].key]: toBuffer(value),
+    });
+    return this;
+  }
+
+  /**
+   * Adds one or more consequent clauses to be executed if the comparison
+   * is truthy.
+   */
+  public then(...clauses: IOperation[]): this {
+    this.request.success = clauses.map(clause => clause.op());
+    return this;
+  }
+
+  /**
+   * Adds one or more consequent clauses to be executed if the comparison
+   * is falsey.
+   */
+  public else(...clauses: IOperation[]): this {
+    this.request.failure = clauses.map(clause => clause.op());
+    return this;
+  }
+
+  /**
+   * Runs the generated transaction and returns its result.
+   */
+  public commit(): Promise<RPC.ITxnResponse> {
+    return this.kv.txn(this.request);
   }
 }
