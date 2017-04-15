@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 
+import { PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
 import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCConnectFailedError } from './errors';
-import { PutBuilder } from './kv-builder';
 import * as RPC from './rpc';
 
 function throwIfError<T>(value: T | Error): T {
@@ -48,6 +48,32 @@ const enum State {
 
 /**
  * Lease is a high-level manager for etcd leases.
+ * Leases are great for things like service discovery:
+ *
+ * ```
+ * const os = require('os');
+ * const { Etcd3 } = require('etcd3');
+ * const client = new Etcd3();
+ *
+ * const hostPrefix = 'available-hosts/';
+ *
+ * function grantLease() {
+ *   const lease = client.lease();
+ *
+ *   lease.on('lost', err => {
+ *     console.log('We lost our lease as a result of this error:', err);
+ *     console.log('Trying to re-grant it...');
+ *     grantLease();
+ *   })
+ *
+ *   await lease.put(hostPrefix + os.hostname()).value('');
+ * }
+ *
+ * function getAvailableHosts() {
+ *   const keys = await client.get().keys().strings();
+ *   return keys.map(key => key.slice(hostPrefix.length));
+ * }
+ * ```
  */
 export class Lease extends EventEmitter {
 

@@ -4,6 +4,7 @@ import * as sinon from 'sinon';
 import {
   Etcd3,
   EtcdLeaseInvalidError,
+  EtcdLockFailedError,
   GRPCConnectFailedError,
   Lease,
 } from '../src';
@@ -225,6 +226,67 @@ describe('connection pool', () => {
         clock.tick(20000);
         expect(await onEvent('lost')).to.be.an.instanceof(EtcdLeaseInvalidError);
         expect(lease.revoked()).to.be.true;
+      });
+    });
+
+    describe('if()', () => {
+      it('runs a simple if', async () => {
+        await client.if('foo1', 'value', '==', 'bar1')
+          .then(client.put('foo1').value('bar2'))
+          .commit();
+
+        expect(await client.get('foo1').string()).to.equal('bar2');
+      });
+
+      it('runs consequents', async () => {
+        await client.if('foo1', 'value', '==', 'bar1')
+          .then(client.put('foo1').value('bar2'))
+          .else(client.put('foo1').value('bar3'))
+          .commit();
+
+        expect(await client.get('foo1').string()).to.equal('bar2');
+      });
+
+      it('runs multiple clauses and consequents', async () => {
+        const result = await client.if('foo1', 'value', '==', 'bar1')
+          .and('foo2', 'value', '==', 'wut')
+          .then(client.put('foo1').value('bar2'))
+          .else(client.put('foo1').value('bar3'), client.get('foo2'))
+          .commit();
+
+        expect(result.responses[1].response_range.kvs[0].value.toString())
+          .to.equal('bar2');
+        expect(await client.get('foo1').string()).to.equal('bar3');
+      });
+    });
+
+    describe('lock()', () => {
+      const assertCantLock = () => {
+        return client.lock('resource')
+          .acquire()
+          .then(() => { throw new Error('expected to throw'); })
+          .catch(err => expect(err).to.be.an.instanceof(EtcdLockFailedError));
+      };
+
+      const assertAbleToLock = async () => {
+        const lock = client.lock('resource');
+        await lock.acquire();
+        await lock.release();
+      };
+
+      it('locks exclusively around a resource', async () => {
+        const lock1 = client.lock('resource');
+        await lock1.acquire();
+
+        await assertCantLock();
+        await lock1.release();
+
+        await assertAbleToLock();
+      });
+
+      it('provides locking around functions', async () => {
+        await client.lock('resource').do(assertCantLock);
+        await assertAbleToLock();
       });
     });
   });
