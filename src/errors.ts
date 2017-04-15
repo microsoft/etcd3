@@ -3,63 +3,33 @@
  * A GRPCGenericError is rejected via the connection when some error occurs
  * that we can't be more specific about.
  */
-export class GRPCGenericError extends Error {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, GRPCGenericError.prototype);
-  }
-}
+export class GRPCGenericError extends Error {}
 
 /**
  * GRPCConnectFailed is thrown when connecting to GRPC fails.
  */
-export class GRPCConnectFailedError extends GRPCGenericError {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, GRPCConnectFailedError.prototype);
-  }
-}
+export class GRPCConnectFailedError extends GRPCGenericError {}
 
 /**
  * GRPCProtocolError is thrown when a protocol error occurs on the other end,
  * indicating that the external implementation is incorrect or incompatible.
  */
-export class GRPCProtocolError extends GRPCGenericError {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, GRPCProtocolError.prototype);
-  }
-}
+export class GRPCProtocolError extends GRPCGenericError {}
 
 /**
  * GRPCInternalError is thrown when a internal error occurs on either end.
  */
-export class GRPCInternalError extends GRPCGenericError {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, GRPCInternalError.prototype);
-  }
-}
+export class GRPCInternalError extends GRPCGenericError {}
 
 /**
  * GRPCCancelledError is emitted when an ongoing call is cancelled.
  */
-export class GRPCCancelledError extends GRPCGenericError {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, GRPCCancelledError.prototype);
-  }
-}
+export class GRPCCancelledError extends GRPCGenericError {}
 
 /**
  * EtcdError is an application error returned by etcd.
  */
-export class EtcdError extends Error {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, EtcdError.prototype);
-  }
-}
+export class EtcdError extends Error {}
 
 /**
  * EtcdLeaseTimeoutError is thrown when trying to renew a lease that's
@@ -68,19 +38,13 @@ export class EtcdError extends Error {
 export class EtcdLeaseInvalidError extends Error {
   constructor(leaseID: string) {
     super(`Lease ${leaseID} is expired or revoked`);
-    Object.setPrototypeOf(this, EtcdLeaseInvalidError.prototype);
   }
 }
 
 /**
  * EtcdLockFailedError is thrown when we fail to aquire a lock.
  */
-export class EtcdLockFailedError extends Error {
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, EtcdLockFailedError.prototype);
-  }
-}
+export class EtcdLockFailedError extends Error {}
 
 interface IErrorCtor {
   new (message: string): Error;
