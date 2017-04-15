@@ -488,6 +488,11 @@ export class ComparatorBuilder {
       cmp: keyof typeof comparator, value: string | Buffer | number): this {
     assertWithin(compareTarget, column, 'comparison target in client.and(...)');
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
+
+    if (column === 'value') {
+      value = toBuffer(<string | Buffer> value);
+    }
+
     this.request.compare = this.request.compare || [];
     this.request.compare.push({
       key: toBuffer(key),
