@@ -4,6 +4,7 @@ import * as sinon from 'sinon';
 import {
   Etcd3,
   EtcdLeaseInvalidError,
+  EtcdLockFailedError,
   GRPCConnectFailedError,
   Lease,
 } from '../src';
@@ -256,6 +257,36 @@ describe('connection pool', () => {
         expect(result.responses[1].response_range.kvs[0].value.toString())
           .to.equal('bar2');
         expect(await client.get('foo1').string()).to.equal('bar3');
+      });
+    });
+
+    describe('lock()', () => {
+      const assertCantLock = () => {
+        return client.lock('resource')
+          .acquire()
+          .then(() => { throw new Error('expected to throw'); })
+          .catch(err => expect(err).to.be.an.instanceof(EtcdLockFailedError));
+      };
+
+      const assertAbleToLock = async () => {
+        const lock = client.lock('resource');
+        await lock.acquire();
+        await lock.release();
+      };
+
+      it('locks exclusively around a resource', async () => {
+        const lock1 = client.lock('resource');
+        await lock1.acquire();
+
+        await assertCantLock();
+        await lock1.release();
+
+        await assertAbleToLock();
+      });
+
+      it('provides locking around functions', async () => {
+        await client.lock('resource').do(assertCantLock);
+        await assertAbleToLock();
       });
     });
   });
