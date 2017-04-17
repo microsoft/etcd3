@@ -75,6 +75,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcderror.html" class="tsd-kind-icon">Etcd<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdleaseinvaliderror.html" class="tsd-kind-icon">Etcd<wbr>Lease<wbr>Invalid<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdlockfailederror.html" class="tsd-kind-icon">Etcd<wbr>Lock<wbr>Failed<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpccancellederror.html" class="tsd-kind-icon">GRPCCancelled<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpcconnectfailederror.html" class="tsd-kind-icon">GRPCConnect<wbr>Failed<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpcgenericerror.html" class="tsd-kind-icon">GRPCGeneric<wbr>Error</a></li>
@@ -113,7 +114,7 @@
 					<div class="tsd-signature tsd-kind-icon">grpc<wbr>Message<wbr>ToError<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">RegExp</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/errors_.ierrorctor.html" class="tsd-signature-type">IErrorCtor</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;string | RegExp, IErrorCtor&gt;([[&#x27;Connect Failed&#x27;, GRPCConnectFailedError],[&#x27;Channel Disconnected&#x27;, GRPCConnectFailedError],[&#x27;Endpoint read failed&#x27;, GRPCProtocolError],[&#x27;Got config after disconnection&#x27;, GRPCProtocolError],[&#x27;Failed to create subchannel&#x27;, GRPCProtocolError],[&#x27;Attempt to send initial metadata after stream was closed&#x27;, GRPCProtocolError],[&#x27;Attempt to send message after stream was closed&#x27;, GRPCProtocolError],[&#x27;Last stream closed after sending GOAWAY&#x27;, GRPCProtocolError],[&#x27;Failed parsing HTTP/2&#x27;, GRPCProtocolError],[&#x27;TCP stream shutting down&#x27;, GRPCProtocolError],[&#x27;Secure read failed&#x27;, GRPCProtocolError],[&#x27;Handshake read failed&#x27;, GRPCProtocolError],[&#x27;Handshake write failed&#x27;, GRPCProtocolError],[&#x27;FD shutdown&#x27;, GRPCInternalError],[&#x27;Failed to load file&#x27;, GRPCInternalError],[&#x27;Unable to configure socket&#x27;, GRPCInternalError],[&#x27;Failed to add port to server&#x27;, GRPCInternalError],[&#x27;Failed to prepare server socket&#x27;, GRPCInternalError],[&#x27;Call batch failed&#x27;, GRPCInternalError],[&#x27;Missing :authority or :path&#x27;, GRPCInternalError],[&#x27;Cancelled before creating subchannel&#x27;, GRPCCancelledError],[&#x27;Pick cancelled&#x27;, GRPCCancelledError],[&#x27;Disconnected&#x27;, GRPCCancelledError],])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/errors.ts#L83">errors.ts:83</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L57">errors.ts:57</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -136,7 +137,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/errors.ts#L133">errors.ts:133</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L107">errors.ts:107</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -165,7 +166,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/errors.ts#L109">errors.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L83">errors.ts:83</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -191,7 +192,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/errors.ts#L125">errors.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L99">errors.ts:99</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -224,6 +225,9 @@
 						<a href="backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="builder_.html">"builder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
@@ -233,10 +237,10 @@
 						<a href="index_.html">"index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="kv_builder_.html">"kv-<wbr>builder"</a>
+						<a href="lease_.html">"lease"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="lease_.html">"lease"</a>
+						<a href="lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="options_.html">"options"</a>
@@ -259,6 +263,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/errors_.etcdleaseinvaliderror.html" class="tsd-kind-icon">Etcd<wbr>Lease<wbr>Invalid<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdlockfailederror.html" class="tsd-kind-icon">Etcd<wbr>Lock<wbr>Failed<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/errors_.grpccancellederror.html" class="tsd-kind-icon">GRPCCancelled<wbr>Error</a>

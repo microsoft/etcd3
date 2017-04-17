@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>IAuthUserGetResponse | etcd3</title>
+	<title>EtcdLockFailedError | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,24 +56,36 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/rpc_.html">&quot;rpc&quot;</a>
+					<a href="../modules/errors_.html">&quot;errors&quot;</a>
 				</li>
 				<li>
-					<a href="rpc_.iauthusergetresponse.html">IAuthUserGetResponse</a>
+					<a href="errors_.etcdlockfailederror.html">EtcdLockFailedError</a>
 				</li>
 			</ul>
-			<h1>Interface IAuthUserGetResponse</h1>
+			<h1>Class EtcdLockFailedError</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>EtcdLockFailedError is thrown when we fail to aquire a lock.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">IAuthUserGetResponse</span>
+						<span class="tsd-signature-type">Error</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">EtcdLockFailedError</span>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -84,8 +96,10 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.iauthusergetresponse.html#header" class="tsd-kind-icon">header</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.iauthusergetresponse.html#roles" class="tsd-kind-icon">roles</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="errors_.etcdlockfailederror.html#error" class="tsd-kind-icon">Error</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.etcdlockfailederror.html#message" class="tsd-kind-icon">message</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.etcdlockfailederror.html#name" class="tsd-kind-icon">name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static"><a href="errors_.etcdlockfailederror.html#stack" class="tsd-kind-icon">stack</a></li>
 							</ul>
 						</section>
 					</div>
@@ -93,23 +107,47 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="header" class="tsd-anchor"></a>
-					<h3>header</h3>
-					<div class="tsd-signature tsd-kind-icon">header<span class="tsd-signature-symbol">:</span> <a href="rpc_.iresponseheader.html" class="tsd-signature-type">IResponseHeader</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="error" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> Error</h3>
+					<div class="tsd-signature tsd-kind-icon">Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ErrorConstructor</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L961">rpc.ts:961</a></li>
+							<li>Defined in /Users/copeet/Github/etcd3/node_modules/typescript/lib/lib.es5.d.ts:917</li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="roles" class="tsd-anchor"></a>
-					<h3>roles</h3>
-					<div class="tsd-signature tsd-kind-icon">roles<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="message" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> message</h3>
+					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
+						<p>Inherited from Error.message</p>
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L962">rpc.ts:962</a></li>
+							<li>Defined in /Users/copeet/Github/etcd3/node_modules/typescript/lib/lib.es5.d.ts:907</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="name" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> name</h3>
+					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from Error.name</p>
+						<ul>
+							<li>Defined in /Users/copeet/Github/etcd3/node_modules/typescript/lib/lib.es5.d.ts:906</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
+					<a name="stack" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagOptional">Optional</span> stack</h3>
+					<div class="tsd-signature tsd-kind-icon">stack<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from Error.stack</p>
+						<p>Overrides Error.stack</p>
+						<ul>
+							<li>Defined in /Users/copeet/Github/etcd3/node_modules/typescript/lib/lib.es5.d.ts:908</li>
 						</ul>
 					</aside>
 				</section>
@@ -133,7 +171,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/errors_.html">"errors"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -148,7 +186,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -161,21 +199,63 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.etcderror.html" class="tsd-kind-icon">Etcd<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.etcdleaseinvaliderror.html" class="tsd-kind-icon">Etcd<wbr>Lease<wbr>Invalid<wbr>Error</a>
+					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="rpc_.iauthusergetresponse.html" class="tsd-kind-icon">IAuth<wbr>User<wbr>Get<wbr>Response</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.etcdlockfailederror.html" class="tsd-kind-icon">Etcd<wbr>Lock<wbr>Failed<wbr>Error</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="rpc_.iauthusergetresponse.html#header" class="tsd-kind-icon">header</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="errors_.etcdlockfailederror.html#error" class="tsd-kind-icon">Error</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="rpc_.iauthusergetresponse.html#roles" class="tsd-kind-icon">roles</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdlockfailederror.html#message" class="tsd-kind-icon">message</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdlockfailederror.html#name" class="tsd-kind-icon">name</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdlockfailederror.html#stack" class="tsd-kind-icon">stack</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.grpccancellederror.html" class="tsd-kind-icon">GRPCCancelled<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.grpcconnectfailederror.html" class="tsd-kind-icon">GRPCConnect<wbr>Failed<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.grpcgenericerror.html" class="tsd-kind-icon">GRPCGeneric<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.grpcinternalerror.html" class="tsd-kind-icon">GRPCInternal<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="errors_.grpcprotocolerror.html" class="tsd-kind-icon">GRPCProtocol<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/errors_.ierrorctor.html" class="tsd-kind-icon">IError<wbr>Ctor</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/errors_.html#grpcmessagetoerror" class="tsd-kind-icon">grpc<wbr>Message<wbr>ToError</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/errors_.html#castgrpcerror" class="tsd-kind-icon">cast<wbr>Grpc<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/errors_.html#getmatchinggrpcerror" class="tsd-kind-icon">get<wbr>Matching<wbr>Grpc<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/errors_.html#rewriteerrorname" class="tsd-kind-icon">rewrite<wbr>Error<wbr>Name</a>
+					</li>
 				</ul>
 			</nav>
 		</div>

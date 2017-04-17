@@ -75,16 +75,16 @@
 						<p>Etcd3 is a high-level interface for interacting and calling etcd endpoints.
 						It also provides several lower-level clients for directly calling methods.</p>
 					</div>
-					<pre><code><span class="hljs-keyword">const</span> <span class="hljs-comment">{ Etcd3 }</span> = <span class="hljs-keyword">require</span>(<span class="hljs-string">'etcd3'</span>);
+					<pre><code><span class="hljs-keyword">const</span> { Etcd3 } = require(<span class="hljs-string">'etcd3'</span>);
 <span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
 
-<span class="hljs-keyword">await</span> client.put(<span class="hljs-string">'foo'</span>).value(<span class="hljs-string">'bar'</span>);
-console.log(<span class="hljs-string">'foo is:'</span>, <span class="hljs-keyword">await</span> client.get(<span class="hljs-string">'foo'</span>).string());
+<span class="hljs-keyword">await</span> client.put(<span class="hljs-string">'foo'</span>).<span class="hljs-keyword">value</span>(<span class="hljs-string">'bar'</span>);
+console.log(<span class="hljs-string">'foo is:'</span>, <span class="hljs-keyword">await</span> client.<span class="hljs-keyword">get</span>(<span class="hljs-string">'foo'</span>).<span class="hljs-keyword">string</span>());
 
 <span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">await</span> client.getAll().prefix(<span class="hljs-string">'f'</span>).strings();
-console.log(<span class="hljs-string">'all keys starting with "f": keys);
+console.log(<span class="hljs-string">'all keys starting with "f"'</span>: keys);
 
-await client.delete().all();</span>
+<span class="hljs-keyword">await</span> client.delete().all();
 </code></pre>
 				</div>
 			</section>
@@ -124,7 +124,9 @@ await client.delete().all();</span>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#delete" class="tsd-kind-icon">delete</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#get" class="tsd-kind-icon">get</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#getall" class="tsd-kind-icon">get<wbr>All</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#if" class="tsd-kind-icon">if</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#lease" class="tsd-kind-icon">lease</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#lock" class="tsd-kind-icon">lock</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="index_.etcd3.html#mock" class="tsd-kind-icon">mock</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#put" class="tsd-kind-icon">put</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="index_.etcd3.html#unmock" class="tsd-kind-icon">unmock</a></li>
@@ -145,7 +147,7 @@ await client.delete().all();</span>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L38">index.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L39">index.ts:39</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -167,7 +169,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">auth<span class="tsd-signature-symbol">:</span> <a href="rpc_.authclient.html" class="tsd-signature-type">AuthClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.AuthClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L35">index.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L36">index.ts:36</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -177,7 +179,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">cluster<span class="tsd-signature-symbol">:</span> <a href="rpc_.clusterclient.html" class="tsd-signature-type">ClusterClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.ClusterClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L38">index.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L39">index.ts:39</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -187,7 +189,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">kv<span class="tsd-signature-symbol">:</span> <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.KVClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L33">index.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L34">index.ts:34</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -197,7 +199,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">lease<wbr>Client<span class="tsd-signature-symbol">:</span> <a href="rpc_.leaseclient.html" class="tsd-signature-type">LeaseClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.LeaseClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L34">index.ts:34</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L35">index.ts:35</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -207,7 +209,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">maintenance<span class="tsd-signature-symbol">:</span> <a href="rpc_.maintenanceclient.html" class="tsd-signature-type">MaintenanceClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.MaintenanceClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L36">index.ts:36</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L37">index.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -217,7 +219,7 @@ await client.delete().all();</span>
 					<div class="tsd-signature tsd-kind-icon">watch<span class="tsd-signature-symbol">:</span> <a href="rpc_.watchclient.html" class="tsd-signature-type">WatchClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.WatchClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L37">index.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L38">index.ts:38</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -234,7 +236,7 @@ await client.delete().all();</span>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L140">index.ts:140</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L134">index.ts:134</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -250,13 +252,13 @@ await client.delete().all();</span>
 					<a name="delete" class="tsd-anchor"></a>
 					<h3>delete</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.deletebuilder.html" class="tsd-signature-type">DeleteBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">delete<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.deletebuilder.html" class="tsd-signature-type">DeleteBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L66">index.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L67">index.ts:67</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -264,7 +266,7 @@ await client.delete().all();</span>
 									<p><code>.delete()</code> starts making a delete request against etcd.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.deletebuilder.html" class="tsd-signature-type">DeleteBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.deletebuilder.html" class="tsd-signature-type">DeleteBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -272,13 +274,13 @@ await client.delete().all();</span>
 					<a name="get" class="tsd-anchor"></a>
 					<h3>get</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L45">index.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L46">index.ts:46</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -292,7 +294,7 @@ await client.delete().all();</span>
 									<h5>key: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -300,13 +302,13 @@ await client.delete().all();</span>
 					<a name="getall" class="tsd-anchor"></a>
 					<h3>get<wbr>All</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L52">index.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L53">index.ts:53</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -314,7 +316,46 @@ await client.delete().all();</span>
 									<p><code>.getAll()</code> starts a query to look up multiple keys from etcd.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="if" class="tsd-anchor"></a>
+					<h3>if</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">if<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, column<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span>, cmp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.comparatorbuilder.html" class="tsd-signature-type">ComparatorBuilder</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L93">index.ts:93</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p><code>if()</code> starts a new etcd transaction, which allows you to execute complex
+										statements atomically. See documentation on the ComparatorBuilder for
+									more information.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li>
+									<h5>column: <span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span></h5>
+								</li>
+								<li>
+									<h5>cmp: <span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span></h5>
+								</li>
+								<li>
+									<h5>value: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.comparatorbuilder.html" class="tsd-signature-type">ComparatorBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -328,37 +369,15 @@ await client.delete().all();</span>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L100">index.ts:100</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L76">index.ts:76</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p><code>lease()</code> grants and returns a new Lease instance. The Lease is
-									automatically kept alive for you until it is revoked.</p>
+										automatically kept alive for you until it is revoked. See the
+									documentation on the Lease class for some examples.</p>
 								</div>
-								<p>Leases are great for things like service discovery:</p>
-								<pre><code><span class="hljs-keyword">const</span> os = <span class="hljs-built_in">require</span>(<span class="hljs-string">'os'</span>);
-<span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'etcd3'</span>);
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
-
-<span class="hljs-keyword">const</span> hostPrefix = <span class="hljs-string">'available-hosts/'</span>;
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">grantLease</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">const</span> lease = client.lease();
-
-  lease.on(<span class="hljs-string">'lost'</span>, err =&gt; {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'We lost our lease as a result of this error:'</span>, err);
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Trying to re-grant it...'</span>);
-    grantLease();
-  })
-
-  <span class="hljs-keyword">await</span> lease.put(hostPrefix + os.hostname()).value(<span class="hljs-string">''</span>);
-}
-
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableHosts</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">await</span> client.get().keys().strings();
-  <span class="hljs-keyword">return</span> keys.map(<span class="hljs-function"><span class="hljs-params">key</span> =&gt;</span> key.slice(hostPrefix.length));
-}
-</code></pre>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -367,6 +386,35 @@ await client.delete().all();</span>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="lease_.lease.html" class="tsd-signature-type">Lease</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="lock" class="tsd-anchor"></a>
+					<h3>lock</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">lock<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lock_.lock.html" class="tsd-signature-type">Lock</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L84">index.ts:84</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p><code>lock()</code> is a helper to provide distributed locking capability. See
+									the documentation on the Lock class for more information and examples.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="lock_.lock.html" class="tsd-signature-type">Lock</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -380,7 +428,7 @@ await client.delete().all();</span>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L125">index.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L119">index.ts:119</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -423,13 +471,13 @@ client.unmock();
 					<a name="put" class="tsd-anchor"></a>
 					<h3>put</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L59">index.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L60">index.ts:60</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -443,7 +491,7 @@ client.unmock();
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -457,7 +505,7 @@ client.unmock();
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/index.ts#L133">index.ts:133</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/index.ts#L127">index.ts:127</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -484,6 +532,9 @@ client.unmock();
 						<a href="../modules/backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/builder_.html">"builder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -493,10 +544,10 @@ client.unmock();
 						<a href="../modules/index_.html">"index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/kv_builder_.html">"kv-<wbr>builder"</a>
+						<a href="../modules/lease_.html">"lease"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/lease_.html">"lease"</a>
+						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
@@ -553,7 +604,13 @@ client.unmock();
 								<a href="index_.etcd3.html#getall" class="tsd-kind-icon">get<wbr>All</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="index_.etcd3.html#if" class="tsd-kind-icon">if</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="index_.etcd3.html#lease" class="tsd-kind-icon">lease</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="index_.etcd3.html#lock" class="tsd-kind-icon">lock</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
 								<a href="index_.etcd3.html#mock" class="tsd-kind-icon">mock</a>

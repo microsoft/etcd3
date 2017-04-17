@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>MultiRangeBuilder | etcd3</title>
+	<title>SingleRangeBuilder | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/kv_builder_.html">&quot;kv-builder&quot;</a>
+					<a href="../modules/builder_.html">&quot;builder&quot;</a>
 				</li>
 				<li>
-					<a href="kv_builder_.multirangebuilder.html">MultiRangeBuilder</a>
+					<a href="builder_.singlerangebuilder.html">SingleRangeBuilder</a>
 				</li>
 			</ul>
-			<h1>Class MultiRangeBuilder</h1>
+			<h1>Class SingleRangeBuilder</h1>
 		</div>
 	</div>
 </header>
@@ -72,7 +72,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>MultiRangeBuilder is a query builder that looks up multiple keys.</p>
+						<p>SingleRangeBuilder is a query builder that looks up a single key.</p>
 					</div>
 				</div>
 			</section>
@@ -80,10 +80,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="kv_builder_.rangebuilder.html" class="tsd-signature-type">RangeBuilder</a>
+						<a href="builder_.rangebuilder.html" class="tsd-signature-type">RangeBuilder</a>
 						<ul class="tsd-hierarchy">
 							<li>
-								<span class="target">MultiRangeBuilder</span>
+								<span class="target">SingleRangeBuilder</span>
 							</li>
 						</ul>
 					</li>
@@ -93,6 +93,7 @@
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
 					<li><span class="tsd-signature-type">PromiseLike</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+					<li><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -102,37 +103,31 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="builder_.singlerangebuilder.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section tsd-is-inherited tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="kv_builder_.multirangebuilder.html#request" class="tsd-kind-icon">request</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="builder_.singlerangebuilder.html#request" class="tsd-kind-icon">request</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#all" class="tsd-kind-icon">all</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#buffers" class="tsd-kind-icon">buffers</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#catch" class="tsd-kind-icon">catch</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#count" class="tsd-kind-icon">count</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="kv_builder_.multirangebuilder.html#exec" class="tsd-kind-icon">exec</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#inrange" class="tsd-kind-icon">in<wbr>Range</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#json" class="tsd-kind-icon">json</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#keys" class="tsd-kind-icon">keys</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#limit" class="tsd-kind-icon">limit</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#maxcreaterevision" class="tsd-kind-icon">max<wbr>Create<wbr>Revision</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#maxmodrevision" class="tsd-kind-icon">max<wbr>Mod<wbr>Revision</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#mincreaterevision" class="tsd-kind-icon">min<wbr>Create<wbr>Revision</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#minmodrevision" class="tsd-kind-icon">min<wbr>Mod<wbr>Revision</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#prefix" class="tsd-kind-icon">prefix</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#revision" class="tsd-kind-icon">revision</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#serializable" class="tsd-kind-icon">serializable</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#sort" class="tsd-kind-icon">sort</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="kv_builder_.multirangebuilder.html#strings" class="tsd-kind-icon">strings</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="kv_builder_.multirangebuilder.html#then" class="tsd-kind-icon">then</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.singlerangebuilder.html#buffer" class="tsd-kind-icon">buffer</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="builder_.singlerangebuilder.html#catch" class="tsd-kind-icon">catch</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="builder_.singlerangebuilder.html#exec" class="tsd-kind-icon">exec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.singlerangebuilder.html#json" class="tsd-kind-icon">json</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#maxcreaterevision" class="tsd-kind-icon">max<wbr>Create<wbr>Revision</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#maxmodrevision" class="tsd-kind-icon">max<wbr>Mod<wbr>Revision</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#mincreaterevision" class="tsd-kind-icon">min<wbr>Create<wbr>Revision</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#minmodrevision" class="tsd-kind-icon">min<wbr>Mod<wbr>Revision</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#op" class="tsd-kind-icon">op</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#revision" class="tsd-kind-icon">revision</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="builder_.singlerangebuilder.html#serializable" class="tsd-kind-icon">serializable</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.singlerangebuilder.html#string" class="tsd-kind-icon">string</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="builder_.singlerangebuilder.html#then" class="tsd-kind-icon">then</a></li>
 							</ul>
 						</section>
 					</div>
@@ -144,13 +139,13 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Multi<wbr>Range<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Single<wbr>Range<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L159">kv-builder.ts:159</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L178">builder.ts:178</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -158,8 +153,11 @@
 								<li>
 									<h5>kv: <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a></h5>
 								</li>
+								<li>
+									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.multirangebuilder.html" class="tsd-signature-type">MultiRangeBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.singlerangebuilder.html" class="tsd-signature-type">SingleRangeBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -171,9 +169,9 @@
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> request</h3>
 					<div class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">:</span> <a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#request">request</a></p>
+						<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#request">request</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L63">kv-builder.ts:63</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L117">builder.ts:117</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -181,47 +179,25 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="all" class="tsd-anchor"></a>
-					<h3>all</h3>
+					<a name="buffer" class="tsd-anchor"></a>
+					<h3>buffer</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">all<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">buffer<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L177">kv-builder.ts:177</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>All will instruct etcd to get all keys.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="buffers" class="tsd-anchor"></a>
-					<h3>buffers</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">buffers<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L244">kv-builder.ts:244</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L205">builder.ts:205</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Runs the built request and returns the value of the returned key as a
-									buffers.</p>
+									buffer, or <code>null</code> if it isn&#39;t found.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -236,7 +212,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#catch">catch</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/util.ts#L66">util.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/util.ts#L66">util.ts:66</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -281,28 +257,6 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="count" class="tsd-anchor"></a>
-					<h3>count</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">count<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L210">kv-builder.ts:210</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>count returns the number of keys that match the query.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
 					<a name="exec" class="tsd-anchor"></a>
 					<h3>exec</h3>
@@ -314,7 +268,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#exec">exec</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L251">kv-builder.ts:251</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L212">builder.ts:212</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -323,37 +277,6 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="inrange" class="tsd-anchor"></a>
-					<h3>in<wbr>Range</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">in<wbr>Range<span class="tsd-signature-symbol">(</span>start<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, end<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L184">kv-builder.ts:184</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>inRange instructs the builder to get keys in the specified byte range.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>start: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-								<li>
-									<h5>end: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -367,67 +290,16 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L228">kv-builder.ts:228</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L189">builder.ts:189</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Runs the built request and parses the returned keys as JSON.</p>
+									<p>Runs the built request and parses the returned key as JSON,
+									or returns <code>null</code> if it isn&#39;t found.</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="keys" class="tsd-anchor"></a>
-					<h3>keys</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">keys<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L220">kv-builder.ts:220</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Keys instructs the query to get only the matching keys, not values.
-										json(), strings(), and buffers() will return the keys instead of values
-									when this is called.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="limit" class="tsd-anchor"></a>
-					<h3>limit</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">limit<span class="tsd-signature-symbol">(</span>count<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L193">kv-builder.ts:193</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Limit sets the maximum number of results to retrieve.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>count: <span class="tsd-signature-type">number</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -440,9 +312,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#maxcreaterevision">maxCreateRevision</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#maxcreaterevision">maxCreateRevision</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L108">kv-builder.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L162">builder.ts:162</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -469,9 +341,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#maxmodrevision">maxModRevision</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#maxmodrevision">maxModRevision</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L92">kv-builder.ts:92</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L146">builder.ts:146</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -498,9 +370,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#mincreaterevision">minCreateRevision</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#mincreaterevision">minCreateRevision</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L100">kv-builder.ts:100</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L154">builder.ts:154</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -527,9 +399,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#minmodrevision">minModRevision</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#minmodrevision">minModRevision</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L84">kv-builder.ts:84</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L138">builder.ts:138</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -547,31 +419,27 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="prefix" class="tsd-anchor"></a>
-					<h3>prefix</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">prefix<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+					<a name="op" class="tsd-anchor"></a>
+					<h3>op</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">op<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Implementation of <a href="../interfaces/builder_.ioperation.html">IOperation</a>.<a href="../interfaces/builder_.ioperation.html#op">op</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#op">op</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L168">kv-builder.ts:168</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L170">builder.ts:170</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Prefix instructs the query to scan for all keys that have the provided prefix.</p>
+									<p>Returns the request op for this builder, used in transactions.</p>
 								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>value: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -584,9 +452,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#revision">revision</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#revision">revision</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L68">kv-builder.ts:68</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L122">builder.ts:122</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -613,9 +481,9 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="kv_builder_.rangebuilder.html">RangeBuilder</a>.<a href="kv_builder_.rangebuilder.html#serializable">serializable</a></p>
+								<p>Inherited from <a href="builder_.rangebuilder.html">RangeBuilder</a>.<a href="builder_.rangebuilder.html#serializable">serializable</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L76">kv-builder.ts:76</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L130">builder.ts:130</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -634,47 +502,16 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="sort" class="tsd-anchor"></a>
-					<h3>sort</h3>
+					<a name="string" class="tsd-anchor"></a>
+					<h3>string</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">sort<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"key"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span>, order<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"asc"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"desc"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">string<span class="tsd-signature-symbol">(</span>encoding<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L201">kv-builder.ts:201</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Sort specifies how the result should be sorted.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>target: <span class="tsd-signature-type">"key"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span></h5>
-								</li>
-								<li>
-									<h5>order: <span class="tsd-signature-type">"asc"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"desc"</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="strings" class="tsd-anchor"></a>
-					<h3>strings</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">strings<span class="tsd-signature-symbol">(</span>encoding<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/kv-builder.ts#L236">kv-builder.ts:236</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L197">builder.ts:197</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -689,7 +526,7 @@
 									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> encoding: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;utf8&quot;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -704,7 +541,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#then">then</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/util.ts#L59">util.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/util.ts#L59">util.ts:59</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -769,6 +606,9 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/builder_.html">"builder"</a>
+					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
@@ -778,11 +618,11 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/index_.html">"index"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
-						<a href="../modules/kv_builder_.html">"kv-<wbr>builder"</a>
-					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/lease_.html">"lease"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
@@ -801,103 +641,103 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="kv_builder_.deletebuilder.html" class="tsd-kind-icon">Delete<wbr>Builder</a>
+						<a href="builder_.comparatorbuilder.html" class="tsd-kind-icon">Comparator<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="builder_.deletebuilder.html" class="tsd-kind-icon">Delete<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="builder_.multirangebuilder.html" class="tsd-kind-icon">Multi<wbr>Range<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="kv_builder_.multirangebuilder.html" class="tsd-kind-icon">Multi<wbr>Range<wbr>Builder</a>
+						<a href="builder_.singlerangebuilder.html" class="tsd-kind-icon">Single<wbr>Range<wbr>Builder</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="builder_.singlerangebuilder.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
-								<a href="kv_builder_.multirangebuilder.html#request" class="tsd-kind-icon">request</a>
+								<a href="builder_.singlerangebuilder.html#request" class="tsd-kind-icon">request</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#all" class="tsd-kind-icon">all</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#buffers" class="tsd-kind-icon">buffers</a>
+								<a href="builder_.singlerangebuilder.html#buffer" class="tsd-kind-icon">buffer</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#catch" class="tsd-kind-icon">catch</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#count" class="tsd-kind-icon">count</a>
+								<a href="builder_.singlerangebuilder.html#catch" class="tsd-kind-icon">catch</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
-								<a href="kv_builder_.multirangebuilder.html#exec" class="tsd-kind-icon">exec</a>
+								<a href="builder_.singlerangebuilder.html#exec" class="tsd-kind-icon">exec</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#inrange" class="tsd-kind-icon">in<wbr>Range</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#json" class="tsd-kind-icon">json</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#keys" class="tsd-kind-icon">keys</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#limit" class="tsd-kind-icon">limit</a>
+								<a href="builder_.singlerangebuilder.html#json" class="tsd-kind-icon">json</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#maxcreaterevision" class="tsd-kind-icon">max<wbr>Create<wbr>Revision</a>
+								<a href="builder_.singlerangebuilder.html#maxcreaterevision" class="tsd-kind-icon">max<wbr>Create<wbr>Revision</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#maxmodrevision" class="tsd-kind-icon">max<wbr>Mod<wbr>Revision</a>
+								<a href="builder_.singlerangebuilder.html#maxmodrevision" class="tsd-kind-icon">max<wbr>Mod<wbr>Revision</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#mincreaterevision" class="tsd-kind-icon">min<wbr>Create<wbr>Revision</a>
+								<a href="builder_.singlerangebuilder.html#mincreaterevision" class="tsd-kind-icon">min<wbr>Create<wbr>Revision</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#minmodrevision" class="tsd-kind-icon">min<wbr>Mod<wbr>Revision</a>
+								<a href="builder_.singlerangebuilder.html#minmodrevision" class="tsd-kind-icon">min<wbr>Mod<wbr>Revision</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="builder_.singlerangebuilder.html#op" class="tsd-kind-icon">op</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="builder_.singlerangebuilder.html#revision" class="tsd-kind-icon">revision</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="builder_.singlerangebuilder.html#serializable" class="tsd-kind-icon">serializable</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#prefix" class="tsd-kind-icon">prefix</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#revision" class="tsd-kind-icon">revision</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#serializable" class="tsd-kind-icon">serializable</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#sort" class="tsd-kind-icon">sort</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="kv_builder_.multirangebuilder.html#strings" class="tsd-kind-icon">strings</a>
+								<a href="builder_.singlerangebuilder.html#string" class="tsd-kind-icon">string</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited">
-								<a href="kv_builder_.multirangebuilder.html#then" class="tsd-kind-icon">then</a>
+								<a href="builder_.singlerangebuilder.html#then" class="tsd-kind-icon">then</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="kv_builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="../interfaces/builder_.icomparetarget.html" class="tsd-kind-icon">ICompare<wbr>Target</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="kv_builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="kv_builder_.singlerangebuilder.html" class="tsd-kind-icon">Single<wbr>Range<wbr>Builder</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="../interfaces/builder_.ioperation.html" class="tsd-kind-icon">IOperation</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/kv_builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+						<a href="../modules/builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../modules/builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/kv_builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
+						<a href="../modules/builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/kv_builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
+						<a href="../modules/builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/kv_builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
+						<a href="../modules/builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
-						<a href="../modules/kv_builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
+						<a href="../modules/builder_.html#comparator" class="tsd-kind-icon">comparator</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
 					</li>
 				</ul>
 			</nav>

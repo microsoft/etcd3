@@ -80,6 +80,9 @@ client.put(<span class="hljs-string">'foo'</span>).value(<span class="hljs-strin
   .then(<span class="hljs-function"><span class="hljs-params">keys</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'all our keys starting with "f":'</span>, keys))
   .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> client.delete().all());
 </code></pre>
+				<h3 id="api-documentation">API Documentation</h3>
+				<p>Our <a href="https://watchbeam.github.io/etcd3/classes/index_.etcd3.html">TypeDoc docs are available here</a>.</p>
+				<p>Our <a href="https://github.com/WatchBeam/etcd3/blob/master/test/kv.test.ts">test cases</a> are also quite readable.</p>
 				<h3 id="contributing">Contributing</h3>
 				<p>Running tests for this module requires running an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the <code>ETCD_ADDR</code> environment variable, like <code>export ETCD_ADDR=localhost:12345</code>.</p>
 			</div>
@@ -97,6 +100,9 @@ client.put(<span class="hljs-string">'foo'</span>).value(<span class="hljs-strin
 						<a href="modules/backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/builder_.html">"builder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -106,10 +112,10 @@ client.put(<span class="hljs-string">'foo'</span>).value(<span class="hljs-strin
 						<a href="modules/index_.html">"index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/kv_builder_.html">"kv-<wbr>builder"</a>
+						<a href="modules/lease_.html">"lease"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/lease_.html">"lease"</a>
+						<a href="modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/options_.html">"options"</a>

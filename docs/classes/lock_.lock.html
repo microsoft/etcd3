@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>KVClient | etcd3</title>
+	<title>Lock | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,24 +56,48 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/rpc_.html">&quot;rpc&quot;</a>
+					<a href="../modules/lock_.html">&quot;lock&quot;</a>
 				</li>
 				<li>
-					<a href="rpc_.kvclient.html">KVClient</a>
+					<a href="lock_.lock.html">Lock</a>
 				</li>
 			</ul>
-			<h1>Class KVClient</h1>
+			<h1>Class Lock</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A Lock can be used for distributed locking to create atomic operations
+							across multiple systems. An EtcdLockFailedError is thrown if the lock
+						can&#39;t be acquired.</p>
+					</div>
+					<p>Under the hood, the Lock uses a lease on a key which is revoked when the
+						the lock is released. If the server the lock is running on dies, or the
+					network is disconnected, etcd will time out the lock.</p>
+					<p>Bear in mind that this means that in certain rare situations (a network
+						disconnect or wholesale etcd failure), the caller may lose the lock while
+					operations may still be running.</p>
+					<p>A quick example:</p>
+					<pre><code><span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'etcd3'</span>);
+<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
+
+client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-comment">// The lock will automatically be released when this promise returns</span>
+  <span class="hljs-keyword">return</span> doMyAtomicAction();
+});
+</code></pre>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">KVClient</span>
+						<span class="target">Lock</span>
 					</li>
 				</ul>
 			</section>
@@ -84,17 +108,16 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="rpc_.kvclient.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="lock_.lock.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.kvclient.html#compact" class="tsd-kind-icon">compact</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.kvclient.html#deleterange" class="tsd-kind-icon">delete<wbr>Range</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.kvclient.html#put" class="tsd-kind-icon">put</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.kvclient.html#range" class="tsd-kind-icon">range</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.kvclient.html#txn" class="tsd-kind-icon">txn</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#acquire" class="tsd-kind-icon">acquire</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="lock_.lock.html#do" class="tsd-kind-icon">do</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#release" class="tsd-kind-icon">release</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#ttl" class="tsd-kind-icon">ttl</a></li>
 							</ul>
 						</section>
 					</div>
@@ -106,22 +129,25 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new KVClient<span class="tsd-signature-symbol">(</span>client<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.icallable.html" class="tsd-signature-type">ICallable</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Lock<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lock_.lock.html" class="tsd-signature-type">Lock</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L26">rpc.ts:26</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lock.ts#L35">lock.ts:35</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>client: <a href="../interfaces/rpc_.icallable.html" class="tsd-signature-type">ICallable</a></h5>
+									<h5>pool: <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></h5>
+								</li>
+								<li>
+									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="lock_.lock.html" class="tsd-signature-type">Lock</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -129,151 +155,126 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="compact" class="tsd-anchor"></a>
-					<h3>compact</h3>
+					<a name="acquire" class="tsd-anchor"></a>
+					<h3>acquire</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">compact<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.icompactionresponse.html" class="tsd-signature-type">ICompactionResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">acquire<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L64">rpc.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lock.ts#L55">lock.ts:55</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Compact compacts the event history in the etcd key-value store. The key-value
-										store should be periodically compacted or the event history will continue to grow
-									indefinitely.</p>
+									<p>Acquire attempts to acquire the lock, rejecting if it&#39;s unable to.</p>
 								</div>
 							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+					<a name="do" class="tsd-anchor"></a>
+					<h3>do</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">do&lt;T&gt;<span class="tsd-signature-symbol">(</span>fn<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lock.ts#L89">lock.ts:89</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p><code>do()</code> wraps the inner function. It acquires the lock before running
+										the function, and releases the lock after any promise the function
+									returns resolves or throws.</p>
+								</div>
+							</div>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>req: <a href="../interfaces/rpc_.icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a></h5>
+									<h5>fn: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span>
+														<span class="tsd-signature-symbol"> | </span>
+														<span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>
+													</h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.icompactionresponse.html" class="tsd-signature-type">ICompactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="deleterange" class="tsd-anchor"></a>
-					<h3>delete<wbr>Range</h3>
+					<a name="release" class="tsd-anchor"></a>
+					<h3>release</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">release<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L47">rpc.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lock.ts#L76">lock.ts:76</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>DeleteRange deletes the given range from the key-value store.
-										A delete request increments the revision of the key-value store
-									and generates a delete event in the event history for every deleted key.</p>
+									<p>Release frees the lock.</p>
 								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>req: <a href="../interfaces/rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="put" class="tsd-anchor"></a>
-					<h3>put</h3>
+					<a name="ttl" class="tsd-anchor"></a>
+					<h3>ttl</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iputresponse.html" class="tsd-signature-type">IPutResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">ttl<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L39">rpc.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lock.ts#L43">lock.ts:43</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Put puts the given key into the key-value store.
-										A put request increments the revision of the key-value store
-									and generates one event in the event history.</p>
+									<p>Sets the TTL of the lease underlying the lock. The lease TTL defaults
+									to 30 seconds.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>req: <a href="../interfaces/rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a></h5>
+									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iputresponse.html" class="tsd-signature-type">IPutResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="range" class="tsd-anchor"></a>
-					<h3>range</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L31">rpc.ts:31</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Range gets the keys in the range from the key-value store.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>req: <a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="txn" class="tsd-anchor"></a>
-					<h3>txn</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">txn<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.itxnresponse.html" class="tsd-signature-type">ITxnResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L56">rpc.ts:56</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Txn processes multiple requests in a single transaction.
-										A txn request increments the revision of the key-value store
-										and generates events with the same revision for every completed request.
-									It is not allowed to modify the same key several times within one txn.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>req: <a href="../interfaces/rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.itxnresponse.html" class="tsd-signature-type">ITxnResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -306,13 +307,13 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/lease_.html">"lease"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -328,25 +329,22 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="rpc_.kvclient.html" class="tsd-kind-icon">KVClient</a>
+						<a href="lock_.lock.html" class="tsd-kind-icon">Lock</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="lock_.lock.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#compact" class="tsd-kind-icon">compact</a>
+								<a href="lock_.lock.html#acquire" class="tsd-kind-icon">acquire</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
+								<a href="lock_.lock.html#do" class="tsd-kind-icon">do</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#deleterange" class="tsd-kind-icon">delete<wbr>Range</a>
+								<a href="lock_.lock.html#release" class="tsd-kind-icon">release</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#put" class="tsd-kind-icon">put</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#range" class="tsd-kind-icon">range</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="rpc_.kvclient.html#txn" class="tsd-kind-icon">txn</a>
+								<a href="lock_.lock.html#ttl" class="tsd-kind-icon">ttl</a>
 							</li>
 						</ul>
 					</li>

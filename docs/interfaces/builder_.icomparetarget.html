@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>IAuthUserGetResponse | etcd3</title>
+	<title>ICompareTarget | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/rpc_.html">&quot;rpc&quot;</a>
+					<a href="../modules/builder_.html">&quot;builder&quot;</a>
 				</li>
 				<li>
-					<a href="rpc_.iauthusergetresponse.html">IAuthUserGetResponse</a>
+					<a href="builder_.icomparetarget.html">ICompareTarget</a>
 				</li>
 			</ul>
-			<h1>Interface IAuthUserGetResponse</h1>
+			<h1>Interface ICompareTarget</h1>
 		</div>
 	</div>
 </header>
@@ -73,7 +73,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">IAuthUserGetResponse</span>
+						<span class="target">ICompareTarget</span>
 					</li>
 				</ul>
 			</section>
@@ -84,8 +84,8 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.iauthusergetresponse.html#header" class="tsd-kind-icon">header</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.iauthusergetresponse.html#roles" class="tsd-kind-icon">roles</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="builder_.icomparetarget.html#key" class="tsd-kind-icon">key</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="builder_.icomparetarget.html#value" class="tsd-kind-icon">value</a></li>
 							</ul>
 						</section>
 					</div>
@@ -94,22 +94,22 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="header" class="tsd-anchor"></a>
-					<h3>header</h3>
-					<div class="tsd-signature tsd-kind-icon">header<span class="tsd-signature-symbol">:</span> <a href="rpc_.iresponseheader.html" class="tsd-signature-type">IResponseHeader</a></div>
+					<a name="key" class="tsd-anchor"></a>
+					<h3>key</h3>
+					<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"result"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"target"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"key"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"create_revision"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"mod_revision"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L961">rpc.ts:961</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L60">builder.ts:60</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="roles" class="tsd-anchor"></a>
-					<h3>roles</h3>
-					<div class="tsd-signature tsd-kind-icon">roles<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
+					<a name="value" class="tsd-anchor"></a>
+					<h3>value</h3>
+					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.comparetarget.html" class="tsd-signature-type">CompareTarget</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L962">rpc.ts:962</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L59">builder.ts:59</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -127,7 +127,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/builder_.html">"builder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -148,7 +148,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -161,21 +161,66 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.comparatorbuilder.html" class="tsd-kind-icon">Comparator<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.deletebuilder.html" class="tsd-kind-icon">Delete<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.multirangebuilder.html" class="tsd-kind-icon">Multi<wbr>Range<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/builder_.singlerangebuilder.html" class="tsd-kind-icon">Single<wbr>Range<wbr>Builder</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="rpc_.iauthusergetresponse.html" class="tsd-kind-icon">IAuth<wbr>User<wbr>Get<wbr>Response</a>
+						<a href="builder_.icomparetarget.html" class="tsd-kind-icon">ICompare<wbr>Target</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="rpc_.iauthusergetresponse.html#header" class="tsd-kind-icon">header</a>
+								<a href="builder_.icomparetarget.html#key" class="tsd-kind-icon">key</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="rpc_.iauthusergetresponse.html#roles" class="tsd-kind-icon">roles</a>
+								<a href="builder_.icomparetarget.html#value" class="tsd-kind-icon">value</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="builder_.ioperation.html" class="tsd-kind-icon">IOperation</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../modules/builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#comparator" class="tsd-kind-icon">comparator</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="../modules/builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
+					</li>
 				</ul>
 			</nav>
 		</div>

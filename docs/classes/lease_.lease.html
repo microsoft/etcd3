@@ -72,8 +72,32 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Lease is a high-level manager for etcd leases.</p>
+						<p>Lease is a high-level manager for etcd leases.
+						Leases are great for things like service discovery:</p>
 					</div>
+					<pre><code><span class="hljs-keyword">const</span> os = <span class="hljs-built_in">require</span>(<span class="hljs-string">'os'</span>);
+<span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'etcd3'</span>);
+<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
+
+<span class="hljs-keyword">const</span> hostPrefix = <span class="hljs-string">'available-hosts/'</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">grantLease</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">const</span> lease = client.lease();
+
+  lease.on(<span class="hljs-string">'lost'</span>, err =&gt; {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'We lost our lease as a result of this error:'</span>, err);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Trying to re-grant it...'</span>);
+    grantLease();
+  })
+
+  <span class="hljs-keyword">await</span> lease.put(hostPrefix + os.hostname()).value(<span class="hljs-string">''</span>);
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableHosts</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">await</span> client.get().keys().strings();
+  <span class="hljs-keyword">return</span> keys.map(<span class="hljs-function"><span class="hljs-params">key</span> =&gt;</span> key.slice(hostPrefix.length));
+}
+</code></pre>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
@@ -144,7 +168,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L59">lease.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L85">lease.ts:85</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -287,7 +311,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L93">lease.ts:93</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L119">lease.ts:119</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -313,7 +337,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L122">lease.ts:122</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L148">lease.ts:148</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -390,7 +414,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L163">lease.ts:163</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L189">lease.ts:189</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -440,7 +464,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L169">lease.ts:169</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L195">lease.ts:195</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -476,7 +500,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L175">lease.ts:175</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L201">lease.ts:201</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -518,7 +542,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L182">lease.ts:182</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L208">lease.ts:208</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -561,7 +585,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L188">lease.ts:188</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L214">lease.ts:214</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -683,13 +707,13 @@
 					<a name="put" class="tsd-anchor"></a>
 					<h3>put</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="kv_builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L115">lease.ts:115</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L141">lease.ts:141</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -703,7 +727,7 @@
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="kv_builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -770,7 +794,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L101">lease.ts:101</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L127">lease.ts:127</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -793,7 +817,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b0d05eb/src/lease.ts#L149">lease.ts:149</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/lease.ts#L175">lease.ts:175</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -872,6 +896,9 @@
 						<a href="../modules/backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/builder_.html">"builder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -880,11 +907,11 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/index_.html">"index"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="../modules/kv_builder_.html">"kv-<wbr>builder"</a>
-					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="../modules/lease_.html">"lease"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
