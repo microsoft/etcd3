@@ -25,8 +25,8 @@ describe('connection pool', () => {
     ]);
   });
 
-  afterEach(() => {
-    client.delete().all();
+  afterEach(async () => {
+    await client.delete().all();
     client.close();
     badClient.close();
   });
@@ -66,6 +66,15 @@ describe('connection pool', () => {
         o1: 'bar1',
         o2: 'bar2',
         o3: '{"value":"bar3"}',
+      });
+    });
+
+    it('supports wide utf8 characters in prefixes', async () => {
+      // These characters are >16 bits, if they're sliced in the wrong order
+      // (based on string rather than byte length) the prefix can get truncated.
+      await client.put('❤️/💔').value('heyo!');
+      expect(await client.getAll().prefix('❤️/')).to.deep.equal({
+        '💔': 'heyo!',
       });
     });
 
