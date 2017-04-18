@@ -1,7 +1,8 @@
 import * as RPC from './rpc';
 import { PromiseWrap } from './util';
 
-const zeroKey = new Buffer([0]);
+const zeroKey = Buffer.from([0]);
+const emptyBuffer = Buffer.from([]);
 
 /**
  * prefixStart returns a buffer to start the key as a prefix.
@@ -113,7 +114,7 @@ function toBuffer(input: string | Buffer): Buffer {
  * It's extended by the Single and MultiRangeBuilders, which contain
  * the concrete methods to execute the built query.
  */
-export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> implements IOperation {
+export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperation {
   protected request: RPC.IRangeRequest = {};
 
   /**
@@ -175,11 +176,18 @@ export abstract class RangeBuilder extends PromiseWrap<RPC.IRangeResponse> imple
 /**
  * SingleRangeBuilder is a query builder that looks up a single key.
  */
-export class SingleRangeBuilder extends RangeBuilder {
+export class SingleRangeBuilder extends RangeBuilder<string> {
   constructor(private kv: RPC.KVClient, key: string | Buffer) {
     super();
     this.request.key = toBuffer(key);
     this.request.limit = 1;
+  }
+
+  /**
+   * @override
+   */
+  protected createPromise(): Promise<string> {
+    return this.string();
   }
 
   /**
@@ -217,16 +225,22 @@ export class SingleRangeBuilder extends RangeBuilder {
 /**
  * MultiRangeBuilder is a query builder that looks up multiple keys.
  */
-export class MultiRangeBuilder extends RangeBuilder {
+export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
+
+  private queryPrefix: Buffer;
+
   constructor(private kv: RPC.KVClient) {
     super();
-    this.prefix('');
+    this.prefix(emptyBuffer);
   }
 
   /**
-   * Prefix instructs the query to scan for all keys that have the provided prefix.
+   * Prefix instructs the query to scan for all keys that have the provided
+   * prefix. Keys returned from querying will be automatically stripped of
+   * this prefix.
    */
   public prefix(value: string | Buffer): this {
+    this.queryPrefix = toBuffer(value);
     this.request.key = prefixStart(value);
     this.request.range_end = prefixEnd(this.request.key);
     return this;
@@ -275,36 +289,46 @@ export class MultiRangeBuilder extends RangeBuilder {
   }
 
   /**
-   * Keys instructs the query to get only the matching keys, not values.
-   * json(), strings(), and buffers() will return the keys instead of values
-   * when this is called.
+   * Keys returns an array of keys matching the query.
    */
-  public keys(): this {
+  public keys(encoding: string = 'utf8'): Promise<string[]> {
     this.request.keys_only = true;
-    return this;
+    return this.exec().then(res => {
+      return res.kvs.map(kv => kv.key.slice(this.queryPrefix.length).toString(encoding));
+    });
+  }
+
+  /**
+   * Keys returns an array of keys matching the query, as buffers.
+   */
+  public keyBuffers(): Promise<Buffer[]> {
+    this.request.keys_only = true;
+    return this.exec().then(res => {
+      return res.kvs.map(kv => kv.key.slice(this.queryPrefix.length));
+    });
   }
 
   /**
    * Runs the built request and parses the returned keys as JSON.
    */
-  public json(): Promise<object> {
-    return this.buffers().then(res => res.map(value => JSON.parse(value.toString())));
+  public json(): Promise<{ [key: string]: object }> {
+    return this.mapValues(buf => JSON.parse(buf.toString()));
   }
 
   /**
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public strings(encoding: string = 'utf8'): Promise<string[]> {
-    return this.buffers().then(res => res.map(value => value.toString(encoding)));
+  public strings(encoding: string = 'utf8'): Promise<{ [key: string]: string }> {
+    return this.mapValues(buf => buf.toString(encoding));
   }
 
   /**
    * Runs the built request and returns the value of the returned key as a
    * buffers.
    */
-  public buffers(): Promise<Buffer[]> {
-    return this.exec().then(res => res.kvs.map(kv => this.request.keys_only ? kv.key : kv.value));
+  public buffers(): Promise<{ [key: string]: Buffer }> {
+    return this.mapValues(b => b);
   }
 
   /**
@@ -312,6 +336,29 @@ export class MultiRangeBuilder extends RangeBuilder {
    */
   public exec(): Promise<RPC.IRangeResponse> {
     return this.kv.range(this.request);
+  }
+
+  /**
+   * @override
+   */
+  protected createPromise(): Promise<{ [key: string]: string }> {
+    return this.strings();
+  }
+
+  /**
+   * Dispatches a call to the server, and creates a map by running the
+   * iterator over the values returned.
+   */
+  private mapValues<T>(iterator: (buf: Buffer) => T): Promise<{ [key: string]: T }> {
+    return this.exec().then(res => {
+      const output: { [key: string]: T } = {};
+      for (let i = 0; i < res.kvs.length; i += 1) {
+        output[res.kvs[i].key.slice(this.queryPrefix.length).toString()] =
+          iterator(res.kvs[i].value);
+      }
+
+      return output;
+    });
   }
 }
 
@@ -380,6 +427,13 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    */
   public op(): RPC.IRequestOp {
     return { request_delete_range: this.request };
+  }
+
+  /**
+   * @override
+   */
+  protected createPromise(): Promise<RPC.IDeleteRangeResponse> {
+    return this.exec();
   }
 }
 
@@ -451,6 +505,13 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    */
   public op(): RPC.IRequestOp {
     return { request_put: this.request };
+  }
+
+  /**
+   * @override
+   */
+  protected createPromise(): Promise<RPC.IPutResponse> {
+    return this.exec();
   }
 }
 
