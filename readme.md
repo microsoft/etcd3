@@ -26,7 +26,7 @@ client.put('foo').value('bar')
 
 ### API Documentation
 
-Our [TypeDoc docs are available here](https://watchbeam.github.io/etcd3/classes/index_.etcd3.html).
+Our [TypeDoc docs are available here](https://mixer.github.io/etcd3/classes/index_.etcd3.html).
 
 Our [test cases](https://github.com/WatchBeam/etcd3/blob/master/test/kv.test.ts) are also quite readable.
 
