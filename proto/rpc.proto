@@ -292,16 +292,16 @@ message ResponseHeader {
 }
 message RangeRequest {
   enum SortOrder {
-	NONE = 0; // default, no sorting
-	ASCEND = 1; // lowest target value first
-	DESCEND = 2; // highest target value first
+	none = 0; // default, no sorting
+	ascend = 1; // lowest target value first
+	descend = 2; // highest target value first
   }
   enum SortTarget {
-	KEY = 0;
-	VERSION = 1;
-	CREATE = 2;
-	MOD = 3;
-	VALUE = 4;
+	key = 0;
+	version = 1;
+	create = 2;
+	mod = 3;
+	value = 4;
   }
   // key is the first key for the range. If range_end is not given, the request only looks up key.
   bytes key = 1;
@@ -418,16 +418,16 @@ message ResponseOp {
 }
 message Compare {
   enum CompareResult {
-    EQUAL = 0;
-    GREATER = 1;
-    LESS = 2;
-    NOT_EQUAL = 3;
+    equal = 0;
+    greater = 1;
+    less = 2;
+    notEqual = 3;
   }
   enum CompareTarget {
-    VERSION = 0;
-    CREATE = 1;
-    MOD = 2;
-    VALUE= 3;
+    version = 0;
+    create = 1;
+    mod = 2;
+    value= 3;
   }
   // result is logical comparison operation for this comparison.
   CompareResult result = 1;
@@ -537,9 +537,9 @@ message WatchCreateRequest {
   bool progress_notify = 4;
   enum FilterType {
   // filter out put event.
-  NOPUT = 0;
+  noput = 0;
   // filter out delete event.
-  NODELETE = 1;
+  nodelete = 1;
   }
   // filters filter the events at server side before it sends back to the watcher.
   repeated FilterType filters = 5;
@@ -641,6 +641,8 @@ message MemberAddResponse {
   ResponseHeader header = 1;
   // member is the member information for the added member.
   Member member = 2;
+  // members is a list of all members after adding the new member.
+  repeated Member members = 3;
 }
 message MemberRemoveRequest {
   // ID is the member ID of the member to remove.
@@ -648,6 +650,8 @@ message MemberRemoveRequest {
 }
 message MemberRemoveResponse {
   ResponseHeader header = 1;
+  // members is a list of all members after removing the member.
+  repeated Member members = 2;
 }
 message MemberUpdateRequest {
   // ID is the member ID of the member to update.
@@ -657,6 +661,8 @@ message MemberUpdateRequest {
 }
 message MemberUpdateResponse{
   ResponseHeader header = 1;
+  // members is a list of all members after updating the member.
+  repeated Member members = 2;
 }
 message MemberListRequest {
 }
@@ -671,14 +677,14 @@ message DefragmentResponse {
   ResponseHeader header = 1;
 }
 enum AlarmType {
-	NONE = 0; // default, used to query if any alarm is active
-	NOSPACE = 1; // space quota is exhausted
+	none = 0; // default, used to query if any alarm is active
+	nospace = 1; // space quota is exhausted
 }
 message AlarmRequest {
   enum AlarmAction {
-	GET = 0;
-	ACTIVATE = 1;
-	DEACTIVATE = 2;
+	get = 0;
+	activate = 1;
+	deactivate = 2;
   }
   // action is the kind of alarm request to issue. The action
   // may GET alarm statuses, ACTIVATE an alarm, or DEACTIVATE a

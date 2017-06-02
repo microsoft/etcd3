@@ -1,13 +1,18 @@
+import { Role, User } from './auth';
 import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
 import { Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
+import { rangable, Range } from './range';
 import * as RPC from './rpc';
 
-export * from './errors';
+export * from './auth';
 export * from './builder';
+export * from './errors';
 export * from './lease';
+export * from './options';
+export * from './range';
 export * from './rpc';
 
 /**
@@ -28,7 +33,6 @@ export * from './rpc';
  * ```
  */
 export class Etcd3 {
-
   private pool = new ConnectionPool(this.options);
 
   public readonly kv = new RPC.KVClient(this.pool);
@@ -90,9 +94,53 @@ export class Etcd3 {
    * statements atomically. See documentation on the ComparatorBuilder for
    * more information.
    */
-  public if(key: string | Buffer, column: keyof typeof Builder.compareTarget,
-      cmp: keyof typeof Builder.comparator, value: string | Buffer | number): Builder.ComparatorBuilder {
+  public if(
+    key: string | Buffer,
+    column: keyof typeof Builder.compareTarget,
+    cmp: keyof typeof Builder.comparator,
+    value: string | Buffer | number,
+  ): Builder.ComparatorBuilder {
     return new Builder.ComparatorBuilder(this.kv).and(key, column, cmp, value);
+  }
+
+  /**
+   * Creates a structure representing an etcd range. Used in permission grants
+   * and queries. This is a convenience method for `Etcd3.Range.from(...)`.
+   */
+  public range(r: rangable): Range {
+    return Range.from(r);
+  }
+
+  /**
+   * Resolves to an array of roles available in etcd.
+   */
+  public getRoles(): Promise<Role[]> {
+    return this.auth.roleList().then(result => {
+      return result.roles.map(role => new Role(this.auth, role));
+    });
+  }
+
+  /**
+   * Returns an object to manipulate the role with the provided name.
+   */
+  public role(name: string): Role {
+    return new Role(this.auth, name);
+  }
+
+  /**
+   * Resolves to an array of users available in etcd.
+   */
+  public getUsers(): Promise<User[]> {
+    return this.auth.userList().then(result => {
+      return result.users.map(user => new User(this.auth, user));
+    });
+  }
+
+  /**
+   * Returns an object to manipulate the user with the provided name.
+   */
+  public user(name: string): User {
+    return new User(this.auth, name);
   }
 
   /**

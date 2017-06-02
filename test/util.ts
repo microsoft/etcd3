@@ -1,6 +1,22 @@
+import { IOptions } from '../src';
+import * as fs from 'fs';
+
+const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
+
 /**
- * Returns etcd hosts to test against.
+ * Returns the host to test against.
  */
-export function getHosts(): string {
+export function getHost(): string {
   return process.env.ETCD_ADDR || '127.0.0.1:2379';
+}
+
+/**
+ * Returns etcd options to use for connections.
+ */
+export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
+  return {
+    hosts: getHost(),
+    credentials: { rootCertificate },
+    ...defaults,
+  };
 }

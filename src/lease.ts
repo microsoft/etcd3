@@ -76,7 +76,6 @@ const enum State {
  * ```
  */
 export class Lease extends EventEmitter {
-
   private leaseID: Promise<string | Error>;
   private state = State.Alive;
 
@@ -263,12 +262,15 @@ export class Lease extends EventEmitter {
         this.keepalive();
       });
 
-      const keepaliveTimer = setInterval(() => {
-        this.emit('keepaliveFired');
-        this.grant()
-          .then(id => stream.write({ ID: id }))
-          .catch(() => this.close()); // will only throw if the initial grant failed
-      }, 1000 * this.ttl / 3);
+      const keepaliveTimer = setInterval(
+        () => {
+          this.emit('keepaliveFired');
+          this.grant()
+            .then(id => stream.write({ ID: id }))
+            .catch(() => this.close()); // will only throw if the initial grant failed
+        },
+        1000 * this.ttl / 3,
+      );
 
       this.teardown = () => {
         clearInterval(keepaliveTimer);

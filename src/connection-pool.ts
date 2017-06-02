@@ -1,11 +1,11 @@
 import { ExponentialBackoff } from './backoff/exponential';
 import { castGrpcError, GRPCGenericError } from './errors';
 import { IOptions } from './options';
-import { ICallable, Services } from './rpc';
+import { ICallable, Services, IAuthenticateResponse } from './rpc';
 import { SharedPool } from './shared-pool';
 import { forOwn } from './util';
 
-const grpc = require('grpc');
+const grpc = require('grpc'); // tslint:disable-line
 const services = grpc.load(`${__dirname}/../proto/rpc.proto`);
 
 /**
@@ -22,12 +22,101 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
   random: 1,
 });
 
+/**
+ * Used for typing internally.
+ */
+interface GRPCCredentials {
+  isGRPCCredential: void;
+}
+
+/**
+ * Retrieves and returns an auth token for accessing etcd. This function is
+ * based on the algorithm in {@link https://git.io/vHzwh}.
+ */
+class Authentictor {
+  private awaitingToken: Promise<GRPCCredentials> | null = null;
+
+  constructor(private options: IOptions) {}
+
+  /**
+   * Augments the call credentials with the configured username and password,
+   * if any.
+   */
+  public augmentCredentials(original: GRPCCredentials): Promise<GRPCCredentials> {
+    if (this.awaitingToken !== null) {
+      return this.awaitingToken;
+    }
+
+    const hosts = typeof this.options.hosts === 'string'
+      ? [this.options.hosts]
+      : this.options.hosts;
+    const auth = this.options.auth;
+
+    if (!auth) {
+      return Promise.resolve(original);
+    }
+
+    const attempt = (index: number, previousRejection?: Error): Promise<GRPCCredentials> => {
+      if (index > hosts.length) {
+        this.awaitingToken = null;
+        return Promise.reject(previousRejection);
+      }
+
+      return this.getCredentialsFromHost(hosts[index], auth, original)
+        .then(token => {
+          this.awaitingToken = null;
+          return grpc.credentials.combineChannelCredentials(
+            original, this.createMetadataAugmenter(token));
+        })
+        .catch(err => attempt(index + 1, err));
+    };
+
+    return this.awaitingToken = attempt(0);
+  }
+
+  /**
+   * Retrieves an auth token from etcd.
+   */
+  private getCredentialsFromHost(address: string, auth: { username: string, password: string},
+    credentials: GRPCCredentials): Promise<string> {
+
+    const service = new services.etcdserverpb.Auth(address, credentials);
+    return new Promise((resolve, reject) => {
+      service.authenticate(
+        { name: auth.username,  password: auth.password },
+        (err: Error | null, res: IAuthenticateResponse) => {
+          if (err) {
+            return reject(err);
+          }
+
+          return resolve(res.token);
+        }
+      );
+    });
+  }
+
+  /**
+   * Creates a metadata generator that adds the auth token to grpc calls.
+   */
+  private createMetadataAugmenter(token: string): GRPCCredentials {
+    return grpc.credentials.createFromMetadataGenerator(
+      (_ctx: any, callback: (err: Error | null, result?: any) => void) => {
+        const metadata = new grpc.Metadata();
+        metadata.add('token', token);
+        callback(null, metadata);
+      }
+    );
+  }
+}
+
 class Host {
 
-  private cachedCredentials: Promise<any> | null = null;
   private cachedServices: { [name in keyof typeof Services]?: Promise<IRawGRPC> } = Object.create(null);
 
-  constructor(private host: string, private options: IOptions) {}
+  constructor(
+    private host: string,
+    private channelCredentials: Promise<GRPCCredentials>,
+  ) {}
 
   /**
    * Returns the given GRPC service on the current host.
@@ -38,14 +127,10 @@ class Host {
       return Promise.resolve(service);
     }
 
-    if (this.cachedCredentials === null) {
-      this.cachedCredentials = this.buildAuthentication();
-    }
-
-    return this.cachedServices[name] = this.cachedCredentials.then(credentials => {
-      const s = new services.etcdserverpb[name](this.host, credentials);
-      s.etcdHost = this;
-      return s;
+    return this.channelCredentials.then(credentials => {
+      const instance = new services.etcdserverpb[name](this.host, credentials);
+      instance.etcdHost = this;
+      return instance;
     });
   }
 
@@ -54,35 +139,11 @@ class Host {
    * existing client
    */
   public close() {
-    if (!this.cachedCredentials) {
-      return;
-    }
-
     forOwn(this.cachedServices, (service: Promise<IRawGRPC>) => {
       service.then(c => grpc.closeClient(c));
     });
 
-    this.cachedCredentials = null;
     this.cachedServices = Object.create(null);
-  }
-
-  private buildAuthentication(): Promise<any> {
-    const { credentials, auth } = this.options;
-
-    let protocolCredentials = grpc.credentials.createInsecure();
-    if (credentials) {
-      protocolCredentials = grpc.credentials.createSsl(
-        credentials.rootCertificate,
-        credentials.privateKey,
-        credentials.certChain,
-      );
-    }
-
-    if (auth) {
-      throw new Error('password auth not supported yet'); // todo(connor4312)
-    }
-
-    return Promise.resolve(grpc.credentials.combineCallCredentials(protocolCredentials));
   }
 }
 
@@ -94,16 +155,10 @@ export class ConnectionPool implements ICallable {
 
   private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
   private mockImpl: ICallable | null;
+  private authenticator = new Authentictor(this.options);
 
   constructor(private options: IOptions) {
-    if (typeof options.hosts === 'string') {
-      options.hosts = [options.hosts];
-    }
-    if (options.hosts.length === 0) {
-      throw new Error('Cannot construct an etcd client with no hosts specified');
-    }
-
-    options.hosts.forEach(host => this.pool.add(new Host(host, options)));
+    this.seedHosts();
   }
 
   /**
@@ -167,5 +222,42 @@ export class ConnectionPool implements ICallable {
     }
 
     return this.pool.pull().then(client => client.getService(service));
+  }
+
+  /**
+   * Adds configured etcd hosts to the connection pool.
+   */
+  private seedHosts() {
+    const credentials = this.buildAuthentication();
+    const { hosts } = this.options;
+
+    if (typeof hosts === 'string') {
+      this.pool.add(new Host(hosts, credentials));
+      return;
+    }
+
+    if (hosts.length === 0) {
+      throw new Error('Cannot construct an etcd client with no hosts specified');
+    }
+
+    hosts.forEach(host => this.pool.add(new Host(host, credentials)));
+  }
+
+  /**
+   * Creates authentication credentials to use for etcd clients.
+   */
+  private buildAuthentication(): Promise<GRPCCredentials> {
+    const { credentials } = this.options;
+
+    let protocolCredentials = grpc.credentials.createInsecure();
+    if (credentials) {
+      protocolCredentials = grpc.credentials.createSsl(
+        credentials.rootCertificate,
+        credentials.privateKey,
+        credentials.certChain,
+      );
+    }
+
+    return this.authenticator.augmentCredentials(protocolCredentials);
   }
 }

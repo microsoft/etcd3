@@ -4,30 +4,73 @@
     "node_modules/tslint-microsoft-contrib"
   ],
   "rules": {
-    "align": false,
+    // Basic
+    "import-blacklist": [
+        true,
+        "lodash",
+        "rxjs/Rx",
+        "rxjs"
+    ],
+    "no-multiline-string": false,
+    "arrow-parens": [true, "ban-single-arg-parens"],
+    "max-file-line-count": [true, 600],
+    "jsdoc-format": true,
+    "cyclomatic-complexity": [true, 20],
+    "space-before-function-paren": [
+      true,
+      {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "always",
+        "constructor": "never",
+        "method": "never"
+      }
+    ],
+
+    // Microsoft
+    "no-relative-imports": false,
+    "mocha-no-side-effect-code": false,
+    "missing-jsdoc": false,
     "chai-vague-errors": false,
     "export-name": false,
-    "function-name": [true, {
-      "method-regex": "^[a-z][\\w\\d]+$",
-      "private-method-regex": "^[a-z][\\w\\d]+$",
-      "static-method-regex": "^[A-Z][\\w\\d]+$",
-      "function-regex": "^[a-z][\\w\\d]+$"
-    }],
-    "missing-jsdoc": false,
-    "mocha-no-side-effect-code": false,
-    "no-any": false,
-    "no-constructor-vars": false,
-    "no-empty-interfaces": false,
-    "no-invalid-this": false,
-    "no-multiline-string": false,
-    "no-require-imports": false,
-    "no-relative-imports": false,
-    "no-typeof-undefined": false,
-    "no-var-requires": false,
-    "insecure-random": false,
     "no-reserved-keywords": false,
-    "no-backbone-get-set-outside-model": false,
+    "no-any": false,
+    "no-increment-decrement": false,
     "trailing-comma": [true, {"multiline": "always", "singleline": "never"}],
-    "underscore-consistent-invocation": false
+    "no-typeof-undefined": false,
+    "underscore-consistent-invocation": false,
+    "no-backbone-get-set-outside-model": false,
+    "function-name": [true, {
+        "method-regex": "^[a-z][\\w\\d]+$",
+        "private-method-regex": "^[a-z][\\w\\d]+$",
+        "static-method-regex": "^[a-z][\\w\\d]+$",
+        "function-regex": "^[a-z][\\w\\d]+$"
+    }],
+    "typedef-whitespace": [
+      true,
+      {
+        "call-signature": "nospace",
+        "index-signature": "nospace",
+        "parameter": "nospace",
+        "property-declaration": "nospace",
+        "variable-declaration": "nospace"
+      },
+      {
+        "call-signature": "onespace",
+        "index-signature": "onespace",
+        "parameter": "onespace",
+        "property-declaration": "onespace",
+        "variable-declaration": "onespace"
+      }
+    ],
+    "no-stateless-class": false,
+    "insecure-random": false,
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"], // for unused params
+
+    "no-suspicious-comment": false, // For the duration of pre-release development these will be fine, rm and fix on before release.
+    "no-string-literal": false,
+    "no-string-throw": true,
+    "no-empty-line-after-opening-brace": true,
+    "no-function-expression": true
   }
 }

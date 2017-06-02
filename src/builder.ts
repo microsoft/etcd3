@@ -1,59 +1,19 @@
+import { rangable, Range } from './range';
 import * as RPC from './rpc';
-import { PromiseWrap } from './util';
+import { PromiseWrap, toBuffer } from './util';
 
-const zeroKey = Buffer.from([0]);
 const emptyBuffer = Buffer.from([]);
-
-/**
- * prefixStart returns a buffer to start the key as a prefix.
- */
-export function prefixStart(key: Buffer | string) {
-  if (key.length === 0) {
-    return zeroKey;
-  }
-
-  return toBuffer(key);
-}
-
-/**
- * prefixEnd returns the end of a range request, where `key` is the "start"
- * value, to get all values that share the prefix.
- */
-export function prefixEnd(key: Buffer): Buffer {
-  if (key.equals(zeroKey)) {
-    return zeroKey;
-  }
-
-  let buffer = Buffer.from(key); // copy to prevent mutation
-  for (let i = buffer.length - 1; i >= 0; i -= 0) {
-    if (buffer[i] < 0xff) {
-      buffer[i] = buffer[i] + 1;
-      buffer = buffer.slice(0, i + 1);
-      return buffer;
-    }
-  }
-
-  return zeroKey;
-}
-
-export const sortMap = {
-  key: RPC.SortTarget.KEY,
-  version: RPC.SortTarget.VERSION,
-  createdAt: RPC.SortTarget.CREATE,
-  modifiedAt: RPC.SortTarget.MOD,
-  value: RPC.SortTarget.VALUE,
-};
 
 /**
  * Comparators can be passed to various operations in the ComparatorBuilder.
  */
 export const comparator = {
-  '==': RPC.CompareResult.EQUAL,
-  '===': RPC.CompareResult.EQUAL,
-  '>': RPC.CompareResult.GREATER,
-  '<': RPC.CompareResult.LESS,
-  '!=': RPC.CompareResult.NOT_EQUAL,
-  '!==': RPC.CompareResult.NOT_EQUAL,
+  '==': RPC.CompareResult.equal,
+  '===': RPC.CompareResult.equal,
+  '>': RPC.CompareResult.greater,
+  '<': RPC.CompareResult.less,
+  '!=': RPC.CompareResult.notEqual,
+  '!==': RPC.CompareResult.notEqual,
 };
 
 export interface ICompareTarget {
@@ -68,23 +28,11 @@ export interface IOperation {
 /**
  * compareTarget are the types of things that can be compared against.
  */
-export const compareTarget = {
-  value: {
-    value: RPC.CompareTarget.VALUE,
-    key: 'value',
-  },
-  version: {
-    value: RPC.CompareTarget.VERSION,
-    key: 'value',
-  },
-  createdAt: {
-    value: RPC.CompareTarget.CREATE,
-    key: 'create_revision',
-  },
-  modifiedAt: {
-    value: RPC.CompareTarget.MOD,
-    key: 'mod_revision',
-  },
+export const compareTarget: { [key in keyof typeof RPC.CompareTarget]: keyof RPC.ICompare } = {
+  value: 'value',
+  version: 'version',
+  create: 'create_revision',
+  mod: 'mod_revision',
 };
 
 /**
@@ -96,17 +44,6 @@ function assertWithin<T>(map: T, value: keyof T, thing: string) {
     const keys = Object.keys(map).join('" "');
     throw new Error(`Unexpected "${value}" in ${thing}. Possible values are: "${keys}"`);
   }
-}
-
-/**
- * Converts the input to a buffer, if it is not already.
- */
-function toBuffer(input: string | Buffer): Buffer {
-  if (input instanceof Buffer) {
-    return input;
-  }
-
-  return Buffer.from(input);
 }
 
 /**
@@ -226,7 +163,6 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
  * MultiRangeBuilder is a query builder that looks up multiple keys.
  */
 export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
-
   private queryPrefix: Buffer;
 
   constructor(private kv: RPC.KVClient) {
@@ -241,8 +177,16 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public prefix(value: string | Buffer): this {
     this.queryPrefix = toBuffer(value);
-    this.request.key = prefixStart(value);
-    this.request.range_end = prefixEnd(this.request.key);
+    return this.inRange(Range.prefix(value));
+  }
+
+  /**
+   * inRange instructs the builder to get keys in the specified byte range.
+   */
+  public inRange(r: rangable): this {
+    const range = Range.from(r);
+    this.request.key = range.start;
+    this.request.range_end = range.end;
     return this;
   }
 
@@ -251,15 +195,6 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public all(): this {
     return this.prefix('');
-  }
-
-  /**
-   * inRange instructs the builder to get keys in the specified byte range.
-   */
-  public inRange(start: string | Buffer, end: string | Buffer): this {
-    this.request.key = toBuffer(start);
-    this.request.range_end = toBuffer(end);
-    return this;
   }
 
   /**
@@ -273,10 +208,11 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   /**
    * Sort specifies how the result should be sorted.
    */
-  public sort(target: keyof typeof sortMap, order: 'asc' | 'desc'): this {
-    assertWithin(sortMap, target, 'sort order in client.get().sort(...)');
-    this.request.sort_target = sortMap[target];
-    this.request.sort_order = order.toLowerCase() === 'asc' ? RPC.SortOrder.ASCEND : RPC.SortOrder.DESCEND;
+  public sort(target: keyof typeof RPC.SortTarget, order: keyof typeof RPC.SortOrder): this {
+    assertWithin(RPC.SortTarget, target, 'sort order in client.get().sort(...)');
+    assertWithin(RPC.SortOrder, order, 'sort order in client.get().sort(...)');
+    this.request.sort_target = RPC.SortTarget[target];
+    this.request.sort_order = RPC.SortOrder[order];
     return this;
   }
 
@@ -352,7 +288,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   private mapValues<T>(iterator: (buf: Buffer) => T): Promise<{ [key: string]: T }> {
     return this.exec().then(res => {
       const output: { [key: string]: T } = {};
-      for (let i = 0; i < res.kvs.length; i += 1) {
+      for (let i = 0; i < res.kvs.length; i++) {
         output[res.kvs[i].key.slice(this.queryPrefix.length).toString()] =
           iterator(res.kvs[i].value);
       }
@@ -382,11 +318,18 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   }
 
   /**
-   * Prefix instructs the query to delete all keys that have the provided prefix.
+   * key sets a single key to be deleted.
    */
   public prefix(value: string | Buffer): this {
-    this.request.key = prefixStart(value);
-    this.request.range_end = prefixEnd(this.request.key);
+    return this.range(Range.prefix(value));
+  }
+
+  /**
+   * Sets the byte range of values to delete.
+   */
+  public range(range: Range): this {
+    this.request.key = range.start;
+    this.request.range_end = range.end;
     return this;
   }
 
@@ -400,9 +343,10 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   /**
    * inRange instructs the builder to delete keys in the specified byte range.
    */
-  public inRange(start: string | Buffer, end: string | Buffer): this {
-    this.request.key = toBuffer(start);
-    this.request.range_end = toBuffer(end);
+  public inRange(r: rangable): this {
+    const range = Range.from(r);
+    this.request.key = range.start;
+    this.request.range_end = range.end;
     return this;
   }
 
@@ -523,7 +467,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * const id = uuid.v4();
  *
  * function lock() {
- *   return client.if('my_lock', 'createdAt', '==', 0)
+ *   return client.if('my_lock', 'create', '==', 0)
  *     .then(client.put('my_lock').value(id))
  *     .else(client.get('my_lock'))
  *     .commit()
@@ -545,8 +489,12 @@ export class ComparatorBuilder {
   /**
    * Adds a new clause to the transaction.
    */
-  public and(key: string | Buffer, column: keyof typeof compareTarget,
-      cmp: keyof typeof comparator, value: string | Buffer | number): this {
+  public and(
+    key: string | Buffer,
+    column: keyof typeof RPC.CompareTarget,
+    cmp: keyof typeof comparator,
+    value: string | Buffer | number,
+  ): this {
     assertWithin(compareTarget, column, 'comparison target in client.and(...)');
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
 
@@ -558,8 +506,8 @@ export class ComparatorBuilder {
     this.request.compare.push({
       key: toBuffer(key),
       result: comparator[cmp],
-      target: compareTarget[column].value,
-      [compareTarget[column].key]: typeof value === 'number' ? value : toBuffer(value),
+      target: RPC.CompareTarget[column],
+      [compareTarget[column]]: typeof value === 'number' ? value : toBuffer(value),
     });
     return this;
   }

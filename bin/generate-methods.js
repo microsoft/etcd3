@@ -32,6 +32,7 @@ const pbTypeAliases = {
   bool: 'boolean',
   string: 'string',
   bytes: 'Buffer',
+  Type: 'Permission',
 };
 
 const numericTypes = [
@@ -82,6 +83,7 @@ function template(name, params) {
     getCommentPrefixing,
     getLineContaining,
     formatType,
+    aliases: pbTypeAliases,
   });
 
   emit(templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, ''));
@@ -95,7 +97,7 @@ function stripPackageNameFrom(name) {
   return name;
 }
 
-function formatType(type, isInResponse = false) {
+function formatTypeInner(type, isInResponse) {
   if (type in pbTypeAliases) {
     return pbTypeAliases[type];
   }
@@ -113,13 +115,25 @@ function formatType(type, isInResponse = false) {
   return `I${type}`;
 }
 
+function formatType(type, isInResponse = false) {
+  const isEnum = enums.includes(type);
+  const formatted = formatTypeInner(type, isInResponse);
+
+  // grpc unmarshals enums as their string representations.
+  if (isEnum) {
+    return isInResponse ? `keyof typeof ${formatted}` : `${formatted} | keyof typeof ${formatted}`;
+  }
+
+  return formatted;
+}
+
 function getLineContaining(substring, from = 0) {
   return lines.findIndex((l, i) => i >= from && l.includes(substring));
 }
 
 function indent(level) {
   let out = '';
-  for (let i = 0; i < level; i++) {
+  for (let i = 0; i < level; i += 1) {
     out += indentation;
   }
   return out;
