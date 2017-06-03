@@ -345,9 +345,9 @@ describe('client', () => {
 
     it('create and deletes', async () => {
       const fooRole = await client.role('foo').create();
-      expectRoles(['foo']);
+      await expectRoles(['foo']);
       await fooRole.delete();
-      expectRoles([]);
+      await expectRoles([]);
     });
 
     it('throws on existing roles', async () => {
