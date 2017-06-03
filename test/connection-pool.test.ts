@@ -1,9 +1,8 @@
 import { expect } from 'chai';
 
+import { GRPCConnectFailedError, IOptions, KVClient } from '../src';
 import { ConnectionPool } from '../src/connection-pool';
-import { KVClient } from '../src/rpc';
-import { GRPCConnectFailedError, IOptions } from '../src';
-import { getOptions, getHost } from './util';
+import { getHost, getOptions } from './util';
 
 function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
   return getOptions({

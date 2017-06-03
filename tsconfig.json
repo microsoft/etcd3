@@ -22,7 +22,13 @@
       "chai-subset",
       "mocha",
       "node"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "src/types/*"
+      ]
+    }
   },
   "exclude": [
     "node_modules",

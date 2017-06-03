@@ -81,7 +81,7 @@ export class Role {
     return this.client.roleGrantPermission({
       name: this.name,
       perm: {
-        permType: 'read',
+        permType: req.permission,
         key: range.start,
         range_end: range.end,
       },

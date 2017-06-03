@@ -74,6 +74,18 @@ export class EtcdUserNotFoundError extends Error {}
  */
 export class EtcdLockFailedError extends Error {}
 
+/**
+ * EtcdAuthenticationFailedError is thrown when an invalid username/password
+ * combination is submitted.
+ */
+export class EtcdAuthenticationFailedError extends Error {}
+
+/**
+ * EtcdPermissionDeniedError is thrown when the user attempts to modify a key
+ * that they don't have access to.
+ */
+export class EtcdPermissionDeniedError extends Error {}
+
 interface IErrorCtor {
   new (message: string): Error;
 }
@@ -111,6 +123,8 @@ const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
   [/role is not granted to the user/, EtcdRoleNotGrantedError],
   [/role name not found/, EtcdRoleNotFoundError],
   [/user name not found/, EtcdUserNotFoundError],
+  [/authentication failed, invalid user ID or password/, EtcdAuthenticationFailedError],
+  [/permission denied/, EtcdPermissionDeniedError],
 ]);
 
 function getMatchingGrpcError(err: Error): IErrorCtor | null {

@@ -1,5 +1,6 @@
-import { IOptions } from '../src';
 import * as fs from 'fs';
+
+import { IOptions } from '../src';
 
 const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
 

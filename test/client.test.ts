@@ -3,8 +3,10 @@ import * as sinon from 'sinon';
 
 import {
   Etcd3,
+  EtcdAuthenticationFailedError,
   EtcdLeaseInvalidError,
   EtcdLockFailedError,
+  EtcdPermissionDeniedError,
   EtcdRoleExistsError,
   EtcdRoleNotFoundError,
   EtcdRoleNotGrantedError,
@@ -19,7 +21,12 @@ import { getOptions } from './util';
 function expectReject(promise: Promise<any>, err: { new (message: string): Error }) {
   return promise
     .then(() => { throw new Error('expected to reject'); })
-    .catch(actualErr => expect(actualErr).to.be.an.instanceof(err));
+    .catch(actualErr => {
+      if (!(actualErr instanceof err)) {
+        console.error(actualErr.stack);
+        expect(actualErr).to.be.an.instanceof(err);
+      }
+    });
 }
 
 function wipeAll(things: Promise<{ delete(): any }[]>) {
@@ -30,22 +37,22 @@ describe('client', () => {
   let client: Etcd3;
   let badClient: Etcd3;
 
-  // beforeEach(() => {
-  //   client = new Etcd3(getOptions());
-  //   badClient = new Etcd3(getOptions({ hosts: '127.0.0.1:1' }));
-  //   return Promise.all([
-  //     client.put('foo1').value('bar1'),
-  //     client.put('foo2').value('bar2'),
-  //     client.put('foo3').value('{"value":"bar3"}'),
-  //     client.put('baz').value('bar5'),
-  //   ]);
-  // });
+  beforeEach(() => {
+    client = new Etcd3(getOptions());
+    badClient = new Etcd3(getOptions({ hosts: '127.0.0.1:1' }));
+    return Promise.all([
+      client.put('foo1').value('bar1'),
+      client.put('foo2').value('bar2'),
+      client.put('foo3').value('{"value":"bar3"}'),
+      client.put('baz').value('bar5'),
+    ]);
+  });
 
-  // afterEach(async () => {
-  //   await client.delete().all();
-  //   client.close();
-  //   badClient.close();
-  // });
+  afterEach(async () => {
+    await client.delete().all();
+    client.close();
+    badClient.close();
+  });
 
   it('allows mocking', async () => {
     const mock = client.mock({
@@ -429,45 +436,45 @@ describe('client', () => {
   });
 
   describe('password auth', () => {
-    // beforeEach(async () => {
-    //   await wipeAll(client.getUsers());
-    //   await wipeAll(client.getRoles());
+    beforeEach(async () => {
+      await wipeAll(client.getUsers());
+      await wipeAll(client.getRoles());
 
-    //   // We need to set up a root user and root role first, otherwise etcd
-    //   // will yell at us.
-    //   const rootUser = await client.user('root').create('password');
-    //   rootUser.addRole('root');
+      // We need to set up a root user and root role first, otherwise etcd
+      // will yell at us.
+      const rootUser = await client.user('root').create('password');
+      rootUser.addRole('root');
 
-    //   await client.user('connor').create('password');
+      await client.user('connor').create('password');
 
-    //   const normalRole = await client.role('all').create();
-    //   await normalRole.grant({
-    //     permission: 'readwrite',
-    //     range: client.range({ prefix: 'f' }),
-    //   });
-    //   await normalRole.addUser('connor');
-    //   await client.auth.authEnable();
-    // });
+      const normalRole = await client.role('rw_prefix_f').create();
+      await normalRole.grant({
+        permission: 'readwrite',
+        range: client.range({ prefix: 'f' }),
+      });
+      await normalRole.addUser('connor');
+      await client.auth.authEnable();
+    });
 
-    // afterEach(async () => {
-    //   const rootClient = new Etcd3(getOptions({
-    //     auth: {
-    //       username: 'root',
-    //       password: 'password',
-    //     },
-    //   }));
+    afterEach(async () => {
+      const rootClient = new Etcd3(getOptions({
+        auth: {
+          username: 'root',
+          password: 'password',
+        },
+      }));
 
-    //   await rootClient.auth.authDisable();
-    //   rootClient.close();
+      await rootClient.auth.authDisable();
+      rootClient.close();
 
-    //   await wipeAll(client.getUsers());
-    //   await wipeAll(client.getRoles());
-    // });
+      await wipeAll(client.getUsers());
+      await wipeAll(client.getRoles());
+    });
 
     it('allows authentication using the correct credentials', async () => {
       const authedClient = new Etcd3(getOptions({
         auth: {
-          username: 'root',
+          username: 'connor',
           password: 'password',
         },
       }));
@@ -476,7 +483,7 @@ describe('client', () => {
       authedClient.close();
     });
 
-    it('throws when using incorrect credentials', async () => {
+    it('rejects modifying a key the client has no access to', async () => {
       const authedClient = new Etcd3(getOptions({
         auth: {
           username: 'connor',
@@ -485,8 +492,24 @@ describe('client', () => {
       }));
 
       await expectReject(
+        authedClient.put('wut').value('bar').exec(),
+        EtcdPermissionDeniedError,
+      );
+
+      authedClient.close();
+    });
+
+    it('throws when using incorrect credentials', async () => {
+      const authedClient = new Etcd3(getOptions({
+        auth: {
+          username: 'connor',
+          password: 'bad password',
+        },
+      }));
+
+      await expectReject(
         authedClient.put('foo').value('bar').exec(),
-        EtcdRoleNotFoundError,
+        EtcdAuthenticationFailedError,
       );
 
       authedClient.close();
