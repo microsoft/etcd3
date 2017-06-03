@@ -30,7 +30,6 @@ import * as RPC from './rpc';
  * ```
  */
 export class Lock {
-
   private leaseTTL = 30;
   private lease: Lease | null;
 
@@ -58,7 +57,7 @@ export class Lock {
 
     return lease.grant().then(leaseID => {
       return new ComparatorBuilder(kv)
-        .and(this.key, 'createdAt', '==', 0)
+        .and(this.key, 'Create', '==', 0)
         .then(new PutBuilder(kv, this.key).value('').lease(leaseID))
         .commit()
         .then(res => {

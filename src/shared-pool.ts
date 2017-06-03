@@ -58,10 +58,10 @@ export class SharedPool<T> {
     }
 
     const nextAvailable = minBy(available, r => r.availableAfter);
-    this.contentionCount += 1;
+    this.contentionCount++;
 
     return delay(nextAvailable[0].availableAfter - now).then(() => {
-      this.contentionCount -= 1;
+      this.contentionCount--;
       return this.pull();
     });
   }

@@ -1,4 +1,4 @@
-export enum <%= name %> {
+export enum <%= name in aliases ? aliases[name] : name %> {
 --<% _.forOwn(node.values, (count, field) => { %>
 --<%= getCommentPrefixing(`${field} = ${count}`, getLineContaining(`enum ${name}`)) %>
   <%= field %> = <%= count %>,

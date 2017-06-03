@@ -1,9 +1,15 @@
 import { expect } from 'chai';
 
+import { GRPCConnectFailedError, IOptions, KVClient } from '../src';
 import { ConnectionPool } from '../src/connection-pool';
-import { GRPCConnectFailedError } from '../src/errors';
-import { KVClient } from '../src/rpc';
-import { getHosts } from './util';
+import { getHost, getOptions } from './util';
+
+function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
+  return getOptions({
+    hosts: ['127.0.0.1:1', getHost()],
+    ...options,
+  });
+}
 
 describe('connection pool', () => {
   const key = new Buffer('foo');
@@ -18,7 +24,7 @@ describe('connection pool', () => {
   });
 
   it('calls simple methods', async () => {
-    pool = new ConnectionPool({ hosts: getHosts() });
+    pool = new ConnectionPool(getOptions());
     const kv = new KVClient(pool);
     await kv.put({ key, value });
     const res = await kv.range({ key });
@@ -28,7 +34,7 @@ describe('connection pool', () => {
   });
 
   it('rejects hitting invalid hosts', () => {
-    pool = new ConnectionPool({ hosts: ['127.0.0.1:1', getHosts()] });
+    pool = new ConnectionPool(getOptionsWithBadHost());
     const kv = new KVClient(pool);
     return kv.range({ key })
       .then(() => { throw new Error('expected to reject'); })
@@ -36,10 +42,7 @@ describe('connection pool', () => {
   });
 
   it('retries when requested', async () => {
-    pool = new ConnectionPool({
-      hosts: ['127.0.0.1:1', getHosts()],
-      retry: true,
-    });
+    pool = new ConnectionPool(getOptionsWithBadHost({ retry: true }));
     const kv = new KVClient(pool);
     expect((await kv.range({ key })).kvs).to.deep.equal([]);
   });

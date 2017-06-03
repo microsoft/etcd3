@@ -3,20 +3,43 @@ import * as sinon from 'sinon';
 
 import {
   Etcd3,
+  EtcdAuthenticationFailedError,
   EtcdLeaseInvalidError,
   EtcdLockFailedError,
+  EtcdPermissionDeniedError,
+  EtcdRoleExistsError,
+  EtcdRoleNotFoundError,
+  EtcdRoleNotGrantedError,
+  EtcdUserExistsError,
+  EtcdUserNotFoundError,
   GRPCConnectFailedError,
   Lease,
+  Role,
 } from '../src';
-import { getHosts } from './util';
+import { getOptions } from './util';
 
-describe('connection pool', () => {
+function expectReject(promise: Promise<any>, err: { new (message: string): Error }) {
+  return promise
+    .then(() => { throw new Error('expected to reject'); })
+    .catch(actualErr => {
+      if (!(actualErr instanceof err)) {
+        console.error(actualErr.stack);
+        expect(actualErr).to.be.an.instanceof(err);
+      }
+    });
+}
+
+function wipeAll(things: Promise<{ delete(): any }[]>) {
+  return things.then(items => Promise.all(items.map(item => item.delete())));
+}
+
+describe('client', () => {
   let client: Etcd3;
   let badClient: Etcd3;
 
   beforeEach(() => {
-    client = new Etcd3({ hosts: getHosts() });
-    badClient = new Etcd3({ hosts: '127.0.0.1:1' });
+    client = new Etcd3(getOptions());
+    badClient = new Etcd3(getOptions({ hosts: '127.0.0.1:1' }));
     return Promise.all([
       client.put('foo1').value('bar1'),
       client.put('foo2').value('bar2'),
@@ -95,14 +118,14 @@ describe('connection pool', () => {
     it('sorts', async () => {
       expect(await client.getAll()
         .prefix('foo')
-        .sort('key', 'asc')
+        .sort('Key', 'Ascend')
         .limit(2)
         .keys(),
       ).to.deep.equal(['1', '2']);
 
       expect(await client.getAll()
         .prefix('foo')
-        .sort('key', 'desc')
+        .sort('Key', 'Descend')
         .limit(2)
         .keys(),
       ).to.deep.equal(['3', '2']);
@@ -252,7 +275,7 @@ describe('connection pool', () => {
 
     describe('if()', () => {
       it('runs a simple if', async () => {
-        await client.if('foo1', 'value', '==', 'bar1')
+        await client.if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .commit();
 
@@ -260,7 +283,7 @@ describe('connection pool', () => {
       });
 
       it('runs consequents', async () => {
-        await client.if('foo1', 'value', '==', 'bar1')
+        await client.if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'))
           .commit();
@@ -269,8 +292,8 @@ describe('connection pool', () => {
       });
 
       it('runs multiple clauses and consequents', async () => {
-        const result = await client.if('foo1', 'value', '==', 'bar1')
-          .and('foo2', 'value', '==', 'wut')
+        const result = await client.if('foo1', 'Value', '==', 'bar1')
+          .and('foo2', 'Value', '==', 'wut')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'), client.get('foo2'))
           .commit();
@@ -309,6 +332,187 @@ describe('connection pool', () => {
         await client.lock('resource').do(assertCantLock);
         await assertAbleToLock();
       });
+    });
+  });
+
+  describe('roles', () => {
+    afterEach(() => wipeAll(client.getRoles()));
+
+    const expectRoles = async (expected: string[]) => {
+      const list = await client.getRoles();
+      expect(list.map(r => r.name)).to.deep.equal(expected);
+    };
+
+    it('create and deletes', async () => {
+      const fooRole = await client.role('foo').create();
+      await expectRoles(['foo']);
+      await fooRole.delete();
+      await expectRoles([]);
+    });
+
+    it('throws on existing roles', async () => {
+      await client.role('foo').create();
+      await expectReject(client.role('foo').create(), EtcdRoleExistsError);
+    });
+
+    it('throws on deleting a non-existent role', async () => {
+      await expectReject(client.role('foo').delete(), EtcdRoleNotFoundError);
+    });
+
+    it('throws on granting permission to a non-existent role', async () => {
+      await expectReject(
+        client.role('foo').grant({
+          permission: 'Read',
+          range: client.range({ prefix: '111' }),
+        }),
+        EtcdRoleNotFoundError,
+      );
+    });
+
+    it('round trips permission grants', async () => {
+      const fooRole = await client.role('foo').create();
+      await fooRole.grant({
+        permission: 'Read',
+        range: client.range({ prefix: '111' }),
+      });
+
+      const perms = await fooRole.permissions();
+      expect(perms).to.containSubset([
+        {
+          permission: 'Read',
+          range: client.range({ prefix: '111' }),
+        },
+      ]);
+
+      await fooRole.revoke(perms[0]);
+      expect(await fooRole.permissions()).to.have.length(0);
+    });
+  });
+
+  describe('users', () => {
+    let fooRole: Role;
+    beforeEach(async () => {
+      fooRole = client.role('foo');
+      await fooRole.create();
+    });
+
+    afterEach(async () => {
+      await fooRole.delete();
+      await wipeAll(client.getUsers());
+    });
+
+    it('creates users', async () => {
+      expect(await client.getUsers()).to.have.lengthOf(0);
+      await client.user('connor').create('password');
+      expect(await client.getUsers()).to.containSubset([{ name: 'connor' }]);
+    });
+
+    it('throws on existing users', async () => {
+      await client.user('connor').create('password');
+      await expectReject(client.user('connor').create('password'), EtcdUserExistsError);
+    });
+
+    it('throws on regranting the same role multiple times', async () => {
+      const user = await client.user('connor').create('password');
+      await expectReject(user.removeRole(fooRole), EtcdRoleNotGrantedError);
+    });
+
+    it('throws on granting a non-existent role', async () => {
+      const user = await client.user('connor').create('password');
+      await expectReject(user.addRole('wut'), EtcdRoleNotFoundError);
+    });
+
+    it('throws on deleting a non-existent user', async () => {
+      await expectReject(client.user('connor').delete(), EtcdUserNotFoundError);
+    });
+
+    it('round trips roles', async () => {
+      const user = await client.user('connor').create('password');
+      await user.addRole(fooRole);
+      expect(await user.roles()).to.containSubset([{ name: 'foo' }]);
+      await user.removeRole(fooRole);
+      expect(await user.roles()).to.have.lengthOf(0);
+    });
+  });
+
+  describe('password auth', () => {
+    beforeEach(async () => {
+      await wipeAll(client.getUsers());
+      await wipeAll(client.getRoles());
+
+      // We need to set up a root user and root role first, otherwise etcd
+      // will yell at us.
+      const rootUser = await client.user('root').create('password');
+      rootUser.addRole('root');
+
+      await client.user('connor').create('password');
+
+      const normalRole = await client.role('rw_prefix_f').create();
+      await normalRole.grant({
+        permission: 'Readwrite',
+        range: client.range({ prefix: 'f' }),
+      });
+      await normalRole.addUser('connor');
+      await client.auth.authEnable();
+    });
+
+    afterEach(async () => {
+      const rootClient = new Etcd3(getOptions({
+        auth: {
+          username: 'root',
+          password: 'password',
+        },
+      }));
+
+      await rootClient.auth.authDisable();
+      rootClient.close();
+
+      await wipeAll(client.getUsers());
+      await wipeAll(client.getRoles());
+    });
+
+    it('allows authentication using the correct credentials', async () => {
+      const authedClient = new Etcd3(getOptions({
+        auth: {
+          username: 'connor',
+          password: 'password',
+        },
+      }));
+
+      await authedClient.put('foo').value('bar');
+      authedClient.close();
+    });
+
+    it('rejects modifying a key the client has no access to', async () => {
+      const authedClient = new Etcd3(getOptions({
+        auth: {
+          username: 'connor',
+          password: 'password',
+        },
+      }));
+
+      await expectReject(
+        authedClient.put('wut').value('bar').exec(),
+        EtcdPermissionDeniedError,
+      );
+
+      authedClient.close();
+    });
+
+    it('throws when using incorrect credentials', async () => {
+      const authedClient = new Etcd3(getOptions({
+        auth: {
+          username: 'connor',
+          password: 'bad password',
+        },
+      }));
+
+      await expectReject(
+        authedClient.put('foo').value('bar').exec(),
+        EtcdAuthenticationFailedError,
+      );
+
+      authedClient.close();
     });
   });
 });

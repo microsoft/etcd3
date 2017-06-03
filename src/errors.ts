@@ -32,7 +32,7 @@ export class GRPCCancelledError extends GRPCGenericError {}
 export class EtcdError extends Error {}
 
 /**
- * EtcdLeaseTimeoutError is thrown when trying to renew a lease that's
+ * EtcdLeaseInvalidError is thrown when trying to renew a lease that's
  * expired.
  */
 export class EtcdLeaseInvalidError extends Error {
@@ -42,9 +42,49 @@ export class EtcdLeaseInvalidError extends Error {
 }
 
 /**
+ * EtcdRoleExistsError is thrown when trying to create a role that already exists.
+ */
+export class EtcdRoleExistsError extends Error {}
+
+/**
+ * EtcdUserExistsError is thrown when trying to create a user that already exists.
+ */
+export class EtcdUserExistsError extends Error {}
+
+/**
+ * EtcdRoleNotGrantedError is thrown when trying to revoke a role from a user
+ * to which the role is not granted.
+ */
+export class EtcdRoleNotGrantedError extends Error {}
+
+/**
+ * EtcdRoleNotFoundError is thrown when trying to operate on a role that does
+ * not exist.
+ */
+export class EtcdRoleNotFoundError extends Error {}
+
+/**
+ * EtcdUserNotFoundError is thrown when trying to operate on a user that does
+ * not exist.
+ */
+export class EtcdUserNotFoundError extends Error {}
+
+/**
  * EtcdLockFailedError is thrown when we fail to aquire a lock.
  */
 export class EtcdLockFailedError extends Error {}
+
+/**
+ * EtcdAuthenticationFailedError is thrown when an invalid username/password
+ * combination is submitted.
+ */
+export class EtcdAuthenticationFailedError extends Error {}
+
+/**
+ * EtcdPermissionDeniedError is thrown when the user attempts to modify a key
+ * that they don't have access to.
+ */
+export class EtcdPermissionDeniedError extends Error {}
 
 interface IErrorCtor {
   new (message: string): Error;
@@ -54,7 +94,7 @@ interface IErrorCtor {
  * Mapping of GRPC error messages to typed error. GRPC errors are untyped
  * by default and sourced from within a mess of C code.
  */
-const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
+const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Connect Failed', GRPCConnectFailedError],
   ['Channel Disconnected', GRPCConnectFailedError],
   ['Endpoint read failed', GRPCProtocolError],
@@ -78,18 +118,19 @@ const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
   ['Cancelled before creating subchannel', GRPCCancelledError],
   ['Pick cancelled', GRPCCancelledError],
   ['Disconnected', GRPCCancelledError],
+  ['etcdserver: role name already exists', EtcdRoleExistsError],
+  ['etcdserver: user name already exists', EtcdUserExistsError],
+  ['etcdserver: role is not granted to the user', EtcdRoleNotGrantedError],
+  ['etcdserver: role name not found', EtcdRoleNotFoundError],
+  ['etcdserver: user name not found', EtcdUserNotFoundError],
+  ['etcdserver: authentication failed, invalid user ID or password', EtcdAuthenticationFailedError],
+  ['etcdserver: permission denied', EtcdPermissionDeniedError],
 ]);
 
 function getMatchingGrpcError(err: Error): IErrorCtor | null {
   for (const [key, value] of grpcMessageToError) {
-    if (typeof key === 'string') {
-      if (err.message.includes(key)) {
-        return value;
-      }
-    } else {
-      if (key.test(err.message)) {
-        return value;
-      }
+    if (err.message.includes(key)) {
+      return value;
     }
   }
 
@@ -109,9 +150,9 @@ export function castGrpcError(err: Error): Error {
     return err; // it looks like it's already some kind of typed error
   }
 
-  let ctor: IErrorCtor = getMatchingGrpcError(err) || GRPCGenericError;
-  if (err.message.includes('etcdserver:')) {
-    ctor = EtcdError;
+  let ctor = getMatchingGrpcError(err);
+  if (!ctor) {
+    ctor = err.message.includes('etcdserver:') ? EtcdError : GRPCGenericError;
   }
 
   const castError = new ctor(rewriteErrorName(err.message, ctor));

@@ -292,16 +292,16 @@ message ResponseHeader {
 }
 message RangeRequest {
   enum SortOrder {
-	NONE = 0; // default, no sorting
-	ASCEND = 1; // lowest target value first
-	DESCEND = 2; // highest target value first
+	None = 0; // default, no sorting
+	Ascend = 1; // lowest target value first
+	Descend = 2; // highest target value first
   }
   enum SortTarget {
-	KEY = 0;
-	VERSION = 1;
-	CREATE = 2;
-	MOD = 3;
-	VALUE = 4;
+	Key = 0;
+	Version = 1;
+	Create = 2;
+	Mod = 3;
+	Value = 4;
   }
   // key is the first key for the range. If range_end is not given, the request only looks up key.
   bytes key = 1;
@@ -418,16 +418,16 @@ message ResponseOp {
 }
 message Compare {
   enum CompareResult {
-    EQUAL = 0;
-    GREATER = 1;
-    LESS = 2;
-    NOT_EQUAL = 3;
+    Equal = 0;
+    Greater = 1;
+    Less = 2;
+    NotEqual = 3;
   }
   enum CompareTarget {
-    VERSION = 0;
-    CREATE = 1;
-    MOD = 2;
-    VALUE= 3;
+    Version = 0;
+    Create = 1;
+    Mod = 2;
+    Value= 3;
   }
   // result is logical comparison operation for this comparison.
   CompareResult result = 1;
@@ -537,9 +537,9 @@ message WatchCreateRequest {
   bool progress_notify = 4;
   enum FilterType {
   // filter out put event.
-  NOPUT = 0;
+  Noput = 0;
   // filter out delete event.
-  NODELETE = 1;
+  Nodelete = 1;
   }
   // filters filter the events at server side before it sends back to the watcher.
   repeated FilterType filters = 5;
@@ -572,6 +572,8 @@ message WatchResponse {
   // The client should treat the watcher as canceled and should not try to create any
   // watcher with the same start_revision again.
   int64 compact_revision  = 5;
+  // cancel_reason indicates the reason for canceling the watcher.
+  string cancel_reason = 6;
   repeated mvccpb.Event events = 11;
 }
 message LeaseGrantRequest {
@@ -641,6 +643,8 @@ message MemberAddResponse {
   ResponseHeader header = 1;
   // member is the member information for the added member.
   Member member = 2;
+  // members is a list of all members after adding the new member.
+  repeated Member members = 3;
 }
 message MemberRemoveRequest {
   // ID is the member ID of the member to remove.
@@ -648,6 +652,8 @@ message MemberRemoveRequest {
 }
 message MemberRemoveResponse {
   ResponseHeader header = 1;
+  // members is a list of all members after removing the member.
+  repeated Member members = 2;
 }
 message MemberUpdateRequest {
   // ID is the member ID of the member to update.
@@ -657,6 +663,8 @@ message MemberUpdateRequest {
 }
 message MemberUpdateResponse{
   ResponseHeader header = 1;
+  // members is a list of all members after updating the member.
+  repeated Member members = 2;
 }
 message MemberListRequest {
 }
@@ -671,14 +679,14 @@ message DefragmentResponse {
   ResponseHeader header = 1;
 }
 enum AlarmType {
-	NONE = 0; // default, used to query if any alarm is active
-	NOSPACE = 1; // space quota is exhausted
+	None = 0; // default, used to query if any alarm is active
+	Nospace = 1; // space quota is exhausted
 }
 message AlarmRequest {
   enum AlarmAction {
-	GET = 0;
-	ACTIVATE = 1;
-	DEACTIVATE = 2;
+	Get = 0;
+	Activate = 1;
+	Deactivate = 2;
   }
   // action is the kind of alarm request to issue. The action
   // may GET alarm statuses, ACTIVATE an alarm, or DEACTIVATE a
