@@ -1,3 +1,11 @@
+/**
+ * Thrown when an internal assertion fails.
+ */
+export class ClientRuntimeError extends Error {
+  constructor(message: string) {
+    super(`${message} Please report this error at https://github.com/mixer/etcd3`);
+  }
+}
 
 /**
  * A GRPCGenericError is rejected via the connection when some error occurs

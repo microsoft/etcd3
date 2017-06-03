@@ -3,6 +3,7 @@ import { ComparatorBuilder, PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
 import { Lease } from './lease';
 import * as RPC from './rpc';
+import { NSApplicator } from './util';
 
 /**
  * A Lock can be used for distributed locking to create atomic operations
@@ -33,7 +34,11 @@ export class Lock {
   private leaseTTL = 30;
   private lease: Lease | null;
 
-  constructor(private pool: ConnectionPool, private key: string | Buffer) {}
+  constructor(
+    private readonly pool: ConnectionPool,
+    private readonly namespace: NSApplicator,
+    private key: string | Buffer,
+  ) {}
 
   /**
    * Sets the TTL of the lease underlying the lock. The lease TTL defaults
@@ -52,13 +57,13 @@ export class Lock {
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
   public acquire(): Promise<void> {
-    const lease = this.lease = new Lease(this.pool, this.leaseTTL);
+    const lease = this.lease = new Lease(this.pool, this.namespace, this.leaseTTL);
     const kv = new RPC.KVClient(this.pool);
 
     return lease.grant().then(leaseID => {
-      return new ComparatorBuilder(kv)
+      return new ComparatorBuilder(kv, this.namespace)
         .and(this.key, 'Create', '==', 0)
-        .then(new PutBuilder(kv, this.key).value('').lease(leaseID))
+        .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
         .commit()
         .then(res => {
           if (!res.succeeded) {

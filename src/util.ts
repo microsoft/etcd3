@@ -1,3 +1,8 @@
+import { ClientRuntimeError } from './errors';
+
+export const zeroKey = Buffer.from([0]);
+export const emptyKey = Buffer.from([]);
+
 /**
  * Converts the input to a buffer, if it is not already.
  */
@@ -7,6 +12,99 @@ export function toBuffer(input: string | Buffer): Buffer {
   }
 
   return Buffer.from(input);
+}
+
+/**
+ * Returns the range_end value for a query for the provided prefix.
+ */
+export function endRangeForPrefix(prefix: Buffer): Buffer {
+    const start = toBuffer(prefix);
+    let end = Buffer.from(start); // copy to prevent mutation
+    for (let i = end.length - 1; i >= 0; i--) {
+      if (end[i] < 0xff) {
+        end[i]++;
+        end = end.slice(0, i + 1);
+        return end;
+      }
+    }
+
+    return zeroKey;
+}
+
+/**
+ * NSApplicator is used internally to apply a namespace to a given request. It
+ * can only be used for a single application.
+ */
+export class NSApplicator {
+  // A little caching, maybe a microoptimization :P
+  private endRange: Buffer | null;
+
+  constructor(private readonly prefix: Buffer) {}
+
+  /**
+   * Applies the namespace prefix to the buffer, if it exists.
+   */
+  public applyKey(buf?: Buffer) {
+    if (this.prefix.length === 0 || !buf) {
+      return buf;
+    }
+
+    return Buffer.concat([this.prefix, buf]);
+  }
+
+  /**
+   * Applies the namespace prefix to a range end. Due to how etcd handle 'zero'
+   * ranges, we need special logic here.
+   */
+  public applyRangeEnd(buf?: Buffer) {
+    if (this.prefix.length === 0 || !buf) {
+      return buf;
+    }
+
+    if (buf.equals(zeroKey)) {
+      if (!this.endRange) {
+        this.endRange = endRangeForPrefix(this.prefix);
+      }
+
+      return this.endRange;
+    }
+
+    return Buffer.concat([this.prefix, buf]);
+  }
+
+  /**
+   * Shortcut function to apply the namespace to a GRPC CRUD request. It returns
+   * a new request, it does not modify the original.
+   */
+  public applyToRequest<T extends { key?: Buffer, range_end?: Buffer }>(req: T): T {
+    if (this.prefix.length === 0) {
+      return req;
+    }
+
+    // TS doesn't seem to like the spread operator on generics, so O.A it is.
+    return Object.assign({}, req, {
+      key: this.applyKey(req.key),
+      range_end: this.applyRangeEnd(req.range_end),
+    });
+  }
+
+  /**
+   * Removes a namespace prefix from the provided buffer. Throws if the buffer
+   * doesn't have the prefix.
+   */
+  public unprefix(buf: Buffer): Buffer {
+    if (this.prefix.length === 0) {
+      return buf;
+    }
+
+    if (!buf.slice(0, this.prefix.length).equals(this.prefix)) {
+      throw new ClientRuntimeError(
+        `Cannot slice non-existent prefix ${this.prefix} from ${buf}!`,
+      );
+    }
+
+    return buf.slice(this.prefix.length);
+  }
 }
 
 /**
