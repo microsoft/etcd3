@@ -86,18 +86,9 @@ describe('client', () => {
 
     it('queries prefixes', async () => {
       expect(await client.getAll().prefix('fo').strings()).to.deep.equal({
-        o1: 'bar1',
-        o2: 'bar2',
-        o3: '{"value":"bar3"}',
-      });
-    });
-
-    it('supports wide utf8 characters in prefixes', async () => {
-      // These characters are >16 bits, if they're sliced in the wrong order
-      // (based on string rather than byte length) the prefix can get truncated.
-      await client.put('❤️/💔').value('heyo!');
-      expect(await client.getAll().prefix('❤️/')).to.deep.equal({
-        '💔': 'heyo!',
+        foo1: 'bar1',
+        foo2: 'bar2',
+        foo3: '{"value":"bar3"}',
       });
     });
 
@@ -121,14 +112,14 @@ describe('client', () => {
         .sort('Key', 'Ascend')
         .limit(2)
         .keys(),
-      ).to.deep.equal(['1', '2']);
+      ).to.deep.equal(['foo1', 'foo2']);
 
       expect(await client.getAll()
         .prefix('foo')
         .sort('Key', 'Descend')
         .limit(2)
         .keys(),
-      ).to.deep.equal(['3', '2']);
+      ).to.deep.equal(['foo3', 'foo2']);
     });
   });
 

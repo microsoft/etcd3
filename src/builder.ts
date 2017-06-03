@@ -163,8 +163,6 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
  * MultiRangeBuilder is a query builder that looks up multiple keys.
  */
 export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
-  private queryPrefix: Buffer;
-
   constructor(private kv: RPC.KVClient) {
     super();
     this.prefix(emptyBuffer);
@@ -176,7 +174,6 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * this prefix.
    */
   public prefix(value: string | Buffer): this {
-    this.queryPrefix = toBuffer(value);
     return this.inRange(Range.prefix(value));
   }
 
@@ -230,7 +227,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   public keys(encoding: string = 'utf8'): Promise<string[]> {
     this.request.keys_only = true;
     return this.exec().then(res => {
-      return res.kvs.map(kv => kv.key.slice(this.queryPrefix.length).toString(encoding));
+      return res.kvs.map(kv => kv.key.toString(encoding));
     });
   }
 
@@ -240,7 +237,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   public keyBuffers(): Promise<Buffer[]> {
     this.request.keys_only = true;
     return this.exec().then(res => {
-      return res.kvs.map(kv => kv.key.slice(this.queryPrefix.length));
+      return res.kvs.map(kv => kv.key);
     });
   }
 
@@ -289,8 +286,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
     return this.exec().then(res => {
       const output: { [key: string]: T } = {};
       for (let i = 0; i < res.kvs.length; i++) {
-        output[res.kvs[i].key.slice(this.queryPrefix.length).toString()] =
-          iterator(res.kvs[i].value);
+        output[res.kvs[i].key.toString()] = iterator(res.kvs[i].value);
       }
 
       return output;
