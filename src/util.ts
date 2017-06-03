@@ -49,21 +49,21 @@ export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key
 export abstract class PromiseWrap<T> implements PromiseLike<T> {
 
   /**
-   * exec should be override to run the promised action.
+   * createPromise should ben override to run the promised action.
    */
-  public abstract exec(): Promise<T>;
+  protected abstract createPromise(): Promise<T>;
 
   /**
    * then implements Promiselike.then()
    */
   public then<R, V>(onFulfilled: (value: T) => R | Promise<R>, onRejected?: (err: any) => V | Promise<V>): Promise<R | V> {
-    return this.exec().then(onFulfilled, <any> onRejected);
+    return this.createPromise().then(onFulfilled, <any> onRejected);
   }
 
   /**
    * catch implements Promiselike.catch()
    */
   public catch<R>(onRejected: (err: any) => R | Promise<R>): Promise<R> {
-    return this.exec().catch(onRejected);
+    return this.createPromise().catch(onRejected);
   }
 }

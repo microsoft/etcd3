@@ -25,8 +25,8 @@ describe('connection pool', () => {
     ]);
   });
 
-  afterEach(() => {
-    client.delete().all();
+  afterEach(async () => {
+    await client.delete().all();
     client.close();
     badClient.close();
   });
@@ -46,7 +46,12 @@ describe('connection pool', () => {
 
   describe('get() / getAll()', () => {
     it('lists all values', async () => {
-      expect(await client.getAll().strings()).to.containSubset(['bar1', 'bar2', 'bar5']);
+      expect(await client.getAll().strings()).to.deep.equal({
+        foo1: 'bar1',
+        foo2: 'bar2',
+        foo3: '{"value":"bar3"}',
+        baz: 'bar5',
+      });
     });
 
     it('gets single keys with various encoding', async () => {
@@ -57,12 +62,30 @@ describe('connection pool', () => {
     });
 
     it('queries prefixes', async () => {
-      expect(await client.getAll().prefix('foo').strings())
-        .to.have.members(['bar1', 'bar2', '{"value":"bar3"}']);
+      expect(await client.getAll().prefix('fo').strings()).to.deep.equal({
+        o1: 'bar1',
+        o2: 'bar2',
+        o3: '{"value":"bar3"}',
+      });
+    });
+
+    it('supports wide utf8 characters in prefixes', async () => {
+      // These characters are >16 bits, if they're sliced in the wrong order
+      // (based on string rather than byte length) the prefix can get truncated.
+      await client.put('❤️/💔').value('heyo!');
+      expect(await client.getAll().prefix('❤️/')).to.deep.equal({
+        '💔': 'heyo!',
+      });
     });
 
     it('gets keys', async () => {
-      expect(await client.getAll().keys().strings()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
+      expect(await client.getAll().keys()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
+      expect(await client.getAll().keyBuffers()).to.have.deep.members([
+        Buffer.from('foo1'),
+        Buffer.from('foo2'),
+        Buffer.from('foo3'),
+        Buffer.from('baz'),
+      ]);
     });
 
     it('counts', async () => {
@@ -74,17 +97,15 @@ describe('connection pool', () => {
         .prefix('foo')
         .sort('key', 'asc')
         .limit(2)
-        .keys()
-        .strings(),
-      ).to.deep.equal(['foo1', 'foo2']);
+        .keys(),
+      ).to.deep.equal(['1', '2']);
 
       expect(await client.getAll()
         .prefix('foo')
         .sort('key', 'desc')
         .limit(2)
-        .keys()
-        .strings(),
-      ).to.deep.equal(['foo3', 'foo2']);
+        .keys(),
+      ).to.deep.equal(['3', '2']);
     });
   });
 
@@ -96,7 +117,7 @@ describe('connection pool', () => {
 
     it('deletes prefix', async () => {
       await client.delete().prefix('foo');
-      expect(await client.getAll().keys().strings()).to.deep.equal(['baz']);
+      expect(await client.getAll().keys()).to.deep.equal(['baz']);
     });
 
     it('gets previous', async () => {
@@ -123,8 +144,8 @@ describe('connection pool', () => {
 
       it('includes previous values', async () => {
         expect(await client.put('foo1').value('updated').getPrevious()).to.containSubset({
-            key: new Buffer('foo1'),
-            value: new Buffer('bar1'),
+          key: new Buffer('foo1'),
+          value: new Buffer('bar1'),
         });
       });
     });
@@ -169,7 +190,7 @@ describe('connection pool', () => {
     it('provides basic lease lifecycle', async () => {
       lease = client.lease(100);
       await lease.put('leased').value('foo');
-      expect((await client.get('leased')).kvs[0].lease).to.equal(await lease.grant());
+      expect((await client.get('leased').exec()).kvs[0].lease).to.equal(await lease.grant());
       await lease.revoke();
       expect(await client.get('leased').buffer()).to.be.null;
     });

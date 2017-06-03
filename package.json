@@ -6,7 +6,7 @@
   "typings": "lib/src/index.d.ts",
   "scripts": {
     "test": "npm-run-all --parallel test:lint test:unit",
-    "test:unit": "TS_NODE_COMPILER_OPTIONS='{\"target\":\"es6\"}' mocha --compilers ts:ts-node/register --timeout 20000 -r test/_setup.ts test/*.test.ts",
+    "test:unit": "mocha --compilers ts:ts-node/register --timeout 20000 -r test/_setup.ts test/*.test.ts",
     "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
     "update-proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
     "build:doc": "rm -rf docs && typedoc --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
