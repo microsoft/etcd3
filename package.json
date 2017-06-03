@@ -50,7 +50,7 @@
     "tslint": "^4.0.0",
     "tslint-microsoft-contrib": "4.0.0",
     "typedoc": "^0.5.10",
-    "typescript": "^2.2.2"
+    "typescript": "2.3.0"
   },
   "dependencies": {
     "grpc": "^1.2.3"
