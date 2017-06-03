@@ -1,4 +1,4 @@
-# etcd3 [![Build Status](https://travis-ci.org/WatchBeam/etcd3.svg?branch=master)](https://travis-ci.org/WatchBeam/etcd3)
+# etcd3 [![Build Status](https://travis-ci.org/mixer/etcd3.svg?branch=master)](https://travis-ci.org/mixer/etcd3)
 
 etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes load balancing, reconnections, high-level query builders and lease management, mocking, and is type-safe for TypeScript consumers.
 
@@ -26,9 +26,9 @@ client.put('foo').value('bar')
 
 ### API Documentation
 
-Our [TypeDoc docs are available here](https://watchbeam.github.io/etcd3/classes/index_.etcd3.html).
+Our [TypeDoc docs are available here](https://mixer.github.io/etcd3/classes/index_.etcd3.html).
 
-Our [test cases](https://github.com/WatchBeam/etcd3/blob/master/test/kv.test.ts) are also quite readable.
+Our [test cases](https://github.com/mixer/etcd3/blob/master/test/kv.test.ts) are also quite readable.
 
 ### Contributing
 
