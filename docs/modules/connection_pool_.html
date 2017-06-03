@@ -73,22 +73,22 @@
 						<section class="tsd-index-section ">
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported"><a href="../classes/connection_pool_.authenticator.html" class="tsd-kind-icon">Authenticator</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/connection_pool_.connectionpool.html" class="tsd-kind-icon">Connection<wbr>Pool</a></li>
-								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported"><a href="../classes/connection_pool_.host.html" class="tsd-kind-icon">Host</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Interfaces</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-interface tsd-parent-kind-external-module"><a href="../interfaces/connection_pool_.irawgrpc.html" class="tsd-kind-icon">IRawGRPC</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/connection_pool_.host.html" class="tsd-kind-icon">Host</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="connection_pool_.html#defaultbackoffstrategy" class="tsd-kind-icon">default<wbr>Backoff<wbr>Strategy</a></li>
-								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="connection_pool_.html#grpc" class="tsd-kind-icon">grpc</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="connection_pool_.html#services" class="tsd-kind-icon">services</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="connection_pool_.html#runservicecall" class="tsd-kind-icon">run<wbr>Service<wbr>Call</a></li>
 							</ul>
 						</section>
 					</div>
@@ -102,29 +102,70 @@
 					<div class="tsd-signature tsd-kind-icon">default<wbr>Backoff<wbr>Strategy<span class="tsd-signature-symbol">:</span> <a href="../classes/backoff_exponential_.exponentialbackoff.html" class="tsd-signature-type">ExponentialBackoff</a><span class="tsd-signature-symbol"> =&nbsp;new ExponentialBackoff({initial: 300,max: 10 * 1000,random: 1,})</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/connection-pool.ts#L19">connection-pool.ts:19</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="grpc" class="tsd-anchor"></a>
-					<h3>grpc</h3>
-					<div class="tsd-signature tsd-kind-icon">grpc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&#x27;grpc&#x27;)</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/connection-pool.ts#L8">connection-pool.ts:8</a></li>
+							<li>Defined in connection-pool.ts:12</li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="services" class="tsd-anchor"></a>
 					<h3>services</h3>
-					<div class="tsd-signature tsd-kind-icon">services<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;grpc.load(&#x60;${__dirname}/../proto/rpc.proto&#x60;)</span></div>
+					<div class="tsd-signature tsd-kind-icon">services<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> =&nbsp;grpc.load(&#x60;${__dirname}/../proto/rpc.proto&#x60;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/connection-pool.ts#L9">connection-pool.ts:9</a></li>
+							<li>Defined in connection-pool.ts:10</li>
 						</ul>
 					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-index-signature">
+								<h5><span class="tsd-signature-symbol">[</span>namespace: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">object</span></h5>
+								<ul class="tsd-parameters">
+									<li class="tsd-parameter-index-signature">
+										<h5><span class="tsd-signature-symbol">[</span>service: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">Client</span></h5>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="runservicecall" class="tsd-anchor"></a>
+					<h3>run<wbr>Service<wbr>Call</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">run<wbr>Service<wbr>Call<span class="tsd-signature-symbol">(</span>client<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Client</span>, method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, payload<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in connection-pool.ts:22</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Executes a grpc service calls, casting the error (if any) and wrapping
+									into a Promise.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>client: <span class="tsd-signature-type">Client</span></h5>
+								</li>
+								<li>
+									<h5>method: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>payload: <span class="tsd-signature-type">object</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -133,6 +174,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="auth_.html">"auth"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="backoff_backoff_.html">"backoff/backoff"</a>
@@ -162,6 +206,9 @@
 						<a href="options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="range_.html">"range"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -174,23 +221,23 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../classes/connection_pool_.authenticator.html" class="tsd-kind-icon">Authenticator</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/connection_pool_.connectionpool.html" class="tsd-kind-icon">Connection<wbr>Pool</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/connection_pool_.host.html" class="tsd-kind-icon">Host</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/connection_pool_.irawgrpc.html" class="tsd-kind-icon">IRawGRPC</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
 						<a href="connection_pool_.html#defaultbackoffstrategy" class="tsd-kind-icon">default<wbr>Backoff<wbr>Strategy</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="connection_pool_.html#grpc" class="tsd-kind-icon">grpc</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="connection_pool_.html#services" class="tsd-kind-icon">services</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="connection_pool_.html#runservicecall" class="tsd-kind-icon">run<wbr>Service<wbr>Call</a>
 					</li>
 				</ul>
 			</nav>

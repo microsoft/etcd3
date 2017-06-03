@@ -77,7 +77,7 @@
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/builder_.deletebuilder.html" class="tsd-kind-icon">Delete<wbr>Builder</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/builder_.multirangebuilder.html" class="tsd-kind-icon">Multi<wbr>Range<wbr>Builder</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a></li>
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/builder_.singlerangebuilder.html" class="tsd-kind-icon">Single<wbr>Range<wbr>Builder</a></li>
 							</ul>
 						</section>
@@ -91,16 +91,13 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="builder_.html#emptybuffer" class="tsd-kind-icon">empty<wbr>Buffer</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section ">
+						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a></li>
-								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a></li>
-								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a></li>
-								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -108,7 +105,6 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-object-literal tsd-parent-kind-external-module"><a href="builder_.html#comparator" class="tsd-kind-icon">comparator</a></li>
 								<li class="tsd-kind-object-literal tsd-parent-kind-external-module"><a href="builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a></li>
-								<li class="tsd-kind-object-literal tsd-parent-kind-external-module"><a href="builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a></li>
 							</ul>
 						</section>
 					</div>
@@ -117,17 +113,17 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Variables</h2>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="zerokey" class="tsd-anchor"></a>
-					<h3>zero<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">zero<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;new Buffer([0])</span></div>
+					<a name="emptybuffer" class="tsd-anchor"></a>
+					<h3>empty<wbr>Buffer</h3>
+					<div class="tsd-signature tsd-kind-icon">empty<wbr>Buffer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;Buffer.from([])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L4">builder.ts:4</a></li>
+							<li>Defined in builder.ts:5</li>
 						</ul>
 					</aside>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group ">
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Functions</h2>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 					<a name="assertwithin" class="tsd-anchor"></a>
@@ -139,7 +135,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L93">builder.ts:93</a></li>
+									<li>Defined in builder.ts:42</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -170,91 +166,6 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
-					<a name="prefixend" class="tsd-anchor"></a>
-					<h3>prefix<wbr>End</h3>
-					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
-						<li class="tsd-signature tsd-kind-icon">prefix<wbr>End<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L21">builder.ts:21</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>prefixEnd returns the end of a range request, where <code>key</code> is the &quot;start&quot;
-									value, to get all values that share the prefix.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>key: <span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
-					<a name="prefixstart" class="tsd-anchor"></a>
-					<h3>prefix<wbr>Start</h3>
-					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
-						<li class="tsd-signature tsd-kind-icon">prefix<wbr>Start<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L9">builder.ts:9</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>prefixStart returns a buffer to start the key as a prefix.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>key: <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="tobuffer" class="tsd-anchor"></a>
-					<h3>to<wbr>Buffer</h3>
-					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">to<wbr>Buffer<span class="tsd-signature-symbol">(</span>input<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L103">builder.ts:103</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Converts the input to a buffer, if it is not already.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>input: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
-						</li>
-					</ul>
-				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Object literals</h2>
@@ -264,7 +175,7 @@
 					<div class="tsd-signature tsd-kind-icon">comparator<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L49">builder.ts:49</a></li>
+							<li>Defined in builder.ts:10</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -275,60 +186,60 @@
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator.__" class="tsd-anchor"></a>
 						<h3>!=</h3>
-						<div class="tsd-signature tsd-kind-icon">!=<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.NOT_EQUAL</span></div>
+						<div class="tsd-signature tsd-kind-icon">!=<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.NotEqual</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L54">builder.ts:54</a></li>
+								<li>Defined in builder.ts:15</li>
 							</ul>
 						</aside>
 					</section>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator.___" class="tsd-anchor"></a>
 						<h3>!==</h3>
-						<div class="tsd-signature tsd-kind-icon">!==<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.NOT_EQUAL</span></div>
+						<div class="tsd-signature tsd-kind-icon">!==<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.NotEqual</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L55">builder.ts:55</a></li>
+								<li>Defined in builder.ts:16</li>
 							</ul>
 						</aside>
 					</section>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator._" class="tsd-anchor"></a>
 						<h3><</h3>
-						<div class="tsd-signature tsd-kind-icon"><<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.LESS</span></div>
+						<div class="tsd-signature tsd-kind-icon"><<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.Less</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L53">builder.ts:53</a></li>
+								<li>Defined in builder.ts:14</li>
 							</ul>
 						</aside>
 					</section>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator.__-1" class="tsd-anchor"></a>
 						<h3>==</h3>
-						<div class="tsd-signature tsd-kind-icon">==<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.EQUAL</span></div>
+						<div class="tsd-signature tsd-kind-icon">==<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.Equal</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L50">builder.ts:50</a></li>
+								<li>Defined in builder.ts:11</li>
 							</ul>
 						</aside>
 					</section>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator.___-1" class="tsd-anchor"></a>
 						<h3>===</h3>
-						<div class="tsd-signature tsd-kind-icon">===<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.EQUAL</span></div>
+						<div class="tsd-signature tsd-kind-icon">===<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.Equal</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L51">builder.ts:51</a></li>
+								<li>Defined in builder.ts:12</li>
 							</ul>
 						</aside>
 					</section>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparator._-1" class="tsd-anchor"></a>
 						<h3>></h3>
-						<div class="tsd-signature tsd-kind-icon">><span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.GREATER</span></div>
+						<div class="tsd-signature tsd-kind-icon">><span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareResult.Greater</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L52">builder.ts:52</a></li>
+								<li>Defined in builder.ts:13</li>
 							</ul>
 						</aside>
 					</section>
@@ -339,7 +250,7 @@
 					<div class="tsd-signature tsd-kind-icon">compare<wbr>Target<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L70">builder.ts:70</a></li>
+							<li>Defined in builder.ts:31</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -347,183 +258,43 @@
 							<p>compareTarget are the types of things that can be compared against.</p>
 						</div>
 					</div>
-					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal">
-						<a name="comparetarget.createdat" class="tsd-anchor"></a>
-						<h3>created<wbr>At</h3>
-						<div class="tsd-signature tsd-kind-icon">created<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="comparetarget.create" class="tsd-anchor"></a>
+						<h3>Create</h3>
+						<div class="tsd-signature tsd-kind-icon">Create<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;create_revision&quot;</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L79">builder.ts:79</a></li>
+								<li>Defined in builder.ts:34</li>
 							</ul>
 						</aside>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.createdat.key" class="tsd-anchor"></a>
-							<h3>key</h3>
-							<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;create_revision&quot;</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L81">builder.ts:81</a></li>
-								</ul>
-							</aside>
-						</section>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.createdat.value" class="tsd-anchor"></a>
-							<h3>value</h3>
-							<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.comparetarget.html" class="tsd-signature-type">CompareTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareTarget.CREATE</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L80">builder.ts:80</a></li>
-								</ul>
-							</aside>
-						</section>
 					</section>
-					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal">
-						<a name="comparetarget.modifiedat" class="tsd-anchor"></a>
-						<h3>modified<wbr>At</h3>
-						<div class="tsd-signature tsd-kind-icon">modified<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="comparetarget.mod" class="tsd-anchor"></a>
+						<h3>Mod</h3>
+						<div class="tsd-signature tsd-kind-icon">Mod<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;mod_revision&quot;</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L83">builder.ts:83</a></li>
+								<li>Defined in builder.ts:35</li>
 							</ul>
 						</aside>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.modifiedat.key-1" class="tsd-anchor"></a>
-							<h3>key</h3>
-							<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;mod_revision&quot;</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L85">builder.ts:85</a></li>
-								</ul>
-							</aside>
-						</section>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.modifiedat.value-1" class="tsd-anchor"></a>
-							<h3>value</h3>
-							<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.comparetarget.html" class="tsd-signature-type">CompareTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareTarget.MOD</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L84">builder.ts:84</a></li>
-								</ul>
-							</aside>
-						</section>
 					</section>
-					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal">
-						<a name="comparetarget.value-2" class="tsd-anchor"></a>
-						<h3>value</h3>
-						<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="comparetarget.value" class="tsd-anchor"></a>
+						<h3>Value</h3>
+						<div class="tsd-signature tsd-kind-icon">Value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;value&quot;</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L71">builder.ts:71</a></li>
+								<li>Defined in builder.ts:32</li>
 							</ul>
 						</aside>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.value-2.key-2" class="tsd-anchor"></a>
-							<h3>key</h3>
-							<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;value&quot;</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L73">builder.ts:73</a></li>
-								</ul>
-							</aside>
-						</section>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.value-2.value-3" class="tsd-anchor"></a>
-							<h3>value</h3>
-							<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.comparetarget.html" class="tsd-signature-type">CompareTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareTarget.VALUE</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L72">builder.ts:72</a></li>
-								</ul>
-							</aside>
-						</section>
 					</section>
-					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal">
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
 						<a name="comparetarget.version" class="tsd-anchor"></a>
-						<h3>version</h3>
-						<div class="tsd-signature tsd-kind-icon">version<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<h3>Version</h3>
+						<div class="tsd-signature tsd-kind-icon">Version<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;version&quot;</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L75">builder.ts:75</a></li>
-							</ul>
-						</aside>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.version.key-3" class="tsd-anchor"></a>
-							<h3>key</h3>
-							<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;value&quot;</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L77">builder.ts:77</a></li>
-								</ul>
-							</aside>
-						</section>
-						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-							<a name="comparetarget.version.value-4" class="tsd-anchor"></a>
-							<h3>value</h3>
-							<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.comparetarget.html" class="tsd-signature-type">CompareTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.CompareTarget.VERSION</span></div>
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L76">builder.ts:76</a></li>
-								</ul>
-							</aside>
-						</section>
-					</section>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-external-module">
-					<a name="sortmap" class="tsd-anchor"></a>
-					<h3>sort<wbr>Map</h3>
-					<div class="tsd-signature tsd-kind-icon">sort<wbr>Map<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L38">builder.ts:38</a></li>
-						</ul>
-					</aside>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-						<a name="sortmap.createdat-1" class="tsd-anchor"></a>
-						<h3>created<wbr>At</h3>
-						<div class="tsd-signature tsd-kind-icon">created<wbr>At<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.sorttarget.html" class="tsd-signature-type">SortTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.SortTarget.CREATE</span></div>
-						<aside class="tsd-sources">
-							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L41">builder.ts:41</a></li>
-							</ul>
-						</aside>
-					</section>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-						<a name="sortmap.key-4" class="tsd-anchor"></a>
-						<h3>key</h3>
-						<div class="tsd-signature tsd-kind-icon">key<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.sorttarget.html" class="tsd-signature-type">SortTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.SortTarget.KEY</span></div>
-						<aside class="tsd-sources">
-							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L39">builder.ts:39</a></li>
-							</ul>
-						</aside>
-					</section>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-						<a name="sortmap.modifiedat-1" class="tsd-anchor"></a>
-						<h3>modified<wbr>At</h3>
-						<div class="tsd-signature tsd-kind-icon">modified<wbr>At<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.sorttarget.html" class="tsd-signature-type">SortTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.SortTarget.MOD</span></div>
-						<aside class="tsd-sources">
-							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L42">builder.ts:42</a></li>
-							</ul>
-						</aside>
-					</section>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-						<a name="sortmap.value-5" class="tsd-anchor"></a>
-						<h3>value</h3>
-						<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.sorttarget.html" class="tsd-signature-type">SortTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.SortTarget.VALUE</span></div>
-						<aside class="tsd-sources">
-							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L43">builder.ts:43</a></li>
-							</ul>
-						</aside>
-					</section>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
-						<a name="sortmap.version-1" class="tsd-anchor"></a>
-						<h3>version</h3>
-						<div class="tsd-signature tsd-kind-icon">version<span class="tsd-signature-symbol">:</span> <a href="../enums/rpc_.sorttarget.html" class="tsd-signature-type">SortTarget</a><span class="tsd-signature-symbol"> =&nbsp;RPC.SortTarget.VERSION</span></div>
-						<aside class="tsd-sources">
-							<ul>
-								<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L40">builder.ts:40</a></li>
+								<li>Defined in builder.ts:33</li>
 							</ul>
 						</aside>
 					</section>
@@ -535,6 +306,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="auth_.html">"auth"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="backoff_backoff_.html">"backoff/backoff"</a>
@@ -564,6 +338,9 @@
 						<a href="options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="range_.html">"range"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -588,7 +365,7 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
@@ -601,28 +378,16 @@
 						<a href="../interfaces/builder_.ioperation.html" class="tsd-kind-icon">IOperation</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+						<a href="builder_.html#emptybuffer" class="tsd-kind-icon">empty<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="builder_.html#comparator" class="tsd-kind-icon">comparator</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a>
-					</li>
-					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
-						<a href="builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
 					</li>
 				</ul>
 			</nav>

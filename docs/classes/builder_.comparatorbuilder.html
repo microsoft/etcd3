@@ -78,7 +78,7 @@
 					<pre><code>const id = uuid.v4();
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">lock</span><span class="hljs-params">()</span> {</span>
-  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'createdAt'</span>, <span class="hljs-string">'=='</span>, <span class="hljs-number">0</span>)
+  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'create'</span>, <span class="hljs-string">'=='</span>, <span class="hljs-number">0</span>)
     .<span class="hljs-keyword">then</span>(client.put(<span class="hljs-string">'my_lock'</span>).value(id))
     .<span class="hljs-keyword">else</span>(client.get(<span class="hljs-string">'my_lock'</span>))
     .commit()
@@ -135,7 +135,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L480">builder.ts:480</a></li>
+									<li>Defined in builder.ts:481</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -155,13 +155,13 @@
 					<a name="and" class="tsd-anchor"></a>
 					<h3>and</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">and<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, column<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span>, cmp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">and<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, column<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span>, cmp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L487">builder.ts:487</a></li>
+									<li>Defined in builder.ts:488</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -175,7 +175,7 @@
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
 								</li>
 								<li>
-									<h5>column: <span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"value"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"createdAt"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"modifiedAt"</span></h5>
+									<h5>column: <span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span></h5>
 								</li>
 								<li>
 									<h5>cmp: <span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span></h5>
@@ -198,7 +198,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L527">builder.ts:527</a></li>
+									<li>Defined in builder.ts:532</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -220,7 +220,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L519">builder.ts:519</a></li>
+									<li>Defined in builder.ts:524</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -249,7 +249,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L510">builder.ts:510</a></li>
+									<li>Defined in builder.ts:515</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -277,6 +277,9 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/auth_.html">"auth"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/backoff_backoff_.html">"backoff/backoff"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -302,6 +305,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/range_.html">"range"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>
@@ -349,7 +355,7 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
@@ -362,28 +368,16 @@
 						<a href="../interfaces/builder_.ioperation.html" class="tsd-kind-icon">IOperation</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+						<a href="../modules/builder_.html#emptybuffer" class="tsd-kind-icon">empty<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../modules/builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="../modules/builder_.html#comparator" class="tsd-kind-icon">comparator</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="../modules/builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a>
-					</li>
-					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
 					</li>
 				</ul>
 			</nav>

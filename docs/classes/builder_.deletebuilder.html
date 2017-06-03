@@ -110,12 +110,14 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#all" class="tsd-kind-icon">all</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="builder_.deletebuilder.html#catch" class="tsd-kind-icon">catch</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite"><a href="builder_.deletebuilder.html#exec" class="tsd-kind-icon">exec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-protected"><a href="builder_.deletebuilder.html#createpromise" class="tsd-kind-icon">create<wbr>Promise</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#exec" class="tsd-kind-icon">exec</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#getprevious" class="tsd-kind-icon">get<wbr>Previous</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#inrange" class="tsd-kind-icon">in<wbr>Range</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#key" class="tsd-kind-icon">key</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#op" class="tsd-kind-icon">op</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#prefix" class="tsd-kind-icon">prefix</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.deletebuilder.html#range" class="tsd-kind-icon">range</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="builder_.deletebuilder.html#then" class="tsd-kind-icon">then</a></li>
 							</ul>
 						</section>
@@ -134,7 +136,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L322">builder.ts:322</a></li>
+									<li>Defined in builder.ts:301</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -160,7 +162,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L349">builder.ts:349</a></li>
+									<li>Defined in builder.ts:335</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -183,7 +185,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#catch">catch</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/util.ts#L66">util.ts:66</a></li>
+									<li>Defined in util.ts:75</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -228,18 +230,41 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
+					<a name="createpromise" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> create<wbr>Promise</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Promise<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Overrides <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#createpromise">createPromise</a></p>
+								<ul>
+									<li>Defined in builder.ts:375</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<dl class="tsd-comment-tags">
+									<dt>override</dt>
+									<dd></dd>
+								</dl>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="exec" class="tsd-anchor"></a>
 					<h3>exec</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">exec<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Overrides <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#exec">exec</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L374">builder.ts:374</a></li>
+									<li>Defined in builder.ts:361</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -261,7 +286,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L367">builder.ts:367</a></li>
+									<li>Defined in builder.ts:354</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -279,13 +304,13 @@
 					<a name="inrange" class="tsd-anchor"></a>
 					<h3>in<wbr>Range</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">in<wbr>Range<span class="tsd-signature-symbol">(</span>start<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, end<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">in<wbr>Range<span class="tsd-signature-symbol">(</span>r<span class="tsd-signature-symbol">: </span><a href="../modules/range_.html#rangable" class="tsd-signature-type">Rangable</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L356">builder.ts:356</a></li>
+									<li>Defined in builder.ts:342</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -296,10 +321,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>start: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
-								</li>
-								<li>
-									<h5>end: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
+									<h5>r: <a href="../modules/range_.html#rangable" class="tsd-signature-type">Rangable</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
@@ -316,7 +338,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L331">builder.ts:331</a></li>
+									<li>Defined in builder.ts:310</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -344,7 +366,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L381">builder.ts:381</a></li>
+									<li>Defined in builder.ts:368</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -366,18 +388,46 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/builder.ts#L340">builder.ts:340</a></li>
+									<li>Defined in builder.ts:319</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Prefix instructs the query to delete all keys that have the provided prefix.</p>
+									<p>key sets a single key to be deleted.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>value: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="range" class="tsd-anchor"></a>
+					<h3>range</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">range<span class="tsd-signature-symbol">(</span>range<span class="tsd-signature-symbol">: </span><a href="range_.range.html" class="tsd-signature-type">Range</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in builder.ts:326</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sets the byte range of values to delete.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>range: <a href="range_.range.html" class="tsd-signature-type">Range</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
@@ -395,7 +445,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#then">then</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/util.ts#L59">util.ts:59</a></li>
+									<li>Defined in util.ts:68</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -455,6 +505,9 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/auth_.html">"auth"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/backoff_backoff_.html">"backoff/backoff"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -480,6 +533,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/range_.html">"range"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>
@@ -511,7 +567,10 @@
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited">
 								<a href="builder_.deletebuilder.html#catch" class="tsd-kind-icon">catch</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite">
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
+								<a href="builder_.deletebuilder.html#createpromise" class="tsd-kind-icon">create<wbr>Promise</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.deletebuilder.html#exec" class="tsd-kind-icon">exec</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
@@ -529,6 +588,9 @@
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.deletebuilder.html#prefix" class="tsd-kind-icon">prefix</a>
 							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="builder_.deletebuilder.html#range" class="tsd-kind-icon">range</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited">
 								<a href="builder_.deletebuilder.html#then" class="tsd-kind-icon">then</a>
 							</li>
@@ -542,7 +604,7 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="builder_.putbuilder.html" class="tsd-kind-icon">Put<wbr>Builder</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="builder_.rangebuilder.html" class="tsd-kind-icon">Range<wbr>Builder</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
@@ -555,28 +617,16 @@
 						<a href="../interfaces/builder_.ioperation.html" class="tsd-kind-icon">IOperation</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/builder_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+						<a href="../modules/builder_.html#emptybuffer" class="tsd-kind-icon">empty<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../modules/builder_.html#assertwithin" class="tsd-kind-icon">assert<wbr>Within</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#prefixend" class="tsd-kind-icon">prefix<wbr>End</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#prefixstart" class="tsd-kind-icon">prefix<wbr>Start</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/builder_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="../modules/builder_.html#comparator" class="tsd-kind-icon">comparator</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
 						<a href="../modules/builder_.html#comparetarget" class="tsd-kind-icon">compare<wbr>Target</a>
-					</li>
-					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
-						<a href="../modules/builder_.html#sortmap" class="tsd-kind-icon">sort<wbr>Map</a>
 					</li>
 				</ul>
 			</nav>

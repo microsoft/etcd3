@@ -73,9 +73,16 @@
 						<section class="tsd-index-section ">
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdauthenticationfailederror.html" class="tsd-kind-icon">Etcd<wbr>Authentication<wbr>Failed<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcderror.html" class="tsd-kind-icon">Etcd<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdleaseinvaliderror.html" class="tsd-kind-icon">Etcd<wbr>Lease<wbr>Invalid<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdlockfailederror.html" class="tsd-kind-icon">Etcd<wbr>Lock<wbr>Failed<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdpermissiondeniederror.html" class="tsd-kind-icon">Etcd<wbr>Permission<wbr>Denied<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdroleexistserror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Exists<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdrolenotfounderror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Not<wbr>Found<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdrolenotgrantederror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Not<wbr>Granted<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcduserexistserror.html" class="tsd-kind-icon">Etcd<wbr>User<wbr>Exists<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.etcdusernotfounderror.html" class="tsd-kind-icon">Etcd<wbr>User<wbr>Not<wbr>Found<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpccancellederror.html" class="tsd-kind-icon">GRPCCancelled<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpcconnectfailederror.html" class="tsd-kind-icon">GRPCConnect<wbr>Failed<wbr>Error</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/errors_.grpcgenericerror.html" class="tsd-kind-icon">GRPCGeneric<wbr>Error</a></li>
@@ -111,10 +118,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="grpcmessagetoerror" class="tsd-anchor"></a>
 					<h3>grpc<wbr>Message<wbr>ToError</h3>
-					<div class="tsd-signature tsd-kind-icon">grpc<wbr>Message<wbr>ToError<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">RegExp</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/errors_.ierrorctor.html" class="tsd-signature-type">IErrorCtor</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;string | RegExp, IErrorCtor&gt;([[&#x27;Connect Failed&#x27;, GRPCConnectFailedError],[&#x27;Channel Disconnected&#x27;, GRPCConnectFailedError],[&#x27;Endpoint read failed&#x27;, GRPCProtocolError],[&#x27;Got config after disconnection&#x27;, GRPCProtocolError],[&#x27;Failed to create subchannel&#x27;, GRPCProtocolError],[&#x27;Attempt to send initial metadata after stream was closed&#x27;, GRPCProtocolError],[&#x27;Attempt to send message after stream was closed&#x27;, GRPCProtocolError],[&#x27;Last stream closed after sending GOAWAY&#x27;, GRPCProtocolError],[&#x27;Failed parsing HTTP/2&#x27;, GRPCProtocolError],[&#x27;TCP stream shutting down&#x27;, GRPCProtocolError],[&#x27;Secure read failed&#x27;, GRPCProtocolError],[&#x27;Handshake read failed&#x27;, GRPCProtocolError],[&#x27;Handshake write failed&#x27;, GRPCProtocolError],[&#x27;FD shutdown&#x27;, GRPCInternalError],[&#x27;Failed to load file&#x27;, GRPCInternalError],[&#x27;Unable to configure socket&#x27;, GRPCInternalError],[&#x27;Failed to add port to server&#x27;, GRPCInternalError],[&#x27;Failed to prepare server socket&#x27;, GRPCInternalError],[&#x27;Call batch failed&#x27;, GRPCInternalError],[&#x27;Missing :authority or :path&#x27;, GRPCInternalError],[&#x27;Cancelled before creating subchannel&#x27;, GRPCCancelledError],[&#x27;Pick cancelled&#x27;, GRPCCancelledError],[&#x27;Disconnected&#x27;, GRPCCancelledError],])</span></div>
+					<div class="tsd-signature tsd-kind-icon">grpc<wbr>Message<wbr>ToError<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/errors_.ierrorctor.html" class="tsd-signature-type">IErrorCtor</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map&lt;string, IErrorCtor&gt;([[&#x27;Connect Failed&#x27;, GRPCConnectFailedError],[&#x27;Channel Disconnected&#x27;, GRPCConnectFailedError],[&#x27;Endpoint read failed&#x27;, GRPCProtocolError],[&#x27;Got config after disconnection&#x27;, GRPCProtocolError],[&#x27;Failed to create subchannel&#x27;, GRPCProtocolError],[&#x27;Attempt to send initial metadata after stream was closed&#x27;, GRPCProtocolError],[&#x27;Attempt to send message after stream was closed&#x27;, GRPCProtocolError],[&#x27;Last stream closed after sending GOAWAY&#x27;, GRPCProtocolError],[&#x27;Failed parsing HTTP/2&#x27;, GRPCProtocolError],[&#x27;TCP stream shutting down&#x27;, GRPCProtocolError],[&#x27;Secure read failed&#x27;, GRPCProtocolError],[&#x27;Handshake read failed&#x27;, GRPCProtocolError],[&#x27;Handshake write failed&#x27;, GRPCProtocolError],[&#x27;FD shutdown&#x27;, GRPCInternalError],[&#x27;Failed to load file&#x27;, GRPCInternalError],[&#x27;Unable to configure socket&#x27;, GRPCInternalError],[&#x27;Failed to add port to server&#x27;, GRPCInternalError],[&#x27;Failed to prepare server socket&#x27;, GRPCInternalError],[&#x27;Call batch failed&#x27;, GRPCInternalError],[&#x27;Missing :authority or :path&#x27;, GRPCInternalError],[&#x27;Cancelled before creating subchannel&#x27;, GRPCCancelledError],[&#x27;Pick cancelled&#x27;, GRPCCancelledError],[&#x27;Disconnected&#x27;, GRPCCancelledError],[&#x27;etcdserver: role name already exists&#x27;, EtcdRoleExistsError],[&#x27;etcdserver: user name already exists&#x27;, EtcdUserExistsError],[&#x27;etcdserver: role is not granted to the user&#x27;, EtcdRoleNotGrantedError],[&#x27;etcdserver: role name not found&#x27;, EtcdRoleNotFoundError],[&#x27;etcdserver: user name not found&#x27;, EtcdUserNotFoundError],[&#x27;etcdserver: authentication failed, invalid user ID or password&#x27;, EtcdAuthenticationFailedError],[&#x27;etcdserver: permission denied&#x27;, EtcdPermissionDeniedError],])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L57">errors.ts:57</a></li>
+							<li>Defined in errors.ts:97</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -137,7 +144,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L107">errors.ts:107</a></li>
+									<li>Defined in errors.ts:148</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -166,7 +173,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L83">errors.ts:83</a></li>
+									<li>Defined in errors.ts:130</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -192,7 +199,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/errors.ts#L99">errors.ts:99</a></li>
+									<li>Defined in errors.ts:140</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -217,6 +224,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="auth_.html">"auth"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="backoff_backoff_.html">"backoff/backoff"</a>
@@ -246,6 +256,9 @@
 						<a href="options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="range_.html">"range"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -259,6 +272,9 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdauthenticationfailederror.html" class="tsd-kind-icon">Etcd<wbr>Authentication<wbr>Failed<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/errors_.etcderror.html" class="tsd-kind-icon">Etcd<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
@@ -266,6 +282,24 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/errors_.etcdlockfailederror.html" class="tsd-kind-icon">Etcd<wbr>Lock<wbr>Failed<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdpermissiondeniederror.html" class="tsd-kind-icon">Etcd<wbr>Permission<wbr>Denied<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdroleexistserror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Exists<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdrolenotfounderror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Not<wbr>Found<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdrolenotgrantederror.html" class="tsd-kind-icon">Etcd<wbr>Role<wbr>Not<wbr>Granted<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcduserexistserror.html" class="tsd-kind-icon">Etcd<wbr>User<wbr>Exists<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/errors_.etcdusernotfounderror.html" class="tsd-kind-icon">Etcd<wbr>User<wbr>Not<wbr>Found<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/errors_.grpccancellederror.html" class="tsd-kind-icon">GRPCCancelled<wbr>Error</a>

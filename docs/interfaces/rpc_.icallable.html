@@ -69,13 +69,6 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>RPC module doc here</p>
-					</div>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -111,13 +104,13 @@
 					<a name="exec" class="tsd-anchor"></a>
 					<h3>exec</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">exec<span class="tsd-signature-symbol">(</span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span>, method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">exec<span class="tsd-signature-symbol">(</span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span>, method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L9">rpc.ts:9</a></li>
+									<li>Defined in rpc.ts:7</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -129,7 +122,7 @@
 									<h5>method: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>params: <span class="tsd-signature-type">any</span></h5>
+									<h5>params: <span class="tsd-signature-type">object</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -140,13 +133,13 @@
 					<a name="getconnection" class="tsd-anchor"></a>
 					<h3>get<wbr>Connection</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Connection<span class="tsd-signature-symbol">(</span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Connection<span class="tsd-signature-symbol">(</span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L10">rpc.ts:10</a></li>
+									<li>Defined in rpc.ts:8</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -155,7 +148,7 @@
 									<h5>service: <span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -166,6 +159,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/auth_.html">"auth"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/backoff_backoff_.html">"backoff/backoff"</a>
@@ -193,6 +189,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/range_.html">"range"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="../modules/rpc_.html">"rpc"</a>

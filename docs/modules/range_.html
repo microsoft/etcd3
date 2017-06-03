@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Type | etcd3</title>
+	<title>&quot;range&quot; | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/rpc_.html">&quot;rpc&quot;</a>
-				</li>
-				<li>
-					<a href="rpc_.type.html">Type</a>
+					<a href="range_.html">&quot;range&quot;</a>
 				</li>
 			</ul>
-			<h1>Enumeration Type</h1>
+			<h1>External module &quot;range&quot;</h1>
 		</div>
 	</div>
 </header>
@@ -74,47 +71,120 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Enumeration members</h3>
+							<h3>Classes</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="rpc_.type.html#read" class="tsd-kind-icon">READ</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="rpc_.type.html#readwrite" class="tsd-kind-icon">READWRITE</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="rpc_.type.html#write" class="tsd-kind-icon">WRITE</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/range_.range.html" class="tsd-kind-icon">Range</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="range_.html#rangable" class="tsd-kind-icon">Rangable</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="range_.html#emptykey" class="tsd-kind-icon">empty<wbr>Key</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="range_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="range_.html#compare" class="tsd-kind-icon">compare</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="range_.html#rangableisprefix" class="tsd-kind-icon">rangable<wbr>IsPrefix</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Enumeration members</h2>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="read" class="tsd-anchor"></a>
-					<h3>READ</h3>
-					<div class="tsd-signature tsd-kind-icon">READ<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;0</span></div>
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
+					<a name="rangable" class="tsd-anchor"></a>
+					<h3>Rangable</h3>
+					<div class="tsd-signature tsd-kind-icon">Rangable<span class="tsd-signature-symbol">:</span> <a href="../classes/range_.range.html" class="tsd-signature-type">Range</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L1006">rpc.ts:1006</a></li>
+							<li>Defined in range.ts:18</li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="readwrite" class="tsd-anchor"></a>
-					<h3>READWRITE</h3>
-					<div class="tsd-signature tsd-kind-icon">READWRITE<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;2</span></div>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="emptykey" class="tsd-anchor"></a>
+					<h3>empty<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">empty<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;Buffer.from([])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L1008">rpc.ts:1008</a></li>
+							<li>Defined in range.ts:4</li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="write" class="tsd-anchor"></a>
-					<h3>WRITE</h3>
-					<div class="tsd-signature tsd-kind-icon">WRITE<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="zerokey" class="tsd-anchor"></a>
+					<h3>zero<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">zero<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;Buffer.from([0])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/b7df085/src/rpc.ts#L1007">rpc.ts:1007</a></li>
+							<li>Defined in range.ts:3</li>
 						</ul>
 					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="compare" class="tsd-anchor"></a>
+					<h3>compare</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">compare<span class="tsd-signature-symbol">(</span>a<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, b<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in range.ts:6</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>a: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li>
+									<h5>b: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="rangableisprefix" class="tsd-anchor"></a>
+					<h3>rangable<wbr>IsPrefix</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">rangable<wbr>IsPrefix<span class="tsd-signature-symbol">(</span>r<span class="tsd-signature-symbol">: </span><a href="range_.html#rangable" class="tsd-signature-type">Rangable</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in range.ts:24</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>r: <a href="range_.html#rangable" class="tsd-signature-type">Rangable</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -125,63 +195,69 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/backoff_backoff_.html">"backoff/backoff"</a>
+						<a href="auth_.html">"auth"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/backoff_exponential_.html">"backoff/exponential"</a>
+						<a href="backoff_backoff_.html">"backoff/backoff"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/builder_.html">"builder"</a>
+						<a href="backoff_exponential_.html">"backoff/exponential"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/connection_pool_.html">"connection-<wbr>pool"</a>
+						<a href="builder_.html">"builder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/errors_.html">"errors"</a>
+						<a href="connection_pool_.html">"connection-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/index_.html">"index"</a>
+						<a href="errors_.html">"errors"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/lease_.html">"lease"</a>
+						<a href="index_.html">"index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/lock_.html">"lock"</a>
+						<a href="lease_.html">"lease"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/options_.html">"options"</a>
+						<a href="lock_.html">"lock"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="options_.html">"options"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/rpc_.html">"rpc"</a>
+						<a href="range_.html">"range"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
+						<a href="rpc_.html">"rpc"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/util_.html">"util"</a>
+						<a href="shared_pool_.html">"shared-<wbr>pool"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="util_.html">"util"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-enum tsd-parent-kind-external-module">
-						<a href="rpc_.type.html" class="tsd-kind-icon">Type</a>
-						<ul>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="rpc_.type.html#read" class="tsd-kind-icon">READ</a>
-							</li>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="rpc_.type.html#readwrite" class="tsd-kind-icon">READWRITE</a>
-							</li>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="rpc_.type.html#write" class="tsd-kind-icon">WRITE</a>
-							</li>
-						</ul>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/range_.range.html" class="tsd-kind-icon">Range</a>
 					</li>
-				</ul>
-				<ul class="after-current">
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
+						<a href="range_.html#rangable" class="tsd-kind-icon">Rangable</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="range_.html#emptykey" class="tsd-kind-icon">empty<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="range_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="range_.html#compare" class="tsd-kind-icon">compare</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="range_.html#rangableisprefix" class="tsd-kind-icon">rangable<wbr>IsPrefix</a>
+					</li>
 				</ul>
 			</nav>
 		</div>
