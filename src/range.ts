@@ -14,14 +14,14 @@ function compare(a: Buffer, b: Buffer) {
   return a.compare(b);
 }
 
-// rangable is a type that can be converted into an etcd range.
-export type rangable = Range
+// Rangable is a type that can be converted into an etcd range.
+export type Rangable = Range
   | string
   | Buffer
   | { start: string | Buffer, end: string | Buffer }
   | { prefix: string | Buffer };
 
-function rangableIsPrefix(r: rangable): r is { prefix: string | Buffer } {
+function rangableIsPrefix(r: Rangable): r is { prefix: string | Buffer } {
   return r.hasOwnProperty('prefix');
 }
 
@@ -94,7 +94,7 @@ export class Range {
   /**
    * Converts a rangable into a qualified Range.
    */
-  public static from(v: rangable): Range {
+  public static from(v: Rangable): Range {
     if (typeof v === 'string' || v instanceof Buffer) {
       return new Range(toBuffer(v));
     }

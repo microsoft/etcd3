@@ -118,14 +118,14 @@ describe('client', () => {
     it('sorts', async () => {
       expect(await client.getAll()
         .prefix('foo')
-        .sort('key', 'ascend')
+        .sort('Key', 'Ascend')
         .limit(2)
         .keys(),
       ).to.deep.equal(['1', '2']);
 
       expect(await client.getAll()
         .prefix('foo')
-        .sort('key', 'descend')
+        .sort('Key', 'Descend')
         .limit(2)
         .keys(),
       ).to.deep.equal(['3', '2']);
@@ -275,7 +275,7 @@ describe('client', () => {
 
     describe('if()', () => {
       it('runs a simple if', async () => {
-        await client.if('foo1', 'value', '==', 'bar1')
+        await client.if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .commit();
 
@@ -283,7 +283,7 @@ describe('client', () => {
       });
 
       it('runs consequents', async () => {
-        await client.if('foo1', 'value', '==', 'bar1')
+        await client.if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'))
           .commit();
@@ -292,8 +292,8 @@ describe('client', () => {
       });
 
       it('runs multiple clauses and consequents', async () => {
-        const result = await client.if('foo1', 'value', '==', 'bar1')
-          .and('foo2', 'value', '==', 'wut')
+        const result = await client.if('foo1', 'Value', '==', 'bar1')
+          .and('foo2', 'Value', '==', 'wut')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'), client.get('foo2'))
           .commit();
@@ -362,7 +362,7 @@ describe('client', () => {
     it('throws on granting permission to a non-existent role', async () => {
       await expectReject(
         client.role('foo').grant({
-          permission: 'read',
+          permission: 'Read',
           range: client.range({ prefix: '111' }),
         }),
         EtcdRoleNotFoundError,
@@ -372,14 +372,14 @@ describe('client', () => {
     it('round trips permission grants', async () => {
       const fooRole = await client.role('foo').create();
       await fooRole.grant({
-        permission: 'read',
+        permission: 'Read',
         range: client.range({ prefix: '111' }),
       });
 
       const perms = await fooRole.permissions();
       expect(perms).to.containSubset([
         {
-          permission: 'read',
+          permission: 'Read',
           range: client.range({ prefix: '111' }),
         },
       ]);
@@ -449,7 +449,7 @@ describe('client', () => {
 
       const normalRole = await client.role('rw_prefix_f').create();
       await normalRole.grant({
-        permission: 'readwrite',
+        permission: 'Readwrite',
         range: client.range({ prefix: 'f' }),
       });
       await normalRole.addUser('connor');

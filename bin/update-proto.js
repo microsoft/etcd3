@@ -9,10 +9,10 @@
  *
  */
 
-const changeCase = require('change-case');
 const fetch = require('node-fetch');
 const path = require('path');
 const fs = require('fs');
+const _ = require('lodash');
 
 /**
  * Files to fetch and concatenate.
@@ -52,12 +52,12 @@ const filterRemovedLines = line => !ignores.some(re => re.test(line));
 const uppercaseEnumFieldRe = /^(\s*)([A-Z_]+)(\s*=\s*[0-9]+;.*)$/;
 
 /**
- * Etcd provides all enums as UPPER_CASE. We change them to cameCase here
+ * Etcd provides all enums as UPPER_CASE. We change them to UpperCamelCase here
  * to match TypeScript conventions better.
  */
 function lowerCaseEnumFields(line) {
   return line.replace(uppercaseEnumFieldRe, (_match, indentation, name, value) => {
-    return `${indentation}${changeCase.camelCase(name)}${value}`;
+    return `${indentation}${_.upperFirst(_.camelCase(name))}${value}`;
   });
 }
 

@@ -295,22 +295,22 @@ export enum SortOrder {
   /**
    * default, no sorting
    */
-  none = 0,
+  None = 0,
   /**
    * lowest target value first
    */
-  ascend = 1,
+  Ascend = 1,
   /**
    * highest target value first
    */
-  descend = 2,
+  Descend = 2,
 }
 export enum SortTarget {
-  key = 0,
-  version = 1,
-  create = 2,
-  mod = 3,
-  value = 4,
+  Key = 0,
+  Version = 1,
+  Create = 2,
+  Mod = 3,
+  Value = 4,
 }
 export interface IRangeRequest {
   /**
@@ -476,16 +476,16 @@ export interface IResponseOp {
   response_delete_range: IDeleteRangeResponse;
 }
 export enum CompareResult {
-  equal = 0,
-  greater = 1,
-  less = 2,
-  notEqual = 3,
+  Equal = 0,
+  Greater = 1,
+  Less = 2,
+  NotEqual = 3,
 }
 export enum CompareTarget {
-  version = 0,
-  create = 1,
-  mod = 2,
-  value = 3,
+  Version = 0,
+  Create = 1,
+  Mod = 2,
+  Value = 3,
 }
 export interface ICompare {
   /**
@@ -592,11 +592,11 @@ export enum FilterType {
   /**
    * filter out put event.
    */
-  noput = 0,
+  Noput = 0,
   /**
    * filter out delete event.
    */
-  nodelete = 1,
+  Nodelete = 1,
 }
 export interface IWatchCreateRequest {
   /**
@@ -657,6 +657,10 @@ export interface IWatchResponse {
    */
   canceled: boolean;
   compact_revision: string;
+  /**
+   * cancel_reason indicates the reason for canceling the watcher.
+   */
+  cancel_reason: string;
   events: IEvent[];
 }
 export interface ILeaseGrantRequest {
@@ -815,16 +819,16 @@ export enum AlarmType {
   /**
    * default, used to query if any alarm is active
    */
-  none = 0,
+  None = 0,
   /**
    * space quota is exhausted
    */
-  nospace = 1,
+  Nospace = 1,
 }
 export enum AlarmAction {
-  get = 0,
-  activate = 1,
-  deactivate = 2,
+  Get = 0,
+  Activate = 1,
+  Deactivate = 2,
 }
 export interface IAlarmRequest {
   /**
@@ -1030,14 +1034,8 @@ export interface IKeyValue {
   lease: string;
 }
 export enum EventType {
-  /**
-   * filter out put event.
-   */
-  put = 0,
-  /**
-   * filter out delete event.
-   */
-  delete = 1,
+  Put = 0,
+  Delete = 1,
 }
 export interface IEvent {
   type: keyof typeof EventType;
@@ -1057,9 +1055,9 @@ export interface IUser {
   roles?: string[];
 }
 export enum Permission {
-  read = 0,
-  write = 1,
-  readwrite = 2,
+  Read = 0,
+  Write = 1,
+  Readwrite = 2,
 }
 export interface IPermission {
   permType: keyof typeof Permission;

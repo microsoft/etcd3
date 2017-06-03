@@ -1,13 +1,18 @@
 /* tslint:disable */
 
-// todo(connor4312): is there a way to mark that these are
-// non-instantiable interfaces?
-
 import { Duplex, Readable, Writable } from 'stream';
 
-export class ChannelCredentials {}
-export class CallCredentials {}
-export class Service {}
+export class ChannelCredentials {
+  private constructor();
+}
+
+export class CallCredentials {
+  private constructor();
+}
+
+export class Service {
+  private constructor();
+}
 
 /**
  * Describes some generic GRPC call or service function. This is super generic,
@@ -42,11 +47,6 @@ export class Client {
 }
 
 export class Server {
-  /**
-   * Creates a new GRPC server.
-   */
-  constructor();
-
   /**
    * Add a proto service to the server, with a corresponding implementation.
    */

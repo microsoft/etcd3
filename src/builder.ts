@@ -1,4 +1,4 @@
-import { rangable, Range } from './range';
+import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { PromiseWrap, toBuffer } from './util';
 
@@ -8,12 +8,12 @@ const emptyBuffer = Buffer.from([]);
  * Comparators can be passed to various operations in the ComparatorBuilder.
  */
 export const comparator = {
-  '==': RPC.CompareResult.equal,
-  '===': RPC.CompareResult.equal,
-  '>': RPC.CompareResult.greater,
-  '<': RPC.CompareResult.less,
-  '!=': RPC.CompareResult.notEqual,
-  '!==': RPC.CompareResult.notEqual,
+  '==': RPC.CompareResult.Equal,
+  '===': RPC.CompareResult.Equal,
+  '>': RPC.CompareResult.Greater,
+  '<': RPC.CompareResult.Less,
+  '!=': RPC.CompareResult.NotEqual,
+  '!==': RPC.CompareResult.NotEqual,
 };
 
 export interface ICompareTarget {
@@ -29,10 +29,10 @@ export interface IOperation {
  * compareTarget are the types of things that can be compared against.
  */
 export const compareTarget: { [key in keyof typeof RPC.CompareTarget]: keyof RPC.ICompare } = {
-  value: 'value',
-  version: 'version',
-  create: 'create_revision',
-  mod: 'mod_revision',
+  Value: 'value',
+  Version: 'version',
+  Create: 'create_revision',
+  Mod: 'mod_revision',
 };
 
 /**
@@ -183,7 +183,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   /**
    * inRange instructs the builder to get keys in the specified byte range.
    */
-  public inRange(r: rangable): this {
+  public inRange(r: Rangable): this {
     const range = Range.from(r);
     this.request.key = range.start;
     this.request.range_end = range.end;
@@ -343,7 +343,7 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   /**
    * inRange instructs the builder to delete keys in the specified byte range.
    */
-  public inRange(r: rangable): this {
+  public inRange(r: Rangable): this {
     const range = Range.from(r);
     this.request.key = range.start;
     this.request.range_end = range.end;
@@ -498,7 +498,7 @@ export class ComparatorBuilder {
     assertWithin(compareTarget, column, 'comparison target in client.and(...)');
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
 
-    if (column === 'value') {
+    if (column === 'Value') {
       value = toBuffer(<string | Buffer> value);
     }
 

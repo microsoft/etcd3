@@ -4,7 +4,7 @@ import { ConnectionPool } from './connection-pool';
 import { Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
-import { rangable, Range } from './range';
+import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 
 export * from './auth';
@@ -107,7 +107,7 @@ export class Etcd3 {
    * Creates a structure representing an etcd range. Used in permission grants
    * and queries. This is a convenience method for `Etcd3.Range.from(...)`.
    */
-  public range(r: rangable): Range {
+  public range(r: Rangable): Range {
     return Range.from(r);
   }
 

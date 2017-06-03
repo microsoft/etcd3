@@ -10,9 +10,9 @@ message User {
 // Permission is a single entity
 message Permission {
   enum Type {
-    read = 0;
-    write = 1;
-    readwrite = 2;
+    Read = 0;
+    Write = 1;
+    Readwrite = 2;
   }
   Type permType = 1;
   bytes key = 2;

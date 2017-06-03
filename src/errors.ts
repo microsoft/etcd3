@@ -94,7 +94,7 @@ interface IErrorCtor {
  * Mapping of GRPC error messages to typed error. GRPC errors are untyped
  * by default and sourced from within a mess of C code.
  */
-const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
+const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Connect Failed', GRPCConnectFailedError],
   ['Channel Disconnected', GRPCConnectFailedError],
   ['Endpoint read failed', GRPCProtocolError],
@@ -118,25 +118,19 @@ const grpcMessageToError = new Map<string | RegExp, IErrorCtor>([
   ['Cancelled before creating subchannel', GRPCCancelledError],
   ['Pick cancelled', GRPCCancelledError],
   ['Disconnected', GRPCCancelledError],
-  [/role name already exists/, EtcdRoleExistsError],
-  [/user name already exists/, EtcdUserExistsError],
-  [/role is not granted to the user/, EtcdRoleNotGrantedError],
-  [/role name not found/, EtcdRoleNotFoundError],
-  [/user name not found/, EtcdUserNotFoundError],
-  [/authentication failed, invalid user ID or password/, EtcdAuthenticationFailedError],
-  [/permission denied/, EtcdPermissionDeniedError],
+  ['etcdserver: role name already exists', EtcdRoleExistsError],
+  ['etcdserver: user name already exists', EtcdUserExistsError],
+  ['etcdserver: role is not granted to the user', EtcdRoleNotGrantedError],
+  ['etcdserver: role name not found', EtcdRoleNotFoundError],
+  ['etcdserver: user name not found', EtcdUserNotFoundError],
+  ['etcdserver: authentication failed, invalid user ID or password', EtcdAuthenticationFailedError],
+  ['etcdserver: permission denied', EtcdPermissionDeniedError],
 ]);
 
 function getMatchingGrpcError(err: Error): IErrorCtor | null {
   for (const [key, value] of grpcMessageToError) {
-    if (typeof key === 'string') {
-      if (err.message.includes(key)) {
-        return value;
-      }
-    } else {
-      if (key.test(err.message)) {
-        return value;
-      }
+    if (err.message.includes(key)) {
+      return value;
     }
   }
 
