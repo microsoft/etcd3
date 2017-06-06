@@ -1,16 +1,14 @@
 import { Role, User } from './auth';
-import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
-import { Lease } from './lease';
-import { Lock } from './lock';
+import { Namespace } from './namespace';
 import { IOptions } from './options';
-import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 
 export * from './auth';
 export * from './builder';
 export * from './errors';
 export * from './lease';
+export * from './namespace';
 export * from './options';
 export * from './range';
 export * from './rpc';
@@ -32,83 +30,13 @@ export * from './rpc';
  * await client.delete().all();
  * ```
  */
-export class Etcd3 {
-  private pool = new ConnectionPool(this.options);
-
-  public readonly kv = new RPC.KVClient(this.pool);
-  public readonly leaseClient = new RPC.LeaseClient(this.pool);
+export class Etcd3 extends Namespace {
   public readonly auth = new RPC.AuthClient(this.pool);
   public readonly maintenance = new RPC.MaintenanceClient(this.pool);
-  public readonly watch = new RPC.WatchClient(this.pool);
   public readonly cluster = new RPC.ClusterClient(this.pool);
 
-  constructor(private options: IOptions = { hosts: '127.0.0.1:2379' }) {}
-
-  /**
-   * `.get()` starts a query to look up a single key from etcd.
-   */
-  public get(key: string): Builder.SingleRangeBuilder {
-    return new Builder.SingleRangeBuilder(this.kv, key);
-  }
-
-  /**
-   * `.getAll()` starts a query to look up multiple keys from etcd.
-   */
-  public getAll(): Builder.MultiRangeBuilder {
-    return new Builder.MultiRangeBuilder(this.kv);
-  }
-
-  /**
-   * `.put()` starts making a put request against etcd.
-   */
-  public put(key: string | Buffer): Builder.PutBuilder {
-    return new Builder.PutBuilder(this.kv, key);
-  }
-
-  /**
-   * `.delete()` starts making a delete request against etcd.
-   */
-  public delete(): Builder.DeleteBuilder {
-    return new Builder.DeleteBuilder(this.kv);
-  }
-
-  /**
-   * `lease()` grants and returns a new Lease instance. The Lease is
-   * automatically kept alive for you until it is revoked. See the
-   * documentation on the Lease class for some examples.
-   */
-  public lease(ttl: number): Lease {
-    return new Lease(this.pool, ttl);
-  }
-
-  /**
-   * `lock()` is a helper to provide distributed locking capability. See
-   * the documentation on the Lock class for more information and examples.
-   */
-  public lock(key: string | Buffer): Lock {
-    return new Lock(this.pool, key);
-  }
-
-  /**
-   * `if()` starts a new etcd transaction, which allows you to execute complex
-   * statements atomically. See documentation on the ComparatorBuilder for
-   * more information.
-   */
-  public if(
-    key: string | Buffer,
-    column: keyof typeof Builder.compareTarget,
-    cmp: keyof typeof Builder.comparator,
-    value: string | Buffer | number,
-  ): Builder.ComparatorBuilder {
-    return new Builder.ComparatorBuilder(this.kv).and(key, column, cmp, value);
-  }
-
-  /**
-   * Creates a structure representing an etcd range. Used in permission grants
-   * and queries. This is a convenience method for `Etcd3.Range.from(...)`.
-   */
-  public range(r: Rangable): Range {
-    return Range.from(r);
+  constructor(options: IOptions = { hosts: '127.0.0.1:2379' }) {
+    super(Buffer.from([]), new ConnectionPool(options));
   }
 
   /**

@@ -4,6 +4,7 @@ import { PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
 import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCConnectFailedError } from './errors';
 import * as RPC from './rpc';
+import { NSApplicator } from './util';
 
 function throwIfError<T>(value: T | Error): T {
   if (value instanceof Error) {
@@ -23,7 +24,7 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  */
 class LeaseClientWrapper implements RPC.ICallable {
   constructor(
-    private leaseID: Promise<string | Error>,
+    private readonly leaseID: Promise<string | Error>,
     private pool: ConnectionPool,
   ) {}
 
@@ -83,7 +84,11 @@ export class Lease extends EventEmitter {
   private lastKeepAlive: number;
   private teardown: () => void = () => { /* noop */ };
 
-  constructor(private pool: ConnectionPool, private ttl: number) {
+  constructor(
+    private readonly pool: ConnectionPool,
+    private readonly namespace: NSApplicator,
+    private ttl: number,
+  ) {
     super();
 
     if (ttl < 1) {
@@ -138,7 +143,11 @@ export class Lease extends EventEmitter {
    * Put returns a put builder that operates within the current lease.
    */
   public put(key: string | Buffer): PutBuilder {
-    return new PutBuilder(new RPC.KVClient(new LeaseClientWrapper(this.leaseID, this.pool)), key);
+    return new PutBuilder(
+      new RPC.KVClient(new LeaseClientWrapper(this.leaseID, this.pool)),
+      this.namespace,
+      key,
+    );
   }
 
   /**

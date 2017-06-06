@@ -1,7 +1,4 @@
-import { toBuffer } from './util';
-
-const zeroKey = Buffer.from([0]);
-const emptyKey = Buffer.from([]);
+import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util';
 
 function compare(a: Buffer, b: Buffer) {
   if (a.length === 0) {
@@ -78,17 +75,7 @@ export class Range {
       return new Range(zeroKey, zeroKey);
     }
 
-    const start = toBuffer(prefix);
-    let end = Buffer.from(start); // copy to prevent mutation
-    for (let i = end.length - 1; i >= 0; i--) {
-      if (end[i] < 0xff) {
-        end[i]++;
-        end = end.slice(0, i + 1);
-        return new Range(start, end);
-      }
-    }
-
-    return new Range(start, zeroKey);
+    return new Range(prefix, endRangeForPrefix(toBuffer(prefix)));
   }
 
   /**

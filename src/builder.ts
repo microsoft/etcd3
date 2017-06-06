@@ -1,6 +1,6 @@
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
-import { PromiseWrap, toBuffer } from './util';
+import { NSApplicator, PromiseWrap, toBuffer } from './util';
 
 const emptyBuffer = Buffer.from([]);
 
@@ -54,6 +54,10 @@ function assertWithin<T>(map: T, value: keyof T, thing: string) {
 export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperation {
   protected request: RPC.IRangeRequest = {};
 
+  constructor(protected readonly namespace: NSApplicator) {
+    super();
+  }
+
   /**
    * revision is the point-in-time of the key-value store to use for the range.
    */
@@ -106,7 +110,7 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
    * Returns the request op for this builder, used in transactions.
    */
   public op(): RPC.IRequestOp {
-    return { request_range: this.request };
+    return { request_range: this.namespace.applyToRequest(this.request) };
   }
 }
 
@@ -114,8 +118,8 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
  * SingleRangeBuilder is a query builder that looks up a single key.
  */
 export class SingleRangeBuilder extends RangeBuilder<string> {
-  constructor(private kv: RPC.KVClient, key: string | Buffer) {
-    super();
+  constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator, key: string | Buffer) {
+    super(namespace);
     this.request.key = toBuffer(key);
     this.request.limit = 1;
   }
@@ -155,7 +159,7 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.request);
+    return this.kv.range(this.namespace.applyToRequest(this.request));
   }
 }
 
@@ -163,15 +167,14 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
  * MultiRangeBuilder is a query builder that looks up multiple keys.
  */
 export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
-  constructor(private kv: RPC.KVClient) {
-    super();
+  constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator) {
+    super(namespace);
     this.prefix(emptyBuffer);
   }
 
   /**
    * Prefix instructs the query to scan for all keys that have the provided
-   * prefix. Keys returned from querying will be automatically stripped of
-   * this prefix.
+   * prefix.
    */
   public prefix(value: string | Buffer): this {
     return this.inRange(Range.prefix(value));
@@ -268,7 +271,13 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.request);
+    return this.kv.range(this.namespace.applyToRequest(this.request)).then(res => {
+      for (let i = 0; i < res.kvs.length; i++) {
+        res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
+      }
+
+      return res;
+    });
   }
 
   /**
@@ -300,7 +309,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
 export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   private request: RPC.IDeleteRangeRequest = {};
 
-  constructor(private kv: RPC.KVClient) {
+  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {
     super();
   }
 
@@ -359,14 +368,14 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    * exec runs the delete put request.
    */
   public exec(): Promise<RPC.IDeleteRangeResponse> {
-    return this.kv.deleteRange(this.request);
+    return this.kv.deleteRange(this.namespace.applyToRequest(this.request));
   }
 
   /**
    * Returns the request op for this builder, used in transactions.
    */
   public op(): RPC.IRequestOp {
-    return { request_delete_range: this.request };
+    return { request_delete_range: this.namespace.applyToRequest(this.request) };
   }
 
   /**
@@ -383,7 +392,11 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
 export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   private request: RPC.IPutRequest = {};
 
-  constructor(private kv: RPC.KVClient, key: string | Buffer) {
+  constructor(
+    private readonly kv: RPC.KVClient,
+    private readonly namespace: NSApplicator,
+    key: string | Buffer,
+  ) {
     super();
     this.request.key = toBuffer(key);
   }
@@ -437,14 +450,14 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * exec runs the put request.
    */
   public exec(): Promise<RPC.IPutResponse> {
-    return this.kv.put(this.request);
+    return this.kv.put(this.namespace.applyToRequest(this.request));
   }
 
   /**
    * Returns the request op for this builder, used in transactions.
    */
   public op(): RPC.IRequestOp {
-    return { request_put: this.request };
+    return { request_put: this.namespace.applyToRequest(this.request) };
   }
 
   /**
@@ -463,7 +476,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * const id = uuid.v4();
  *
  * function lock() {
- *   return client.if('my_lock', 'create', '==', 0)
+ *   return client.if('my_lock', 'Create', '==', 0)
  *     .then(client.put('my_lock').value(id))
  *     .else(client.get('my_lock'))
  *     .commit()
@@ -471,7 +484,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * }
  *
  * function unlock() {
- *   return client.if('my_lock', 'value', '==', 0)
+ *   return client.if('my_lock', 'Value', '==', id)
  *     .then(client.delete().key('my_lock'))
  *     .commit();
  * }
@@ -480,7 +493,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
 export class ComparatorBuilder {
   private request: RPC.ITxnRequest = {};
 
-  constructor(private kv: RPC.KVClient) {}
+  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {}
 
   /**
    * Adds a new clause to the transaction.
@@ -500,7 +513,7 @@ export class ComparatorBuilder {
 
     this.request.compare = this.request.compare || [];
     this.request.compare.push({
-      key: toBuffer(key),
+      key: this.namespace.applyKey(toBuffer(key)),
       result: comparator[cmp],
       target: RPC.CompareTarget[column],
       [compareTarget[column]]: typeof value === 'number' ? value : toBuffer(value),
