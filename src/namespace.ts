@@ -93,8 +93,12 @@ export class Namespace {
     cmp: keyof typeof Builder.comparator,
     value: string | Buffer | number,
   ): Builder.ComparatorBuilder {
-    return new Builder.ComparatorBuilder(this.kv, this.nsApplicator)
-      .and(key, column, cmp, value);
+    return new Builder.ComparatorBuilder(this.kv, this.nsApplicator).and(
+      key,
+      column,
+      cmp,
+      value,
+    );
   }
 
   /**
@@ -113,6 +117,9 @@ export class Namespace {
    * with `user1/`. See the Namespace class for more details.
    */
   public namespace(prefix: string | Buffer): Namespace {
-    return new Namespace(Buffer.concat([this.prefix, toBuffer(prefix)]), this.pool);
+    return new Namespace(
+      Buffer.concat([this.prefix, toBuffer(prefix)]),
+      this.pool,
+    );
   }
 }

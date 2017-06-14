@@ -19,9 +19,13 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
  */
-function runServiceCall(client: grpc.Client, method: string, payload: object): Promise<any> {
+function runServiceCall(
+  client: grpc.Client,
+  method: string,
+  payload: object,
+): Promise<any> {
   return new Promise((resolve, reject) => {
-    (<any> client)[method](payload, (err: Error | null, res: any) => {
+    (<any>client)[method](payload, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -44,7 +48,9 @@ class Authenticator {
    * Augments the call credentials with the configured username and password,
    * if any.
    */
-  public augmentCredentials(original: grpc.ChannelCredentials): Promise<grpc.ChannelCredentials> {
+  public augmentCredentials(
+    original: grpc.ChannelCredentials,
+  ): Promise<grpc.ChannelCredentials> {
     if (this.awaitingToken !== null) {
       return this.awaitingToken;
     }
@@ -58,22 +64,32 @@ class Authenticator {
       return Promise.resolve(original);
     }
 
-    const attempt = (index: number, previousRejection?: Error): Promise<grpc.ChannelCredentials> => {
+    const attempt = (
+      index: number,
+      previousRejection?: Error,
+    ): Promise<grpc.ChannelCredentials> => {
       if (index >= hosts.length) {
         this.awaitingToken = null;
         return Promise.reject(previousRejection);
       }
 
-      return this.getCredentialsFromHost(hosts[index], auth.username, auth.password, original)
+      return this.getCredentialsFromHost(
+        hosts[index],
+        auth.username,
+        auth.password,
+        original,
+      )
         .then(token => {
           this.awaitingToken = null;
           return grpc.credentials.combineChannelCredentials(
-            original, this.createMetadataAugmenter(token));
+            original,
+            this.createMetadataAugmenter(token),
+          );
         })
         .catch(err => attempt(index + 1, err));
     };
 
-    return this.awaitingToken = attempt(0);
+    return (this.awaitingToken = attempt(0));
   }
 
   /**
@@ -105,8 +121,9 @@ class Authenticator {
 }
 
 export class Host {
-
-  private cachedServices: { [name in keyof typeof Services]?: Promise<grpc.Client> } = Object.create(null);
+  private cachedServices: {
+    [name in keyof typeof Services]?: Promise<grpc.Client>
+  } = Object.create(null);
 
   constructor(
     private host: string,
@@ -145,8 +162,9 @@ export class Host {
  * host can contain multiple discreet services.
  */
 export class ConnectionPool implements ICallable {
-
-  private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
+  private pool = new SharedPool<Host>(
+    this.options.backoffStrategy || defaultBackoffStrategy,
+  );
   private mockImpl: ICallable | null;
   private authenticator = new Authenticator(this.options);
 
@@ -178,7 +196,11 @@ export class ConnectionPool implements ICallable {
   /**
    * @override
    */
-  public exec(serviceName: keyof typeof Services, method: string, payload: object): Promise<any> {
+  public exec(
+    serviceName: keyof typeof Services,
+    method: string,
+    payload: object,
+  ): Promise<any> {
     if (this.mockImpl) {
       return this.mockImpl.exec(serviceName, method, payload);
     }
@@ -207,7 +229,9 @@ export class ConnectionPool implements ICallable {
   /**
    * @override
    */
-  public getConnection(service: keyof typeof Services): Promise<{ host: Host, client: grpc.Client }> {
+  public getConnection(
+    service: keyof typeof Services,
+  ): Promise<{ host: Host; client: grpc.Client }> {
     if (this.mockImpl) {
       return this.mockImpl.getConnection(service);
     }
@@ -230,7 +254,9 @@ export class ConnectionPool implements ICallable {
     }
 
     if (hosts.length === 0) {
-      throw new Error('Cannot construct an etcd client with no hosts specified');
+      throw new Error(
+        'Cannot construct an etcd client with no hosts specified',
+      );
     }
 
     hosts.forEach(host => this.pool.add(new Host(host, credentials)));

@@ -57,18 +57,26 @@ export class Lock {
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
   public acquire(): Promise<void> {
-    const lease = this.lease = new Lease(this.pool, this.namespace, this.leaseTTL);
+    const lease = (this.lease = new Lease(
+      this.pool,
+      this.namespace,
+      this.leaseTTL,
+    ));
     const kv = new RPC.KVClient(this.pool);
 
     return lease.grant().then(leaseID => {
       return new ComparatorBuilder(kv, this.namespace)
         .and(this.key, 'Create', '==', 0)
-        .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
+        .then(
+          new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID),
+        )
         .commit()
         .then(res => {
           if (!res.succeeded) {
             this.release();
-            throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
+            throw new EtcdLockFailedError(
+              `Failed to acquire a lock on ${this.key}`,
+            );
           }
         });
     });
@@ -94,6 +102,10 @@ export class Lock {
     return this.acquire()
       .then(fn)
       .then(value => this.release().then(() => value))
-      .catch(err => this.release().then(() => { throw err; }));
+      .catch(err =>
+        this.release().then(() => {
+          throw err;
+        }),
+      );
   }
 }

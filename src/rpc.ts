@@ -4,8 +4,14 @@
 import * as grpc from 'grpc';
 
 export interface ICallable {
-  exec(service: keyof typeof Services, method: string, params: object): Promise<any>;
-  getConnection(service: keyof typeof Services): Promise<{ client: grpc.Client }>;
+  exec(
+    service: keyof typeof Services,
+    method: string,
+    params: object,
+  ): Promise<any>;
+  getConnection(
+    service: keyof typeof Services,
+  ): Promise<{ client: grpc.Client }>;
 }
 
 export interface IResponseStream<T> {
@@ -20,7 +26,9 @@ export interface IRequestStream<T> {
   end(): void;
 }
 
-export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
+export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<
+  R
+> {}
 export class KVClient {
   constructor(private client: ICallable) {}
   /**
@@ -74,7 +82,9 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
-    return this.client.getConnection('Watch').then(cnx => (<any> cnx.client).watch());
+    return this.client
+      .getConnection('Watch')
+      .then(cnx => (<any>cnx.client).watch());
   }
 }
 
@@ -98,13 +108,19 @@ export class LeaseClient {
    * LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
    * to the server and streaming keep alive responses from the server to the client.
    */
-  public leaseKeepAlive(): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
-    return this.client.getConnection('Lease').then(cnx => (<any> cnx.client).leaseKeepAlive());
+  public leaseKeepAlive(): Promise<
+    IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>
+  > {
+    return this.client
+      .getConnection('Lease')
+      .then(cnx => (<any>cnx.client).leaseKeepAlive());
   }
   /**
    * LeaseTimeToLive retrieves lease information.
    */
-  public leaseTimeToLive(req: ILeaseTimeToLiveRequest): Promise<ILeaseTimeToLiveResponse> {
+  public leaseTimeToLive(
+    req: ILeaseTimeToLiveRequest,
+  ): Promise<ILeaseTimeToLiveResponse> {
     return this.client.exec('Lease', 'leaseTimeToLive', req);
   }
 }
@@ -120,13 +136,17 @@ export class ClusterClient {
   /**
    * MemberRemove removes an existing member from the cluster.
    */
-  public memberRemove(req: IMemberRemoveRequest): Promise<IMemberRemoveResponse> {
+  public memberRemove(
+    req: IMemberRemoveRequest,
+  ): Promise<IMemberRemoveResponse> {
     return this.client.exec('Cluster', 'memberRemove', req);
   }
   /**
    * MemberUpdate updates the member configuration.
    */
-  public memberUpdate(req: IMemberUpdateRequest): Promise<IMemberUpdateResponse> {
+  public memberUpdate(
+    req: IMemberUpdateRequest,
+  ): Promise<IMemberUpdateResponse> {
     return this.client.exec('Cluster', 'memberUpdate', req);
   }
   /**
@@ -169,7 +189,9 @@ export class MaintenanceClient {
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(): Promise<IResponseStream<ISnapshotResponse>> {
-    return this.client.getConnection('Maintenance').then(cnx => (<any> cnx.client).snapshot({}));
+    return this.client
+      .getConnection('Maintenance')
+      .then(cnx => (<any>cnx.client).snapshot({}));
   }
 }
 
@@ -190,7 +212,9 @@ export class AuthClient {
   /**
    * Authenticate processes an authenticate request.
    */
-  public authenticate(req: IAuthenticateRequest): Promise<IAuthenticateResponse> {
+  public authenticate(
+    req: IAuthenticateRequest,
+  ): Promise<IAuthenticateResponse> {
     return this.client.exec('Auth', 'authenticate', req);
   }
   /**
@@ -214,25 +238,33 @@ export class AuthClient {
   /**
    * UserDelete deletes a specified user.
    */
-  public userDelete(req: IAuthUserDeleteRequest): Promise<IAuthUserDeleteResponse> {
+  public userDelete(
+    req: IAuthUserDeleteRequest,
+  ): Promise<IAuthUserDeleteResponse> {
     return this.client.exec('Auth', 'userDelete', req);
   }
   /**
    * UserChangePassword changes the password of a specified user.
    */
-  public userChangePassword(req: IAuthUserChangePasswordRequest): Promise<IAuthUserChangePasswordResponse> {
+  public userChangePassword(
+    req: IAuthUserChangePasswordRequest,
+  ): Promise<IAuthUserChangePasswordResponse> {
     return this.client.exec('Auth', 'userChangePassword', req);
   }
   /**
    * UserGrant grants a role to a specified user.
    */
-  public userGrantRole(req: IAuthUserGrantRoleRequest): Promise<IAuthUserGrantRoleResponse> {
+  public userGrantRole(
+    req: IAuthUserGrantRoleRequest,
+  ): Promise<IAuthUserGrantRoleResponse> {
     return this.client.exec('Auth', 'userGrantRole', req);
   }
   /**
    * UserRevokeRole revokes a role of specified user.
    */
-  public userRevokeRole(req: IAuthUserRevokeRoleRequest): Promise<IAuthUserRevokeRoleResponse> {
+  public userRevokeRole(
+    req: IAuthUserRevokeRoleRequest,
+  ): Promise<IAuthUserRevokeRoleResponse> {
     return this.client.exec('Auth', 'userRevokeRole', req);
   }
   /**
@@ -256,19 +288,25 @@ export class AuthClient {
   /**
    * RoleDelete deletes a specified role.
    */
-  public roleDelete(req: IAuthRoleDeleteRequest): Promise<IAuthRoleDeleteResponse> {
+  public roleDelete(
+    req: IAuthRoleDeleteRequest,
+  ): Promise<IAuthRoleDeleteResponse> {
     return this.client.exec('Auth', 'roleDelete', req);
   }
   /**
    * RoleGrantPermission grants a permission of a specified key or range to a specified role.
    */
-  public roleGrantPermission(req: IAuthRoleGrantPermissionRequest): Promise<IAuthRoleGrantPermissionResponse> {
+  public roleGrantPermission(
+    req: IAuthRoleGrantPermissionRequest,
+  ): Promise<IAuthRoleGrantPermissionResponse> {
     return this.client.exec('Auth', 'roleGrantPermission', req);
   }
   /**
    * RoleRevokePermission revokes a key or range permission of a specified role.
    */
-  public roleRevokePermission(req: IAuthRoleRevokePermissionRequest): Promise<IAuthRoleRevokePermissionResponse> {
+  public roleRevokePermission(
+    req: IAuthRoleRevokePermissionRequest,
+  ): Promise<IAuthRoleRevokePermissionResponse> {
     return this.client.exec('Auth', 'roleRevokePermission', req);
   }
 }
@@ -1011,6 +1049,25 @@ export interface IAuthRoleGrantPermissionResponse {
 export interface IAuthRoleRevokePermissionResponse {
   header: IResponseHeader;
 }
+export interface IUser {
+  name?: Buffer;
+  password?: Buffer;
+  roles?: string[];
+}
+export enum Permission {
+  Read = 0,
+  Write = 1,
+  Readwrite = 2,
+}
+export interface IPermission {
+  permType: keyof typeof Permission;
+  key: Buffer;
+  range_end: Buffer;
+}
+export interface IRole {
+  name?: Buffer;
+  keyPermission?: IPermission[];
+}
 export interface IKeyValue {
   /**
    * key is the first key for the range. If range_end is not given, the request only looks up key.
@@ -1048,25 +1105,6 @@ export interface IEvent {
    * The previous key-value pairs will be returned in the delete response.
    */
   prev_kv: IKeyValue;
-}
-export interface IUser {
-  name?: Buffer;
-  password?: Buffer;
-  roles?: string[];
-}
-export enum Permission {
-  Read = 0,
-  Write = 1,
-  Readwrite = 2,
-}
-export interface IPermission {
-  permType: keyof typeof Permission;
-  key: Buffer;
-  range_end: Buffer;
-}
-export interface IRole {
-  name?: Buffer;
-  keyPermission?: IPermission[];
 }
 export const Services = {
   KV: KVClient,

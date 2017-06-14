@@ -19,9 +19,14 @@ import {
 } from '../src';
 import { getOptions } from './util';
 
-function expectReject(promise: Promise<any>, err: { new (message: string): Error }) {
+function expectReject(
+  promise: Promise<any>,
+  err: { new (message: string): Error },
+) {
   return promise
-    .then(() => { throw new Error('expected to reject'); })
+    .then(() => {
+      throw new Error('expected to reject');
+    })
     .catch(actualErr => {
       if (!(actualErr instanceof err)) {
         console.error(actualErr.stack);
@@ -70,7 +75,7 @@ describe('client', () => {
 
   describe('namespacing', () => {
     let ns: Namespace;
-    beforeEach(() => ns = client.namespace('user1/'));
+    beforeEach(() => (ns = client.namespace('user1/')));
 
     const assertEqualInNamespace = async (key: string, value: string) => {
       expect(await ns.get(key)).to.equal(value);
@@ -112,7 +117,8 @@ describe('client', () => {
 
     it('runs a simple if', async () => {
       await ns.put('foo1').value('potatoes');
-      await ns.if('foo1', 'Value', '==', 'potatoes')
+      await ns
+        .if('foo1', 'Value', '==', 'potatoes')
         .then(ns.put('foo1').value('tomatoes'))
         .commit();
 
@@ -132,7 +138,9 @@ describe('client', () => {
 
     it('gets single keys with various encoding', async () => {
       expect(await client.get('foo1').string()).to.equal('bar1');
-      expect(await client.get('foo2').buffer()).to.deep.equal(Buffer.from('bar2'));
+      expect(await client.get('foo2').buffer()).to.deep.equal(
+        Buffer.from('bar2'),
+      );
       expect(await client.get('foo3').json()).to.deep.equal({ value: 'bar3' });
       expect(await client.get('wut').string()).to.be.null;
     });
@@ -146,7 +154,12 @@ describe('client', () => {
     });
 
     it('gets keys', async () => {
-      expect(await client.getAll().keys()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
+      expect(await client.getAll().keys()).to.have.members([
+        'foo1',
+        'foo2',
+        'foo3',
+        'baz',
+      ]);
       expect(await client.getAll().keyBuffers()).to.have.deep.members([
         Buffer.from('foo1'),
         Buffer.from('foo2'),
@@ -160,18 +173,22 @@ describe('client', () => {
     });
 
     it('sorts', async () => {
-      expect(await client.getAll()
-        .prefix('foo')
-        .sort('Key', 'Ascend')
-        .limit(2)
-        .keys(),
+      expect(
+        await client
+          .getAll()
+          .prefix('foo')
+          .sort('Key', 'Ascend')
+          .limit(2)
+          .keys(),
       ).to.deep.equal(['foo1', 'foo2']);
 
-      expect(await client.getAll()
-        .prefix('foo')
-        .sort('Key', 'Descend')
-        .limit(2)
-        .keys(),
+      expect(
+        await client
+          .getAll()
+          .prefix('foo')
+          .sort('Key', 'Descend')
+          .limit(2)
+          .keys(),
       ).to.deep.equal(['foo3', 'foo2']);
     });
   });
@@ -210,7 +227,9 @@ describe('client', () => {
       });
 
       it('includes previous values', async () => {
-        expect(await client.put('foo1').value('updated').getPrevious()).to.containSubset({
+        expect(
+          await client.put('foo1').value('updated').getPrevious(),
+        ).to.containSubset({
           key: new Buffer('foo1'),
           value: new Buffer('bar1'),
         });
@@ -221,7 +240,7 @@ describe('client', () => {
   describe('lease()', () => {
     let lease: Lease;
 
-    const watchEmission = (event: string): { data: any, fired: boolean } => {
+    const watchEmission = (event: string): { data: any; fired: boolean } => {
       const output = { data: null, fired: false };
       lease.once(event, (data: any) => {
         output.data = data;
@@ -232,7 +251,9 @@ describe('client', () => {
     };
 
     const onEvent = (event: string): Promise<any> => {
-      return new Promise(resolve => lease.once(event, (data: any) => resolve(data)));
+      return new Promise(resolve =>
+        lease.once(event, (data: any) => resolve(data)),
+      );
     };
 
     afterEach(async () => {
@@ -249,15 +270,20 @@ describe('client', () => {
       lease = badClient.lease(1);
       const err = await onEvent('lost');
       expect(err).to.be.an.instanceof(GRPCConnectFailedError);
-      await lease.grant()
-        .then(() => { throw new Error('expected to reject'); })
+      await lease
+        .grant()
+        .then(() => {
+          throw new Error('expected to reject');
+        })
         .catch(err2 => expect(err2).to.equal(err));
     });
 
     it('provides basic lease lifecycle', async () => {
       lease = client.lease(100);
       await lease.put('leased').value('foo');
-      expect((await client.get('leased').exec()).kvs[0].lease).to.equal(await lease.grant());
+      expect((await client.get('leased').exec()).kvs[0].lease).to.equal(
+        await lease.grant(),
+      );
       await lease.revoke();
       expect(await client.get('leased').buffer()).to.be.null;
     });
@@ -274,12 +300,15 @@ describe('client', () => {
     it('emits a lost event if the lease is invalidated', async () => {
       lease = client.lease(100);
       let err: Error;
-      lease.on('lost', e => err = e);
+      lease.on('lost', e => (err = e));
       expect(lease.revoked()).to.be.false;
       await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
 
-      await lease.keepaliveOnce()
-        .then(() => { throw new Error('expected to reject'); })
+      await lease
+        .keepaliveOnce()
+        .then(() => {
+          throw new Error('expected to reject');
+        })
         .catch(err2 => {
           expect(err2).to.equal(err);
           expect(err2).to.be.an.instanceof(EtcdLeaseInvalidError);
@@ -312,14 +341,17 @@ describe('client', () => {
       it('tears down if the lease gets revoked', async () => {
         await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
         clock.tick(20000);
-        expect(await onEvent('lost')).to.be.an.instanceof(EtcdLeaseInvalidError);
+        expect(await onEvent('lost')).to.be.an.instanceof(
+          EtcdLeaseInvalidError,
+        );
         expect(lease.revoked()).to.be.true;
       });
     });
 
     describe('if()', () => {
       it('runs a simple if', async () => {
-        await client.if('foo1', 'Value', '==', 'bar1')
+        await client
+          .if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .commit();
 
@@ -327,7 +359,8 @@ describe('client', () => {
       });
 
       it('runs consequents', async () => {
-        await client.if('foo1', 'Value', '==', 'bar1')
+        await client
+          .if('foo1', 'Value', '==', 'bar1')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'))
           .commit();
@@ -336,23 +369,28 @@ describe('client', () => {
       });
 
       it('runs multiple clauses and consequents', async () => {
-        const result = await client.if('foo1', 'Value', '==', 'bar1')
+        const result = await client
+          .if('foo1', 'Value', '==', 'bar1')
           .and('foo2', 'Value', '==', 'wut')
           .then(client.put('foo1').value('bar2'))
           .else(client.put('foo1').value('bar3'), client.get('foo2'))
           .commit();
 
-        expect(result.responses[1].response_range.kvs[0].value.toString())
-          .to.equal('bar2');
+        expect(
+          result.responses[1].response_range.kvs[0].value.toString(),
+        ).to.equal('bar2');
         expect(await client.get('foo1').string()).to.equal('bar3');
       });
     });
 
     describe('lock()', () => {
       const assertCantLock = () => {
-        return client.lock('resource')
+        return client
+          .lock('resource')
           .acquire()
-          .then(() => { throw new Error('expected to throw'); })
+          .then(() => {
+            throw new Error('expected to throw');
+          })
           .catch(err => expect(err).to.be.an.instanceof(EtcdLockFailedError));
       };
 
@@ -453,7 +491,10 @@ describe('client', () => {
 
     it('throws on existing users', async () => {
       await client.user('connor').create('password');
-      await expectReject(client.user('connor').create('password'), EtcdUserExistsError);
+      await expectReject(
+        client.user('connor').create('password'),
+        EtcdUserExistsError,
+      );
     });
 
     it('throws on regranting the same role multiple times', async () => {
@@ -501,12 +542,14 @@ describe('client', () => {
     });
 
     afterEach(async () => {
-      const rootClient = new Etcd3(getOptions({
-        auth: {
-          username: 'root',
-          password: 'password',
-        },
-      }));
+      const rootClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'root',
+            password: 'password',
+          },
+        }),
+      );
 
       await rootClient.auth.authDisable();
       rootClient.close();
@@ -516,24 +559,28 @@ describe('client', () => {
     });
 
     it('allows authentication using the correct credentials', async () => {
-      const authedClient = new Etcd3(getOptions({
-        auth: {
-          username: 'connor',
-          password: 'password',
-        },
-      }));
+      const authedClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'connor',
+            password: 'password',
+          },
+        }),
+      );
 
       await authedClient.put('foo').value('bar');
       authedClient.close();
     });
 
     it('rejects modifying a key the client has no access to', async () => {
-      const authedClient = new Etcd3(getOptions({
-        auth: {
-          username: 'connor',
-          password: 'password',
-        },
-      }));
+      const authedClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'connor',
+            password: 'password',
+          },
+        }),
+      );
 
       await expectReject(
         authedClient.put('wut').value('bar').exec(),
@@ -544,12 +591,14 @@ describe('client', () => {
     });
 
     it('throws when using incorrect credentials', async () => {
-      const authedClient = new Etcd3(getOptions({
-        auth: {
-          username: 'connor',
-          password: 'bad password',
-        },
-      }));
+      const authedClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'connor',
+            password: 'bad password',
+          },
+        }),
+      );
 
       await expectReject(
         authedClient.put('foo').value('bar').exec(),
