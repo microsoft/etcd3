@@ -20,7 +20,7 @@ export class Service {
  */
 export type grpcCall =
   // Simple GRPC call, one request and one response.
-  ((args: object, callback: (err: Error | null, result: any) => void) => void)
+  | ((args: object, callback: (err: Error | null, result: any) => void) => void)
   // A readable stream call, where a request is made with one set of args.
   | ((args: object) => Readable)
   // A writeable stream call, where the client can write many data points
@@ -50,7 +50,10 @@ export class Server {
   /**
    * Add a proto service to the server, with a corresponding implementation.
    */
-  addService(service: Service, implementations: { [method: string]: grpcCall }): void;
+  addService(
+    service: Service,
+    implementations: { [method: string]: grpcCall },
+  ): void;
 
   /**
    * Binds the server to the given port, with SSL enabled if credentials are given.
@@ -128,7 +131,11 @@ export function closeClient(client: Client): void;
 /**
  * Runs the callback after the connection is established.
  */
-export function waitForClientRead(client: Client, deadline: Date | Number, callback: (err: Error | null) => void): void;
+export function waitForClientRead(
+  client: Client,
+  deadline: Date | Number,
+  callback: (err: Error | null) => void,
+): void;
 
 /**
  * Class for storing metadata. Keys are normalized to lowercase ASCII.
@@ -169,7 +176,6 @@ export class Metadata {
 }
 
 export namespace credentials {
-
   /**
    * Create an insecure credentials object. This is used to create a channel
    * that does not use SSL. This cannot be composed with anything.
@@ -180,39 +186,51 @@ export namespace credentials {
    * Create an SSL Credentials object. If using a client-side certificate, both
    * the second and third arguments must be passed.
    */
-  export function createSsl(rootCerts: Buffer, privateKey?: Buffer, certChain?: Buffer): CallCredentials;
+  export function createSsl(
+    rootCerts: Buffer,
+    privateKey?: Buffer,
+    certChain?: Buffer,
+  ): CallCredentials;
 
   /**
    * Combine any number of CallCredentials into a single CallCredentials object.
    */
-  export function combineCallCredentials(...credentials: CallCredentials[]): CallCredentials;
+  export function combineCallCredentials(
+    ...credentials: CallCredentials[]
+  ): CallCredentials;
 
   /**
    * Combine a ChannelCredentials with any number of CallCredentials into a
    * single ChannelCredentials object.
    */
-  export function combineChannelCredentials(channelCredential: ChannelCredentials,
-    ...callCredentials: CallCredentials[]): ChannelCredentials;
+  export function combineChannelCredentials(
+    channelCredential: ChannelCredentials,
+    ...callCredentials: CallCredentials[]
+  ): ChannelCredentials;
 
   /**
    * Create a gRPC credential from a Google credential object.
    * todo(connor4312): type
    */
-  export function createFromGoogleCredential(googleCredential: any): CallCredentials;
+  export function createFromGoogleCredential(
+    googleCredential: any,
+  ): CallCredentials;
 
   /**
    * IMetadataGenerator can be passed into createFromMetadataGenerator.
    */
   export interface IMetadataGenerator {
-    (
-      target: { service_url: string },
-      callback: (error: Error | null, metadata?: Metadata) => void,
-    ): void;
+    (target: { service_url: string }, callback: (
+      error: Error | null,
+      metadata?: Metadata,
+    ) => void): void;
   }
 
   /**
    * Create a gRPC credential from a Google credential object.
    * todo(connor4312): type
    */
-  export function createFromMetadataGenerator(generator: IMetadataGenerator): CallCredentials;
+  export function createFromMetadataGenerator(
+    generator: IMetadataGenerator,
+  ): CallCredentials;
 }

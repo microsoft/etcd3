@@ -27,6 +27,12 @@
       }
     ],
 
+    // Prettier-incompatible or prettier-handled rules
+    "align": false,
+    "no-single-line-block-comment": false,
+    "semicolon": false,
+    "max-file-line-count": false, // todo(connor4312): break up client.test.ts
+
     // Microsoft
     "no-relative-imports": false,
     "mocha-no-side-effect-code": false,

@@ -12,10 +12,11 @@ function compare(a: Buffer, b: Buffer) {
 }
 
 // Rangable is a type that can be converted into an etcd range.
-export type Rangable = Range
+export type Rangable =
+  | Range
   | string
   | Buffer
-  | { start: string | Buffer, end: string | Buffer }
+  | { start: string | Buffer; end: string | Buffer }
   | { prefix: string | Buffer };
 
 function rangableIsPrefix(r: Rangable): r is { prefix: string | Buffer } {

@@ -18,17 +18,17 @@ export function toBuffer(input: string | Buffer): Buffer {
  * Returns the range_end value for a query for the provided prefix.
  */
 export function endRangeForPrefix(prefix: Buffer): Buffer {
-    const start = toBuffer(prefix);
-    let end = Buffer.from(start); // copy to prevent mutation
-    for (let i = end.length - 1; i >= 0; i--) {
-      if (end[i] < 0xff) {
-        end[i]++;
-        end = end.slice(0, i + 1);
-        return end;
-      }
+  const start = toBuffer(prefix);
+  let end = Buffer.from(start); // copy to prevent mutation
+  for (let i = end.length - 1; i >= 0; i--) {
+    if (end[i] < 0xff) {
+      end[i]++;
+      end = end.slice(0, i + 1);
+      return end;
     }
+  }
 
-    return zeroKey;
+  return zeroKey;
 }
 
 /**
@@ -76,7 +76,9 @@ export class NSApplicator {
    * Shortcut function to apply the namespace to a GRPC CRUD request. It returns
    * a new request, it does not modify the original.
    */
-  public applyToRequest<T extends { key?: Buffer, range_end?: Buffer }>(req: T): T {
+  public applyToRequest<T extends { key?: Buffer; range_end?: Buffer }>(
+    req: T,
+  ): T {
     if (this.prefix.length === 0) {
       return req;
     }
@@ -143,8 +145,11 @@ export function delay(duration: number): Promise<void> {
 /**
  * Implementation of lodash forOwn, with stronger typings and no dependency ;)
  */
-export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key: K) => void): void {
-  const keys = <(keyof T)[]> Object.keys(obj);
+export function forOwn<T>(
+  obj: T,
+  iterator: <K extends keyof T>(value: T[K], key: K) => void,
+): void {
+  const keys = <(keyof T)[]>Object.keys(obj);
   for (let i = 0; i < keys.length; i++) {
     iterator(obj[keys[i]], keys[i]);
   }
@@ -163,8 +168,11 @@ export abstract class PromiseWrap<T> implements PromiseLike<T> {
   /**
    * then implements Promiselike.then()
    */
-  public then<R, V>(onFulfilled: (value: T) => R | Promise<R>, onRejected?: (err: any) => V | Promise<V>): Promise<R | V> {
-    return this.createPromise().then(onFulfilled, <any> onRejected);
+  public then<R, V>(
+    onFulfilled: (value: T) => R | Promise<R>,
+    onRejected?: (err: any) => V | Promise<V>,
+  ): Promise<R | V> {
+    return this.createPromise().then(onFulfilled, <any>onRejected);
   }
 
   /**

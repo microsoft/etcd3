@@ -7,15 +7,15 @@ import { toBuffer } from './util';
  * key range, or prefix.
  */
 export type IPermissionRequest =
-  { permission: keyof typeof Permission, range: Range } |
-  { permission: keyof typeof Permission, key: Buffer | string };
+  | { permission: keyof typeof Permission; range: Range }
+  | { permission: keyof typeof Permission; key: Buffer | string };
 
 function getRange(req: IPermissionRequest): Range {
   if (req.hasOwnProperty('key')) {
-    return new Range(toBuffer((<{ key: Buffer | string }> req).key));
+    return new Range(toBuffer((<{ key: Buffer | string }>req).key));
   }
 
-  return (<{ range: Range }> req).range;
+  return (<{ range: Range }>req).range;
 }
 
 /**
@@ -33,10 +33,7 @@ export interface IPermissionResult {
  * ranges.
  */
 export class Role {
-  constructor(
-    private client: AuthClient,
-    public readonly name: string,
-  ) {}
+  constructor(private client: AuthClient, public readonly name: string) {}
 
   /**
    * Creates the role in etcd.
@@ -61,12 +58,13 @@ export class Role {
     }
 
     const range = getRange(req);
-    return this.client.roleRevokePermission({
-      role: this.name,
-      key: range.start.toString(),
-      range_end: range.end.toString(),
-    })
-    .then(() => this);
+    return this.client
+      .roleRevokePermission({
+        role: this.name,
+        key: range.start.toString(),
+        range_end: range.end.toString(),
+      })
+      .then(() => this);
   }
 
   /**
@@ -78,23 +76,23 @@ export class Role {
     }
 
     const range = getRange(req);
-    return this.client.roleGrantPermission({
-      name: this.name,
-      perm: {
-        permType: req.permission,
-        key: range.start,
-        range_end: range.end,
-      },
-    })
-    .then(() => this);
+    return this.client
+      .roleGrantPermission({
+        name: this.name,
+        perm: {
+          permType: req.permission,
+          key: range.start,
+          range_end: range.end,
+        },
+      })
+      .then(() => this);
   }
 
   /**
    * Returns a list of permissions the role has.
    */
   public permissions(): Promise<IPermissionResult[]> {
-    return this.client.roleGet({ role: this.name })
-    .then(response => {
+    return this.client.roleGet({ role: this.name }).then(response => {
       return response.perm.map(perm => ({
         permission: perm.permType,
         range: new Range(perm.key, perm.range_end),
@@ -110,7 +108,8 @@ export class Role {
       user = user.name;
     }
 
-    return this.client.userGrantRole({ user, role: this.name })
+    return this.client
+      .userGrantRole({ user, role: this.name })
       .then(() => this);
   }
 
@@ -122,7 +121,8 @@ export class Role {
       user = user.name;
     }
 
-    return this.client.userRevokeRole({ name: user, role: this.name })
+    return this.client
+      .userRevokeRole({ name: user, role: this.name })
       .then(() => this);
   }
 }
@@ -132,24 +132,21 @@ export class Role {
  * be added to Roles to manage permissions.
  */
 export class User {
-  constructor(
-    private client: AuthClient,
-    public readonly name: string,
-  ) {}
+  constructor(private client: AuthClient, public readonly name: string) {}
 
   /**
    * Creates the user, with the provided password.
    */
   public create(password: string): Promise<this> {
-    return this.client.userAdd({ name: this.name, password })
-      .then(() => this);
+    return this.client.userAdd({ name: this.name, password }).then(() => this);
   }
 
   /**
    * Changes the user's password.
    */
   public setPassword(password: string): Promise<this> {
-    return this.client.userChangePassword({ name: this.name, password })
+    return this.client
+      .userChangePassword({ name: this.name, password })
       .then(() => this);
   }
 
@@ -177,7 +174,8 @@ export class User {
       role = role.name;
     }
 
-    return this.client.userGrantRole({ user: this.name, role })
+    return this.client
+      .userGrantRole({ user: this.name, role })
       .then(() => this);
   }
 
@@ -189,7 +187,8 @@ export class User {
       role = role.name;
     }
 
-    return this.client.userRevokeRole({ name: this.name, role })
+    return this.client
+      .userRevokeRole({ name: this.name, role })
       .then(() => this);
   }
 }

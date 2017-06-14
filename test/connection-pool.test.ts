@@ -36,8 +36,11 @@ describe('connection pool', () => {
   it('rejects hitting invalid hosts', () => {
     pool = new ConnectionPool(getOptionsWithBadHost());
     const kv = new KVClient(pool);
-    return kv.range({ key })
-      .then(() => { throw new Error('expected to reject'); })
+    return kv
+      .range({ key })
+      .then(() => {
+        throw new Error('expected to reject');
+      })
       .catch(err => expect(err).to.be.an.instanceof(GRPCConnectFailedError));
   });
 

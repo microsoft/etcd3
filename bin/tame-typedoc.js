@@ -3,7 +3,7 @@
 const path = require('path');
 const root = path.resolve(__dirname, '..', 'docs');
 const fs = require('fs');
-const _ = require('lodash')
+const _ = require('lodash');
 
 const files = [];
 function gatherFiles(dir = root) {
@@ -22,7 +22,7 @@ function replaceAll(haystack, needle, replacement) {
 }
 
 function ununderscore() {
-  const replacements = []
+  const replacements = [];
   files.forEach((file, i) => {
     const basename = path.basename(file);
     if (basename[0] !== '_') {
