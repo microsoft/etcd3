@@ -10,11 +10,13 @@ describe('shared pool', () => {
 
   beforeEach(() => {
     clock = sinon.useFakeTimers(10);
-    pool = new SharedPool<number>(new ExponentialBackoff({
-      initial: 500,
-      max: 5000,
-      random: 0,
-    }));
+    pool = new SharedPool<number>(
+      new ExponentialBackoff({
+        initial: 500,
+        max: 5000,
+        random: 0,
+      }),
+    );
     pool.add(0);
     pool.add(1);
     pool.add(2);
@@ -67,7 +69,8 @@ describe('shared pool', () => {
   });
 
   it('should not back off multiple times if multiple callers fail', async () => {
-    const getFirstBackoff = (): number => (<any> pool).resources[0].availableAfter;
+    const getFirstBackoff = (): number =>
+      (<any>pool).resources[0].availableAfter;
     const cnx = await pool.pull();
     pool.fail(cnx);
     expect(getFirstBackoff()).to.equal(Date.now() + 500);

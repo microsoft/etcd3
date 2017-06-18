@@ -1,6 +1,7 @@
 ## 0.2.1 TBA
 
  - **feature**: add namespacing capability ([#12](https://github.com/mixer/etcd3/pull/12))
+ - **feature**: add high-level watchers ([#16](https://github.com/mixer/etcd3/pull/16))
 
 ## 0.2.0 2017-06-03
 
