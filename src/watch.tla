@@ -17,16 +17,16 @@ CONSTANT Unsubscribing, Unsubscribed, Subscribing, Subscribed
     (* to socket' rather than socket, which prevents us from verifying      *)
     (* transitions.                                                         *)
     (************************************************************************)
-    define { prevSocket == socket }
+    define { prevWatcher == watcher }
 
     macro CheckInvariants() {
         assert socket \in {Idle, Connected, Connecting};
         assert watcher \in {Subscribed, Subscribing, Unsubscribed, Unsubscribing};
         assert socket = Connected \/ watcher # Subscribed;
 
-        if (prevSocket = Unsubscribing) {
+        if (prevWatcher = Unsubscribing) {
             assert watcher \in {Unsubscribing, Unsubscribed}
-        } else if (prevSocket = Subscribing) {
+        } else if (prevWatcher = Subscribing) {
             assert watcher \in {Subscribing, Subscribed}
         }
     }
@@ -37,14 +37,11 @@ CONSTANT Unsubscribing, Unsubscribed, Subscribing, Subscribed
     (* unsubscribed at any time.                                            *)
     (************************************************************************)
     process (Watcher = 0) { l0: while (TRUE) {
-        watch:
-            either {
-                watcher := Unsubscribing;
-                await watcher = Unsubscribed
-            } or {
-                watcher := Subscribing;
-                await watcher = Subscribed
-            } or { skip }
+            if (watcher = Subscribed) {
+                watcher := Unsubscribing
+            } else if (watcher = Unsubscribed) {
+                watcher := Subscribing
+            }
         }
     }
 
@@ -64,7 +61,7 @@ CONSTANT Unsubscribing, Unsubscribed, Subscribing, Subscribed
             (* "disonnectined". The watcher gets kicked off if they ask *)
             (* to be, otherwise we mark it as reconnecting.             *)
             (************************************************************)
-            if (socket \in {Unsubscribed, Unsubscribing}) {
+            if (watcher \in {Unsubscribed, Unsubscribing}) {
                 watcher := Unsubscribed
             } else {
                 watcher := Subscribing
@@ -91,9 +88,9 @@ CONSTANT Unsubscribing, Unsubscribed, Subscribing, Subscribed
             (* if it asked to be, or connecting if it's subscribing.    *)
             (************************************************************)
             socket := Connected;
-            if (socket = Subscribing) {
+            if (watcher = Subscribing) {
                 watcher := Subscribed
-            } else if (socket = Unsubscribing) {
+            } else if (watcher = Unsubscribing) {
                 watcher := Unsubscribed
             };
 
@@ -106,7 +103,7 @@ CONSTANT Unsubscribing, Unsubscribed, Subscribing, Subscribed
 VARIABLES socket, watcher, pc
 
 (* define statement *)
-prevSocket == socket
+prevWatcher == watcher
 
 
 vars == << socket, watcher, pc >>
@@ -120,20 +117,16 @@ Init == (* Global variables *)
                                         [] self = 1 -> "l1"]
 
 l0 == /\ pc[0] = "l0"
-      /\ pc' = [pc EXCEPT ![0] = "watch"]
-      /\ UNCHANGED << socket, watcher >>
+      /\ IF watcher = Subscribed
+            THEN /\ watcher' = Unsubscribing
+            ELSE /\ IF watcher = Unsubscribed
+                       THEN /\ watcher' = Subscribing
+                       ELSE /\ TRUE
+                            /\ UNCHANGED watcher
+      /\ pc' = [pc EXCEPT ![0] = "l0"]
+      /\ UNCHANGED socket
 
-watch == /\ pc[0] = "watch"
-         /\ \/ /\ watcher' = Unsubscribing
-               /\ watcher' = Unsubscribed
-            \/ /\ watcher' = Subscribing
-               /\ watcher' = Subscribed
-            \/ /\ TRUE
-               /\ UNCHANGED watcher
-         /\ pc' = [pc EXCEPT ![0] = "l0"]
-         /\ UNCHANGED socket
-
-Watcher == l0 \/ watch
+Watcher == l0
 
 l1 == /\ pc[1] = "l1"
       /\ IF socket = Idle
@@ -143,68 +136,68 @@ l1 == /\ pc[1] = "l1"
       /\ UNCHANGED << socket, watcher >>
 
 disconnect == /\ pc[1] = "disconnect"
-              /\ IF socket \in {Unsubscribed, Unsubscribing}
+              /\ IF watcher \in {Unsubscribed, Unsubscribing}
                     THEN /\ watcher' = Unsubscribed
                     ELSE /\ watcher' = Subscribing
               /\ socket' = Idle
               /\ Assert(socket' \in {Idle, Connected, Connecting},
-                        "Failure of assertion at line 23, column 9 of macro called at line 74, column 13.")
+                        "Failure of assertion at line 23, column 9 of macro called at line 71, column 13.")
               /\ Assert(watcher' \in {Subscribed, Subscribing, Unsubscribed, Unsubscribing},
-                        "Failure of assertion at line 24, column 9 of macro called at line 74, column 13.")
+                        "Failure of assertion at line 24, column 9 of macro called at line 71, column 13.")
               /\ Assert(socket' = Connected \/ watcher' # Subscribed,
-                        "Failure of assertion at line 25, column 9 of macro called at line 74, column 13.")
-              /\ IF prevSocket = Unsubscribing
+                        "Failure of assertion at line 25, column 9 of macro called at line 71, column 13.")
+              /\ IF prevWatcher = Unsubscribing
                     THEN /\ Assert(watcher' \in {Unsubscribing, Unsubscribed},
-                                   "Failure of assertion at line 28, column 13 of macro called at line 74, column 13.")
-                    ELSE /\ IF prevSocket = Subscribing
+                                   "Failure of assertion at line 28, column 13 of macro called at line 71, column 13.")
+                    ELSE /\ IF prevWatcher = Subscribing
                                THEN /\ Assert(watcher' \in {Subscribing, Subscribed},
-                                              "Failure of assertion at line 30, column 13 of macro called at line 74, column 13.")
+                                              "Failure of assertion at line 30, column 13 of macro called at line 71, column 13.")
                                ELSE /\ TRUE
               /\ pc' = [pc EXCEPT ![1] = "connect"]
 
 connect == /\ pc[1] = "connect"
            /\ Assert(socket = Idle,
-                     "Failure of assertion at line 81, column 13.")
+                     "Failure of assertion at line 78, column 13.")
            /\ IF watcher \in {Unsubscribed, Unsubscribing}
                  THEN /\ watcher' = Unsubscribed
                  ELSE /\ TRUE
                       /\ UNCHANGED watcher
            /\ socket' = Connecting
            /\ Assert(socket' \in {Idle, Connected, Connecting},
-                     "Failure of assertion at line 23, column 9 of macro called at line 86, column 13.")
+                     "Failure of assertion at line 23, column 9 of macro called at line 83, column 13.")
            /\ Assert(watcher' \in {Subscribed, Subscribing, Unsubscribed, Unsubscribing},
-                     "Failure of assertion at line 24, column 9 of macro called at line 86, column 13.")
+                     "Failure of assertion at line 24, column 9 of macro called at line 83, column 13.")
            /\ Assert(socket' = Connected \/ watcher' # Subscribed,
-                     "Failure of assertion at line 25, column 9 of macro called at line 86, column 13.")
-           /\ IF prevSocket = Unsubscribing
+                     "Failure of assertion at line 25, column 9 of macro called at line 83, column 13.")
+           /\ IF prevWatcher = Unsubscribing
                  THEN /\ Assert(watcher' \in {Unsubscribing, Unsubscribed},
-                                "Failure of assertion at line 28, column 13 of macro called at line 86, column 13.")
-                 ELSE /\ IF prevSocket = Subscribing
+                                "Failure of assertion at line 28, column 13 of macro called at line 83, column 13.")
+                 ELSE /\ IF prevWatcher = Subscribing
                             THEN /\ Assert(watcher' \in {Subscribing, Subscribed},
-                                           "Failure of assertion at line 30, column 13 of macro called at line 86, column 13.")
+                                           "Failure of assertion at line 30, column 13 of macro called at line 83, column 13.")
                             ELSE /\ TRUE
            /\ pc' = [pc EXCEPT ![1] = "connected"]
 
 connected == /\ pc[1] = "connected"
              /\ socket' = Connected
-             /\ IF socket' = Subscribing
+             /\ IF watcher = Subscribing
                    THEN /\ watcher' = Subscribed
-                   ELSE /\ IF socket' = Unsubscribing
+                   ELSE /\ IF watcher = Unsubscribing
                               THEN /\ watcher' = Unsubscribed
                               ELSE /\ TRUE
                                    /\ UNCHANGED watcher
              /\ Assert(socket' \in {Idle, Connected, Connecting},
-                       "Failure of assertion at line 23, column 9 of macro called at line 100, column 13.")
+                       "Failure of assertion at line 23, column 9 of macro called at line 97, column 13.")
              /\ Assert(watcher' \in {Subscribed, Subscribing, Unsubscribed, Unsubscribing},
-                       "Failure of assertion at line 24, column 9 of macro called at line 100, column 13.")
+                       "Failure of assertion at line 24, column 9 of macro called at line 97, column 13.")
              /\ Assert(socket' = Connected \/ watcher' # Subscribed,
-                       "Failure of assertion at line 25, column 9 of macro called at line 100, column 13.")
-             /\ IF prevSocket = Unsubscribing
+                       "Failure of assertion at line 25, column 9 of macro called at line 97, column 13.")
+             /\ IF prevWatcher = Unsubscribing
                    THEN /\ Assert(watcher' \in {Unsubscribing, Unsubscribed},
-                                  "Failure of assertion at line 28, column 13 of macro called at line 100, column 13.")
-                   ELSE /\ IF prevSocket = Subscribing
+                                  "Failure of assertion at line 28, column 13 of macro called at line 97, column 13.")
+                   ELSE /\ IF prevWatcher = Subscribing
                               THEN /\ Assert(watcher' \in {Subscribing, Subscribed},
-                                             "Failure of assertion at line 30, column 13 of macro called at line 100, column 13.")
+                                             "Failure of assertion at line 30, column 13 of macro called at line 97, column 13.")
                               ELSE /\ TRUE
              /\ pc' = [pc EXCEPT ![1] = "l1"]
 
@@ -218,5 +211,5 @@ Spec == Init /\ [][Next]_vars
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jun 15 08:44:17 PDT 2017 by Connor
+\* Last modified Thu Jun 15 21:12:44 PDT 2017 by Connor
 \* Created Thu Jun 15 08:07:31 PDT 2017 by Connor
