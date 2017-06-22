@@ -28,7 +28,7 @@ export class Proxy {
    * activate creates the proxy server.
    */
   public activate(): Promise<void> {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve, reject) => {
       this.server = tls.createServer(
         { cert: tlsCert, key: tlsKey, ALPNProtocols: ['h2'] },
         clientCnx => this.handleIncoming(clientCnx),
@@ -42,6 +42,8 @@ export class Proxy {
         this.isActive = true;
         resolve();
       });
+
+      this.server.on('error', reject);
     });
   }
 
