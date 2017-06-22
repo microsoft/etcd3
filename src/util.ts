@@ -157,13 +157,23 @@ export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key
  * fire on the emitter.
  */
 export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
-  return new Promise(resolve => {
-    const handler = (data: any) => {
-      events.forEach(name => emitter.removeListener(name, handler));
-      resolve(data);
+  return new Promise((resolve, reject) => {
+    const teardown: (() => void)[] = [];
+
+    const handler = (data: any, event: string) => {
+      teardown.forEach(t => t());
+      if (event === 'error') {
+        reject(data);
+      } else {
+        resolve(data);
+      }
     };
 
-    events.forEach(event => emitter.once(event, handler));
+    events.forEach(event => {
+      const fn = (data: any) => handler(data, event);
+      teardown.push(() => emitter.removeListener(event, fn));
+      emitter.once(event, fn);
+    });
   });
 }
 

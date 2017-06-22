@@ -244,7 +244,7 @@ export class Lease extends EventEmitter {
     // far past the end of our key's TTL, there's no way we're going to be
     // able to renew it. Fire a "lost".
     if (Date.now() - this.lastKeepAlive > 2 * 1000 * this.ttl) {
-      this.emit('lost', new GRPCConnectFailedError('We lost connect to etcd and our lease has expired.'));
+      this.emit('lost', new GRPCConnectFailedError('We lost connection to etcd and our lease has expired.'));
       return this.close();
     }
 

@@ -321,13 +321,7 @@ export class WatchBuilder {
       this.namespace.applyToRequest(this.request),
     );
 
-    return onceEvent(watcher, 'connected', 'error').then(res => {
-      if (res instanceof Error) {
-        throw res;
-      }
-
-      return watcher;
-    });
+    return onceEvent(watcher, 'connected').then(() => watcher);
   }
 }
 
