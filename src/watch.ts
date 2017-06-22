@@ -27,7 +27,10 @@ export class WatchManager {
   /**
    * The current GRPC stream, if any.
    */
-  private stream: null | RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>;
+  private stream: null | RPC.IDuplexStream<
+    RPC.IWatchRequest,
+    RPC.IWatchResponse
+  >;
 
   /**
    * List of attached watchers.
@@ -74,8 +77,9 @@ export class WatchManager {
     // If we're awaiting an ID to come back, wait for that to happen or for
     // us to lose connection, whichever happens first.
     if (watcher.id === null) {
-      return onceEvent(watcher, 'connected', 'disconnected')
-        .then(() => this.detach(watcher));
+      return onceEvent(watcher, 'connected', 'disconnected').then(() =>
+        this.detach(watcher),
+      );
     }
 
     // If the watcher does have an ID, mark that we expect to close it and
@@ -93,10 +97,14 @@ export class WatchManager {
    */
   private getStream() {
     if (this.state !== State.Connected) {
-      throw new ClientRuntimeError('Cannot call getStream() if state != Connected');
+      throw new ClientRuntimeError(
+        'Cannot call getStream() if state != Connected',
+      );
     }
     if (!this.stream) {
-      throw new ClientRuntimeError('Expected the watcher stream to exist while state == Connected');
+      throw new ClientRuntimeError(
+        'Expected the watcher stream to exist while state == Connected',
+      );
     }
 
     return this.stream;
@@ -107,7 +115,9 @@ export class WatchManager {
    */
   private establishStream() {
     if (this.state !== State.Idle) {
-      throw new ClientRuntimeError('Cannot call establishStream() if state != Idle');
+      throw new ClientRuntimeError(
+        'Cannot call establishStream() if state != Idle',
+      );
     }
 
     // possible we reconnect and watchers are removed in the meantime
@@ -123,7 +133,8 @@ export class WatchManager {
     this.expectedClosers.clear();
 
     this.state = State.Connecting;
-    this.client.watch()
+    this.client
+      .watch()
       .then(stream => {
         this.state = State.Connected;
         this.stream = stream
@@ -147,10 +158,14 @@ export class WatchManager {
    */
   private destroyStream() {
     if (this.state !== State.Connected) {
-      throw new ClientRuntimeError('Cannot call establishStream() if state != Connected');
+      throw new ClientRuntimeError(
+        'Cannot call establishStream() if state != Connected',
+      );
     }
     if (this.watchers.length > 0) {
-      throw new ClientRuntimeError('Cannot call destroyStream() with active watchers');
+      throw new ClientRuntimeError(
+        'Cannot call destroyStream() with active watchers',
+      );
     }
 
     this.getStream().end();
@@ -168,7 +183,7 @@ export class WatchManager {
 
     this.watchers.forEach(watcher => {
       watcher.emit('disconnected', err);
-      (<{ id: null }> watcher).id = null;
+      (<{ id: null }>watcher).id = null;
     });
 
     this.establishStream();
@@ -183,10 +198,12 @@ export class WatchManager {
     // watcher that's waiting for its ID.
     const target = this.watchers.find(watcher => watcher.id === null);
     if (!target) {
-      throw new ClientRuntimeError('Could not find watcher corresponding to create response');
+      throw new ClientRuntimeError(
+        'Could not find watcher corresponding to create response',
+      );
     }
 
-    (<{ id: string }> target).id = res.watch_id;
+    (<{ id: string }>target).id = res.watch_id;
     target.emit('connected', res);
   }
 
@@ -203,7 +220,10 @@ export class WatchManager {
       return;
     }
 
-    watcher.emit('error', castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`));
+    watcher.emit(
+      'error',
+      castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`),
+    );
   }
 
   /**
@@ -365,7 +385,10 @@ export class Watcher extends EventEmitter {
    * connected is fired after etcd knowledges the watcher is connected.
    * When this event is fired, `id` will already be populated.
    */
-  public on(event: 'connected', handler: (res: RPC.IWatchResponse) => void): this;
+  public on(
+    event: 'connected',
+    handler: (res: RPC.IWatchResponse) => void,
+  ): this;
 
   /**
    * data is fired when etcd reports an update
@@ -377,12 +400,18 @@ export class Watcher extends EventEmitter {
    * put is fired, in addition to `data`, when a key is created
    * or updated in etcd.
    */
-  public on(event: 'put', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
+  public on(
+    event: 'put',
+    handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void,
+  ): this;
 
   /**
    * put is fired, in addition to `data`, when a key is deleted from etcd.
    */
-  public on(event: 'delete', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
+  public on(
+    event: 'delete',
+    handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void,
+  ): this;
 
   /**
    * end is fired after the watcher is closed normally. Like Node.js streams,
@@ -408,7 +437,8 @@ export class Watcher extends EventEmitter {
   /**
    * Implements EventEmitter.on(...).
    */
-  public on(event: string, handler: Function): this { // tslint:disable-line
+  public on(event: string, handler: Function): this {
+    // tslint:disable-line
     return super.on(event, handler);
   }
 
@@ -418,7 +448,7 @@ export class Watcher extends EventEmitter {
    * connected.
    */
   public lastRevision(): number | null {
-    return <number> this.request.start_revision;
+    return <number>this.request.start_revision;
   }
 
   /**

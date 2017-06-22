@@ -11,6 +11,9 @@
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
     "build:doc": "rm -rf docs && typedoc --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc && cp -R proto lib",
+    "fmt": "npm-run-all --parallel fmt:ts fmt:js",
+    "fmt:js": "prettier --single-quote --trailing-comma es5 --write \"bin/*.js\"",
+    "fmt:ts": "prettier --single-quote --trailing-comma all --parser typescript --write \"{src,test}/**/*.ts\"",
     "install": "node client.patch.js",
     "prepublish": "npm run -s build:ts"
   },

@@ -76,7 +76,9 @@ function emit(string) {
 
 function template(name, params) {
   if (!templates[name]) {
-    templates[name] = _.template(fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8'));
+    templates[name] = _.template(
+      fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8')
+    );
   }
 
   params = Object.assign(params || {}, {
@@ -86,7 +88,9 @@ function template(name, params) {
     aliases: pbTypeAliases,
   });
 
-  emit(templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, ''));
+  emit(
+    templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, '')
+  );
 }
 
 function stripPackageNameFrom(name) {
@@ -275,8 +279,11 @@ function codeGen(ast) {
   template('service-map', { services });
 }
 
-new pbjs.Root().load(process.argv[2], { keepCase: true }).then(ast => {
-  prepareForGeneration(ast.nested);
-  template('rpc-prefix');
-  codeGen(ast.nested);
-}).catch(err => console.error(err.stack));
+new pbjs.Root()
+  .load(process.argv[2], { keepCase: true })
+  .then(ast => {
+    prepareForGeneration(ast.nested);
+    template('rpc-prefix');
+    codeGen(ast.nested);
+  })
+  .catch(err => console.error(err.stack));

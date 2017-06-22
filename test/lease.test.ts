@@ -149,7 +149,9 @@ describe('lease()', () => {
     it('tears down if the lease gets revoked', async () => {
       await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
       clock.tick(20000);
-      expect(await onceEvent(lease, 'lost')).to.be.an.instanceof(EtcdLeaseInvalidError);
+      expect(await onceEvent(lease, 'lost')).to.be.an.instanceof(
+        EtcdLeaseInvalidError,
+      );
       expect(lease.revoked()).to.be.true;
     });
   });

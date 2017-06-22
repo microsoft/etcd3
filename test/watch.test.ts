@@ -83,7 +83,9 @@ describe('watch', () => {
     await Promise.all([
       client.put('foo1').value('update 1'),
       onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-        expect(watcher.request.start_revision).to.equal( 1 + Number(res.header.revision));
+        expect(watcher.request.start_revision).to.equal(
+          1 + Number(res.header.revision),
+        );
       }),
     ]);
 
