@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 import { ClientRuntimeError } from './errors';
 
 export const zeroKey = Buffer.from([0]);
@@ -148,6 +150,31 @@ export function forOwn<T>(obj: T, iterator: <K extends keyof T>(value: T[K], key
   for (let i = 0; i < keys.length; i++) {
     iterator(obj[keys[i]], keys[i]);
   }
+}
+
+/**
+ * onceEvent returns a promise that resolves once any of the listed events
+ * fire on the emitter.
+ */
+export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const teardown: (() => void)[] = [];
+
+    const handler = (data: any, event: string) => {
+      teardown.forEach(t => t());
+      if (event === 'error') {
+        reject(data);
+      } else {
+        resolve(data);
+      }
+    };
+
+    events.forEach(event => {
+      const fn = (data: any) => handler(data, event);
+      teardown.push(() => emitter.removeListener(event, fn));
+      emitter.once(event, fn);
+    });
+  });
 }
 
 /**

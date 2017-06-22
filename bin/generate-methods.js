@@ -121,7 +121,9 @@ function formatType(type, isInResponse = false) {
 
   // grpc unmarshals enums as their string representations.
   if (isEnum) {
-    return isInResponse ? `keyof typeof ${formatted}` : `${formatted} | keyof typeof ${formatted}`;
+    return isInResponse
+      ? `keyof typeof ${formatted}`
+      : `(${formatted} | keyof typeof ${formatted})`;
   }
 
   return formatted;

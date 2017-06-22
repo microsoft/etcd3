@@ -243,8 +243,8 @@ export class Lease extends EventEmitter {
     // When the cluster goes down, we keep trying to reconnect. But if we're
     // far past the end of our key's TTL, there's no way we're going to be
     // able to renew it. Fire a "lost".
-    if (this.lastKeepAlive < Date.now() - 2 * 1000 * this.ttl) {
-      this.emit('list', new GRPCConnectFailedError('We lost connect to etcd and our lease has expired.'));
+    if (Date.now() - this.lastKeepAlive > 2 * 1000 * this.ttl) {
+      this.emit('lost', new GRPCConnectFailedError('We lost connection to etcd and our lease has expired.'));
       return this.close();
     }
 
@@ -253,40 +253,49 @@ export class Lease extends EventEmitter {
         return stream.end();
       }
 
-      stream.on('data', res => {
-        if (leaseExpired(res)) {
-          const err = new EtcdLeaseInvalidError(res.ID);
-          this.emit('keepaliveFailed', err);
-          this.emit('lost', err);
-          return this.close();
-        }
-
-        this.lastKeepAlive = Date.now();
-        this.emit('keepaliveSucceeded', res);
-      });
-
-      stream.on('error', err => {
-        this.emit('keepaliveFailed', castGrpcError(err));
-        this.teardown();
-        this.keepalive();
-      });
-
       const keepaliveTimer = setInterval(
-        () => {
-          this.emit('keepaliveFired');
-          this.grant()
-            .then(id => stream.write({ ID: id }))
-            .catch(() => this.close()); // will only throw if the initial grant failed
-        },
+        () => this.fireKeepAlive(stream),
         1000 * this.ttl / 3,
       );
 
       this.teardown = () => {
+        this.teardown = () => undefined;
         clearInterval(keepaliveTimer);
         stream.end();
       };
 
+      stream
+        .on('error', err => this.handleKeepaliveError(err))
+        .on('data', res => {
+          if (leaseExpired(res)) {
+            return this.handleKeepaliveError(new EtcdLeaseInvalidError(res.ID));
+          }
+
+          this.lastKeepAlive = Date.now();
+          this.emit('keepaliveSucceeded', res);
+        });
+
       this.emit('keepaliveEstablished');
-    });
+      this.fireKeepAlive(stream);
+    }).catch(err => this.handleKeepaliveError(err));
+  }
+
+  private fireKeepAlive(stream: RPC.IRequestStream<RPC.ILeaseKeepAliveRequest>) {
+    this.emit('keepaliveFired');
+    this.grant()
+      .then(id => stream.write({ ID: id }))
+      .catch(() => this.close()); // will only throw if the initial grant failed
+  }
+
+  private handleKeepaliveError(err: Error) {
+    this.emit('keepaliveFailed', castGrpcError(err));
+    this.teardown();
+
+    if (err instanceof EtcdLeaseInvalidError) {
+      this.emit('lost', err);
+      this.close();
+    } else {
+      setTimeout(() => this.keepalive(), 100);
+    }
   }
 }

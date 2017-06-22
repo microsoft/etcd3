@@ -27,6 +27,11 @@
       }
     ],
 
+    // Prettier-incompatible or prettier-handled rules
+    "align": false,
+    "no-single-line-block-comment": false,
+    "semicolon": false,
+
     // Microsoft
     "no-relative-imports": false,
     "mocha-no-side-effect-code": false,

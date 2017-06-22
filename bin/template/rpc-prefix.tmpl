@@ -11,7 +11,7 @@ export interface ICallable {
 export interface IResponseStream<T> {
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
-  on(event: 'status', fn: (status: number) => void): this;
+  on(event: 'status', fn: (status: grpc.StatusMessage) => void): this;
   on(event: 'error', fn: (err: Error) => void): this;
 }
 
