@@ -5,6 +5,7 @@ import { Lock } from './lock';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, toBuffer } from './util';
+import { WatchBuilder, WatchManager } from './watch';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default
@@ -30,13 +31,13 @@ export class Namespace {
   private readonly nsApplicator = new NSApplicator(this.prefix);
   public readonly kv = new RPC.KVClient(this.pool);
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
-  public readonly watch = new RPC.WatchClient(this.pool);
+  public readonly watchClient = new RPC.WatchClient(this.pool);
+  private readonly watchManager = new WatchManager(this.watchClient);
 
   constructor(
     protected readonly prefix: Buffer,
     protected readonly pool: ConnectionPool,
   ) {}
-
   /**
    * `.get()` starts a query to look up a single key from etcd.
    */
@@ -95,6 +96,14 @@ export class Namespace {
   ): Builder.ComparatorBuilder {
     return new Builder.ComparatorBuilder(this.kv, this.nsApplicator)
       .and(key, column, cmp, value);
+  }
+
+  /**
+   * `.watch()` creates a new watch builder. See the documentation on the
+   * WatchBuilder for usage examples.
+   */
+  public watch(): WatchBuilder {
+    return new WatchBuilder(this.watchManager, this.nsApplicator);
   }
 
   /**

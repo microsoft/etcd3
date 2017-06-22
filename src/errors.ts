@@ -15,6 +15,7 @@ export class GRPCGenericError extends Error {}
 
 /**
  * GRPCConnectFailed is thrown when connecting to GRPC fails.
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L151-L158
  */
 export class GRPCConnectFailedError extends GRPCGenericError {}
 
@@ -26,6 +27,7 @@ export class GRPCProtocolError extends GRPCGenericError {}
 
 /**
  * GRPCInternalError is thrown when a internal error occurs on either end.
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L145-L150
  */
 export class GRPCInternalError extends GRPCGenericError {}
 
@@ -33,6 +35,61 @@ export class GRPCInternalError extends GRPCGenericError {}
  * GRPCCancelledError is emitted when an ongoing call is cancelled.
  */
 export class GRPCCancelledError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L50-L57
+ */
+export class GRPCUnknownError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L58-L64
+ */
+export class GRPCInvalidArgumentError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L65-L72
+ */
+export class GRPCDeadlineExceededError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L73-L74
+ */
+export class GRPCNotFoundError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L75-L79
+ */
+export class GRPCAlreadyExistsError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L89-L93
+ */
+export class GRPCResourceExhastedError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L94-L116
+ */
+export class GRPCFailedPreconditionError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L117-L124
+ */
+export class GRPCAbortedError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L143-L144
+ */
+export class GRPCNotImplementedError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L125-L142
+ */
+export class GRPCOutOfRangeError extends GRPCGenericError {}
+
+/**
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L159-L160
+ */
+export class GRPCDataLossError extends GRPCGenericError {}
 
 /**
  * EtcdError is an application error returned by etcd.
@@ -85,12 +142,18 @@ export class EtcdLockFailedError extends Error {}
 /**
  * EtcdAuthenticationFailedError is thrown when an invalid username/password
  * combination is submitted.
+ *
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L161-L165
  */
 export class EtcdAuthenticationFailedError extends Error {}
 
 /**
  * EtcdPermissionDeniedError is thrown when the user attempts to modify a key
  * that they don't have access to.
+ *
+ * Also can be emitted from GRPC.
+ *
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L80-L88
  */
 export class EtcdPermissionDeniedError extends Error {}
 
@@ -135,9 +198,9 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['etcdserver: permission denied', EtcdPermissionDeniedError],
 ]);
 
-function getMatchingGrpcError(err: Error): IErrorCtor | null {
+function getMatchingGrpcError(message: string): IErrorCtor | null {
   for (const [key, value] of grpcMessageToError) {
-    if (err.message.includes(key)) {
+    if (message.includes(key)) {
       return value;
     }
   }
@@ -150,6 +213,14 @@ function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): str
 }
 
 /**
+ * Tries to convert an Etcd error string to an etcd error.
+ */
+export function castGrpcErrorMessage(message: string): Error {
+  const ctor = getMatchingGrpcError(message) || EtcdError;
+  return new ctor(message);
+}
+
+/**
  * Tries to convert GRPC's generic, untyped errors to typed errors we can
  * consume. Yes, this method is abhorrent.
  */
@@ -158,7 +229,7 @@ export function castGrpcError(err: Error): Error {
     return err; // it looks like it's already some kind of typed error
   }
 
-  let ctor = getMatchingGrpcError(err);
+  let ctor = getMatchingGrpcError(err.message);
   if (!ctor) {
     ctor = err.message.includes('etcdserver:') ? EtcdError : GRPCGenericError;
   }

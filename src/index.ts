@@ -12,6 +12,7 @@ export * from './namespace';
 export * from './options';
 export * from './range';
 export * from './rpc';
+export { WatchBuilder, Watcher } from './watch';
 
 /**
  * Etcd3 is a high-level interface for interacting and calling etcd endpoints.
