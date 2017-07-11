@@ -1,4 +1,9 @@
-## 0.2.1 2017-07-10
+## 0.2.2 2017-07-10
+
+ - **bug**: fix critical installation issue from 0.2.1
+ - **chore**: update grpc to 1.4.x
+
+## ~~0.2.1 2017-07-10~~
 
  - **breaking**: `client.watch()` is now a function to construct high-level watchers ([#12](https://github.com/mixer/etcd3/pull/12))
  - **feature**: add namespacing capability ([#12](https://github.com/mixer/etcd3/pull/12))
