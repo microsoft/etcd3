@@ -1,6 +1,6 @@
 {
   "name": "etcd3",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Node client for etcd3",
   "main": "lib/src/index.js",
   "typings": "lib/src/index.d.ts",
