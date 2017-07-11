@@ -21,7 +21,7 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
  */
 function runServiceCall(client: grpc.Client, method: string, payload: object): Promise<any> {
   return new Promise((resolve, reject) => {
-    (<any> client)[method](payload, (err: Error | null, res: any) => {
+    (<any>client)[method](payload, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -58,7 +58,10 @@ class Authenticator {
       return Promise.resolve(original);
     }
 
-    const attempt = (index: number, previousRejection?: Error): Promise<grpc.ChannelCredentials> => {
+    const attempt = (
+      index: number,
+      previousRejection?: Error,
+    ): Promise<grpc.ChannelCredentials> => {
       if (index >= hosts.length) {
         this.awaitingToken = null;
         return Promise.reject(previousRejection);
@@ -68,12 +71,14 @@ class Authenticator {
         .then(token => {
           this.awaitingToken = null;
           return grpc.credentials.combineChannelCredentials(
-            original, this.createMetadataAugmenter(token));
+            original,
+            this.createMetadataAugmenter(token),
+          );
         })
         .catch(err => attempt(index + 1, err));
     };
 
-    return this.awaitingToken = attempt(0);
+    return (this.awaitingToken = attempt(0));
   }
 
   /**
@@ -85,11 +90,10 @@ class Authenticator {
     password: string,
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
-    return runServiceCall(
-      new services.etcdserverpb.Auth(address, credentials),
-      'authenticate',
-      { name, password },
-    ).then(res => res.token);
+    return runServiceCall(new services.etcdserverpb.Auth(address, credentials), 'authenticate', {
+      name,
+      password,
+    }).then(res => res.token);
   }
 
   /**
@@ -105,13 +109,11 @@ class Authenticator {
 }
 
 export class Host {
+  private cachedServices: {
+    [name in keyof typeof Services]?: Promise<grpc.Client>
+  } = Object.create(null);
 
-  private cachedServices: { [name in keyof typeof Services]?: Promise<grpc.Client> } = Object.create(null);
-
-  constructor(
-    private host: string,
-    private channelCredentials: Promise<grpc.ChannelCredentials>,
-  ) {}
+  constructor(private host: string, private channelCredentials: Promise<grpc.ChannelCredentials>) {}
 
   /**
    * Returns the given GRPC service on the current host.
@@ -145,7 +147,6 @@ export class Host {
  * host can contain multiple discreet services.
  */
 export class ConnectionPool implements ICallable {
-
   private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
   private mockImpl: ICallable | null;
   private authenticator = new Authenticator(this.options);
@@ -207,7 +208,9 @@ export class ConnectionPool implements ICallable {
   /**
    * @override
    */
-  public getConnection(service: keyof typeof Services): Promise<{ host: Host, client: grpc.Client }> {
+  public getConnection(
+    service: keyof typeof Services,
+  ): Promise<{ host: Host; client: grpc.Client }> {
     if (this.mockImpl) {
       return this.mockImpl.getConnection(service);
     }

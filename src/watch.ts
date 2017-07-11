@@ -74,8 +74,7 @@ export class WatchManager {
     // If we're awaiting an ID to come back, wait for that to happen or for
     // us to lose connection, whichever happens first.
     if (watcher.id === null) {
-      return onceEvent(watcher, 'connected', 'disconnected')
-        .then(() => this.detach(watcher));
+      return onceEvent(watcher, 'connected', 'disconnected').then(() => this.detach(watcher));
     }
 
     // If the watcher does have an ID, mark that we expect to close it and
@@ -123,7 +122,8 @@ export class WatchManager {
     this.expectedClosers.clear();
 
     this.state = State.Connecting;
-    this.client.watch()
+    this.client
+      .watch()
       .then(stream => {
         this.state = State.Connected;
         this.stream = stream
@@ -168,7 +168,7 @@ export class WatchManager {
 
     this.watchers.forEach(watcher => {
       watcher.emit('disconnected', err);
-      (<{ id: null }> watcher).id = null;
+      (<{ id: null }>watcher).id = null;
     });
 
     this.establishStream();
@@ -186,7 +186,7 @@ export class WatchManager {
       throw new ClientRuntimeError('Could not find watcher corresponding to create response');
     }
 
-    (<{ id: string }> target).id = res.watch_id;
+    (<{ id: string }>target).id = res.watch_id;
     target.emit('connected', res);
   }
 
@@ -266,10 +266,7 @@ export const operationNames = {
 export class WatchBuilder {
   private request: RPC.IWatchCreateRequest = { progress_notify: true };
 
-  constructor(
-    private readonly manager: WatchManager,
-    private readonly namespace: NSApplicator,
-  ) {}
+  constructor(private readonly manager: WatchManager, private readonly namespace: NSApplicator) {}
 
   /**
    * Sets a single key to be watched.
@@ -408,7 +405,8 @@ export class Watcher extends EventEmitter {
   /**
    * Implements EventEmitter.on(...).
    */
-  public on(event: string, handler: Function): this { // tslint:disable-line
+  public on(event: string, handler: Function): this {
+    // tslint:disable-line
     return super.on(event, handler);
   }
 
@@ -418,7 +416,7 @@ export class Watcher extends EventEmitter {
    * connected.
    */
   public lastRevision(): number | null {
-    return <number> this.request.start_revision;
+    return <number>this.request.start_revision;
   }
 
   /**

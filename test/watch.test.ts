@@ -2,12 +2,7 @@ import { expect } from 'chai';
 
 import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '../src';
 import { onceEvent } from '../src/util';
-import {
-  createTestClientAndKeys,
-  getOptions,
-  proxy,
-  tearDownTestClient,
-} from './util';
+import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
 
 describe('watch', () => {
   let client: Etcd3;
@@ -42,10 +37,7 @@ describe('watch', () => {
   /**
    * Checks that the watcher is not getting updates for the given key.
    */
-  async function expectNotWatching(
-    watcher: Watcher,
-    key: string,
-  ): Promise<Watcher> {
+  async function expectNotWatching(watcher: Watcher, key: string): Promise<Watcher> {
     let watching = false;
     const listener = () => (watching = true);
     watcher.on('put', listener);
@@ -83,7 +75,7 @@ describe('watch', () => {
     await Promise.all([
       client.put('foo1').value('update 1'),
       onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-        expect(watcher.request.start_revision).to.equal( 1 + Number(res.header.revision));
+        expect(watcher.request.start_revision).to.equal(1 + Number(res.header.revision));
       }),
     ]);
 

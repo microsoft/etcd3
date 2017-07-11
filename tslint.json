@@ -31,6 +31,7 @@
     "align": false,
     "no-single-line-block-comment": false,
     "semicolon": false,
+    "trailing-comma": false,
 
     // Microsoft
     "no-relative-imports": false,
@@ -41,7 +42,6 @@
     "no-reserved-keywords": false,
     "no-any": false,
     "no-increment-decrement": false,
-    "trailing-comma": [true, {"multiline": "always", "singleline": "never"}],
     "no-typeof-undefined": false,
     "underscore-consistent-invocation": false,
     "no-backbone-get-set-outside-model": false,

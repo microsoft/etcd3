@@ -34,10 +34,7 @@ export class Namespace {
   public readonly watchClient = new RPC.WatchClient(this.pool);
   private readonly watchManager = new WatchManager(this.watchClient);
 
-  constructor(
-    protected readonly prefix: Buffer,
-    protected readonly pool: ConnectionPool,
-  ) {}
+  constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}
   /**
    * `.get()` starts a query to look up a single key from etcd.
    */
@@ -94,8 +91,7 @@ export class Namespace {
     cmp: keyof typeof Builder.comparator,
     value: string | Buffer | number,
   ): Builder.ComparatorBuilder {
-    return new Builder.ComparatorBuilder(this.kv, this.nsApplicator)
-      .and(key, column, cmp, value);
+    return new Builder.ComparatorBuilder(this.kv, this.nsApplicator).and(key, column, cmp, value);
   }
 
   /**

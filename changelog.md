@@ -8,6 +8,7 @@
  - **breaking**: `client.watch()` is now a function to construct high-level watchers ([#12](https://github.com/mixer/etcd3/pull/12))
  - **feature**: add namespacing capability ([#12](https://github.com/mixer/etcd3/pull/12))
  - **feature**: add high-level watchers ([#16](https://github.com/mixer/etcd3/pull/16))
+ - **chore**: use [prettier](https://github.com/prettier/prettier) formatting for all code ([#16](https://github.com/mixer/etcd3/pull/18))
 
 ## 0.2.0 2017-06-03
 

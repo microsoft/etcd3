@@ -10,10 +10,7 @@ describe('transactions', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   it('runs a simple if', async () => {
-    await client
-      .if('foo1', 'Value', '==', 'bar1')
-      .then(client.put('foo1').value('bar2'))
-      .commit();
+    await client.if('foo1', 'Value', '==', 'bar1').then(client.put('foo1').value('bar2')).commit();
 
     expect(await client.get('foo1').string()).to.equal('bar2');
   });
@@ -36,9 +33,7 @@ describe('transactions', () => {
       .else(client.put('foo1').value('bar3'), client.get('foo2'))
       .commit();
 
-    expect(result.responses[1].response_range.kvs[0].value.toString()).to.equal(
-      'bar2',
-    );
+    expect(result.responses[1].response_range.kvs[0].value.toString()).to.equal('bar2');
     expect(await client.get('foo1').string()).to.equal('bar3');
   });
 });

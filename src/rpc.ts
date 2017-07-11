@@ -74,7 +74,7 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
-    return this.client.getConnection('Watch').then(cnx => (<any> cnx.client).watch());
+    return this.client.getConnection('Watch').then(cnx => (<any>cnx.client).watch());
   }
 }
 
@@ -99,7 +99,7 @@ export class LeaseClient {
    * to the server and streaming keep alive responses from the server to the client.
    */
   public leaseKeepAlive(): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
-    return this.client.getConnection('Lease').then(cnx => (<any> cnx.client).leaseKeepAlive());
+    return this.client.getConnection('Lease').then(cnx => (<any>cnx.client).leaseKeepAlive());
   }
   /**
    * LeaseTimeToLive retrieves lease information.
@@ -169,7 +169,7 @@ export class MaintenanceClient {
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(): Promise<IResponseStream<ISnapshotResponse>> {
-    return this.client.getConnection('Maintenance').then(cnx => (<any> cnx.client).snapshot({}));
+    return this.client.getConnection('Maintenance').then(cnx => (<any>cnx.client).snapshot({}));
   }
 }
 
@@ -220,7 +220,9 @@ export class AuthClient {
   /**
    * UserChangePassword changes the password of a specified user.
    */
-  public userChangePassword(req: IAuthUserChangePasswordRequest): Promise<IAuthUserChangePasswordResponse> {
+  public userChangePassword(
+    req: IAuthUserChangePasswordRequest,
+  ): Promise<IAuthUserChangePasswordResponse> {
     return this.client.exec('Auth', 'userChangePassword', req);
   }
   /**
@@ -262,13 +264,17 @@ export class AuthClient {
   /**
    * RoleGrantPermission grants a permission of a specified key or range to a specified role.
    */
-  public roleGrantPermission(req: IAuthRoleGrantPermissionRequest): Promise<IAuthRoleGrantPermissionResponse> {
+  public roleGrantPermission(
+    req: IAuthRoleGrantPermissionRequest,
+  ): Promise<IAuthRoleGrantPermissionResponse> {
     return this.client.exec('Auth', 'roleGrantPermission', req);
   }
   /**
    * RoleRevokePermission revokes a key or range permission of a specified role.
    */
-  public roleRevokePermission(req: IAuthRoleRevokePermissionRequest): Promise<IAuthRoleRevokePermissionResponse> {
+  public roleRevokePermission(
+    req: IAuthRoleRevokePermissionRequest,
+  ): Promise<IAuthRoleRevokePermissionResponse> {
     return this.client.exec('Auth', 'roleRevokePermission', req);
   }
 }

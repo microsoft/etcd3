@@ -21,9 +21,7 @@ describe('crud', () => {
 
     it('gets single keys with various encoding', async () => {
       expect(await client.get('foo1').string()).to.equal('bar1');
-      expect(await client.get('foo2').buffer()).to.deep.equal(
-        Buffer.from('bar2'),
-      );
+      expect(await client.get('foo2').buffer()).to.deep.equal(Buffer.from('bar2'));
       expect(await client.get('foo3').json()).to.deep.equal({ value: 'bar3' });
       expect(await client.get('wut').string()).to.be.null;
     });
@@ -37,12 +35,7 @@ describe('crud', () => {
     });
 
     it('gets keys', async () => {
-      expect(await client.getAll().keys()).to.have.members([
-        'foo1',
-        'foo2',
-        'foo3',
-        'baz',
-      ]);
+      expect(await client.getAll().keys()).to.have.members(['foo1', 'foo2', 'foo3', 'baz']);
       expect(await client.getAll().keyBuffers()).to.have.deep.members([
         Buffer.from('foo1'),
         Buffer.from('foo2'),
@@ -57,21 +50,11 @@ describe('crud', () => {
 
     it('sorts', async () => {
       expect(
-        await client
-          .getAll()
-          .prefix('foo')
-          .sort('Key', 'Ascend')
-          .limit(2)
-          .keys(),
+        await client.getAll().prefix('foo').sort('Key', 'Ascend').limit(2).keys(),
       ).to.deep.equal(['foo1', 'foo2']);
 
       expect(
-        await client
-          .getAll()
-          .prefix('foo')
-          .sort('Key', 'Descend')
-          .limit(2)
-          .keys(),
+        await client.getAll().prefix('foo').sort('Key', 'Descend').limit(2).keys(),
       ).to.deep.equal(['foo3', 'foo2']);
     });
   });
@@ -110,9 +93,7 @@ describe('crud', () => {
       });
 
       it('includes previous values', async () => {
-        expect(
-          await client.put('foo1').value('updated').getPrevious(),
-        ).to.containSubset({
+        expect(await client.put('foo1').value('updated').getPrevious()).to.containSubset({
           key: new Buffer('foo1'),
           value: new Buffer('bar1'),
         });

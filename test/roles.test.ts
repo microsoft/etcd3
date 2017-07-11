@@ -11,12 +11,7 @@ import {
   EtcdUserNotFoundError,
   Role,
 } from '../src';
-import {
-  createTestClientAndKeys,
-  expectReject,
-  getOptions,
-  tearDownTestClient,
-} from './util';
+import { createTestClientAndKeys, expectReject, getOptions, tearDownTestClient } from './util';
 
 function wipeAll(things: Promise<{ delete(): any }[]>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));
@@ -102,10 +97,7 @@ describe('roles and auth', () => {
 
     it('throws on existing users', async () => {
       await client.user('connor').create('password');
-      await expectReject(
-        client.user('connor').create('password'),
-        EtcdUserExistsError,
-      );
+      await expectReject(client.user('connor').create('password'), EtcdUserExistsError);
     });
 
     it('throws on regranting the same role multiple times', async () => {
@@ -193,10 +185,7 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expectReject(
-        authedClient.put('wut').value('bar').exec(),
-        EtcdPermissionDeniedError,
-      );
+      await expectReject(authedClient.put('wut').value('bar').exec(), EtcdPermissionDeniedError);
 
       authedClient.close();
     });

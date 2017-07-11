@@ -225,7 +225,7 @@ export function castGrpcErrorMessage(message: string): Error {
  * consume. Yes, this method is abhorrent.
  */
 export function castGrpcError(err: Error): Error {
-  if ((<any> err).constructor !== Error) {
+  if ((<any>err).constructor !== Error) {
     return err; // it looks like it's already some kind of typed error
   }
 

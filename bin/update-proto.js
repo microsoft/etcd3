@@ -37,12 +37,7 @@ const files = [
  * Matches lines that should be stripped out from the combined proto file.
  * @type {RegExp[]}
  */
-const ignores = [
-  /^import .+/,
-  /^option .+/,
-  /^package .+/,
-  /^syntax .+/,
-];
+const ignores = [/^import .+/, /^option .+/, /^package .+/, /^syntax .+/];
 
 /**
  * Filters out lines that should be ignored when transforming the proto files.
@@ -63,21 +58,24 @@ function lowerCaseEnumFields(line) {
 
 const baseUrl = 'https://raw.githubusercontent.com/coreos/etcd/master';
 
-Promise.all(files.map(f => {
-  return fetch(`${baseUrl}/${f.path}`)
-    .then(res => res.text())
-    .then(contents => {
-      return 'syntax = "proto3";\n' + f.prefix + contents
-        .split(/\r?\n/g)
-        .filter(filterRemovedLines)
-        .map(lowerCaseEnumFields)
-        .join('\n')
-        .replace(/\n\n+/g, '\n');
-    })
-    .then(contents => {
-      fs.writeFileSync(
-        path.join(process.argv[2], path.basename(f.path)),
-        contents
-      );
-    });
-})).then(() => process.exit(0));
+Promise.all(
+  files.map(f => {
+    return fetch(`${baseUrl}/${f.path}`)
+      .then(res => res.text())
+      .then(contents => {
+        return (
+          'syntax = "proto3";\n' +
+          f.prefix +
+          contents
+            .split(/\r?\n/g)
+            .filter(filterRemovedLines)
+            .map(lowerCaseEnumFields)
+            .join('\n')
+            .replace(/\n\n+/g, '\n')
+        );
+      })
+      .then(contents => {
+        fs.writeFileSync(path.join(process.argv[2], path.basename(f.path)), contents);
+      });
+  })
+).then(() => process.exit(0));

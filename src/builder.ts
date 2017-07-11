@@ -144,7 +144,9 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    * string, or `null` if it isn't found.
    */
   public string(encoding: string = 'utf8'): Promise<string | null> {
-    return this.exec().then(res => res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding));
+    return this.exec().then(
+      res => (res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding)),
+    );
   }
 
   /**
@@ -152,7 +154,7 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    * buffer, or `null` if it isn't found.
    */
   public buffer(): Promise<Buffer | null> {
-    return this.exec().then(res => res.kvs.length === 0 ? null : res.kvs[0].value);
+    return this.exec().then(res => (res.kvs.length === 0 ? null : res.kvs[0].value));
   }
 
   /**
@@ -375,7 +377,9 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    * Returns the request op for this builder, used in transactions.
    */
   public op(): RPC.IRequestOp {
-    return { request_delete_range: this.namespace.applyToRequest(this.request) };
+    return {
+      request_delete_range: this.namespace.applyToRequest(this.request),
+    };
   }
 
   /**
@@ -508,7 +512,7 @@ export class ComparatorBuilder {
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
 
     if (column === 'Value') {
-      value = toBuffer(<string | Buffer> value);
+      value = toBuffer(<string | Buffer>value);
     }
 
     this.request.compare = this.request.compare || [];

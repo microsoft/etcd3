@@ -57,7 +57,7 @@ export class Lock {
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
   public acquire(): Promise<void> {
-    const lease = this.lease = new Lease(this.pool, this.namespace, this.leaseTTL);
+    const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
     const kv = new RPC.KVClient(this.pool);
 
     return lease.grant().then(leaseID => {
@@ -91,9 +91,10 @@ export class Lock {
    * returns resolves or throws.
    */
   public do<T>(fn: () => T | Promise<T>): Promise<T> {
-    return this.acquire()
-      .then(fn)
-      .then(value => this.release().then(() => value))
-      .catch(err => this.release().then(() => { throw err; }));
+    return this.acquire().then(fn).then(value => this.release().then(() => value)).catch(err =>
+      this.release().then(() => {
+        throw err;
+      }),
+    );
   }
 }

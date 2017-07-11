@@ -161,9 +161,7 @@ function getCommentPrefixing(substring, from = 0, indentation = 1) {
     return '';
   }
 
-  return ['/**', ...comments, ' */']
-    .map(line => `${indent(indentation)}${line}`)
-    .join('\n');
+  return ['/**', ...comments, ' */'].map(line => `${indent(indentation)}${line}`).join('\n');
 }
 
 function generateMethodCalls(node, name) {
@@ -275,8 +273,11 @@ function codeGen(ast) {
   template('service-map', { services });
 }
 
-new pbjs.Root().load(process.argv[2], { keepCase: true }).then(ast => {
-  prepareForGeneration(ast.nested);
-  template('rpc-prefix');
-  codeGen(ast.nested);
-}).catch(err => console.error(err.stack));
+new pbjs.Root()
+  .load(process.argv[2], { keepCase: true })
+  .then(ast => {
+    prepareForGeneration(ast.nested);
+    template('rpc-prefix');
+    codeGen(ast.nested);
+  })
+  .catch(err => console.error(err.stack));

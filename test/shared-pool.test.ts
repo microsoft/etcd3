@@ -69,8 +69,7 @@ describe('shared pool', () => {
   });
 
   it('should not back off multiple times if multiple callers fail', async () => {
-    const getFirstBackoff = (): number =>
-      (<any>pool).resources[0].availableAfter;
+    const getFirstBackoff = (): number => (<any>pool).resources[0].availableAfter;
     const cnx = await pool.pull();
     pool.fail(cnx);
     expect(getFirstBackoff()).to.equal(Date.now() + 500);
