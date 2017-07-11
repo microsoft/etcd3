@@ -28,9 +28,7 @@ export interface IOperation {
 /**
  * compareTarget are the types of things that can be compared against.
  */
-export const compareTarget: {
-  [key in keyof typeof RPC.CompareTarget]: keyof RPC.ICompare
-} = {
+export const compareTarget: { [key in keyof typeof RPC.CompareTarget]: keyof RPC.ICompare } = {
   Value: 'value',
   Version: 'version',
   Create: 'create_revision',
@@ -44,9 +42,7 @@ export const compareTarget: {
 function assertWithin<T>(map: T, value: keyof T, thing: string) {
   if (!(value in map)) {
     const keys = Object.keys(map).join('" "');
-    throw new Error(
-      `Unexpected "${value}" in ${thing}. Possible values are: "${keys}"`,
-    );
+    throw new Error(`Unexpected "${value}" in ${thing}. Possible values are: "${keys}"`);
   }
 }
 
@@ -55,8 +51,7 @@ function assertWithin<T>(map: T, value: keyof T, thing: string) {
  * It's extended by the Single and MultiRangeBuilders, which contain
  * the concrete methods to execute the built query.
  */
-export abstract class RangeBuilder<T> extends PromiseWrap<T>
-  implements IOperation {
+export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperation {
   protected request: RPC.IRangeRequest = {};
 
   constructor(protected readonly namespace: NSApplicator) {
@@ -123,11 +118,7 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T>
  * SingleRangeBuilder is a query builder that looks up a single key.
  */
 export class SingleRangeBuilder extends RangeBuilder<string> {
-  constructor(
-    private readonly kv: RPC.KVClient,
-    namespace: NSApplicator,
-    key: string | Buffer,
-  ) {
+  constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator, key: string | Buffer) {
     super(namespace);
     this.request.key = toBuffer(key);
     this.request.limit = 1;
@@ -154,8 +145,7 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    */
   public string(encoding: string = 'utf8'): Promise<string | null> {
     return this.exec().then(
-      res =>
-        res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding),
+      res => (res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding)),
     );
   }
 
@@ -164,9 +154,7 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    * buffer, or `null` if it isn't found.
    */
   public buffer(): Promise<Buffer | null> {
-    return this.exec().then(
-      res => (res.kvs.length === 0 ? null : res.kvs[0].value),
-    );
+    return this.exec().then(res => (res.kvs.length === 0 ? null : res.kvs[0].value));
   }
 
   /**
@@ -222,15 +210,8 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   /**
    * Sort specifies how the result should be sorted.
    */
-  public sort(
-    target: keyof typeof RPC.SortTarget,
-    order: keyof typeof RPC.SortOrder,
-  ): this {
-    assertWithin(
-      RPC.SortTarget,
-      target,
-      'sort order in client.get().sort(...)',
-    );
+  public sort(target: keyof typeof RPC.SortTarget, order: keyof typeof RPC.SortOrder): this {
+    assertWithin(RPC.SortTarget, target, 'sort order in client.get().sort(...)');
     assertWithin(RPC.SortOrder, order, 'sort order in client.get().sort(...)');
     this.request.sort_target = RPC.SortTarget[target];
     this.request.sort_order = RPC.SortOrder[order];
@@ -276,9 +257,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public strings(
-    encoding: string = 'utf8',
-  ): Promise<{ [key: string]: string }> {
+  public strings(encoding: string = 'utf8'): Promise<{ [key: string]: string }> {
     return this.mapValues(buf => buf.toString(encoding));
   }
 
@@ -294,15 +273,13 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv
-      .range(this.namespace.applyToRequest(this.request))
-      .then(res => {
-        for (let i = 0; i < res.kvs.length; i++) {
-          res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
-        }
+    return this.kv.range(this.namespace.applyToRequest(this.request)).then(res => {
+      for (let i = 0; i < res.kvs.length; i++) {
+        res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
+      }
 
-        return res;
-      });
+      return res;
+    });
   }
 
   /**
@@ -316,9 +293,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Dispatches a call to the server, and creates a map by running the
    * iterator over the values returned.
    */
-  private mapValues<T>(
-    iterator: (buf: Buffer) => T,
-  ): Promise<{ [key: string]: T }> {
+  private mapValues<T>(iterator: (buf: Buffer) => T): Promise<{ [key: string]: T }> {
     return this.exec().then(res => {
       const output: { [key: string]: T } = {};
       for (let i = 0; i < res.kvs.length; i++) {
@@ -336,10 +311,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
 export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   private request: RPC.IDeleteRangeRequest = {};
 
-  constructor(
-    private readonly kv: RPC.KVClient,
-    private readonly namespace: NSApplicator,
-  ) {
+  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {
     super();
   }
 
@@ -463,9 +435,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * key before setting it. One may not always be available if a compaction
    * takes place.
    */
-  public getPrevious(): Promise<
-    RPC.IKeyValue & { header: RPC.IResponseHeader }
-  > {
+  public getPrevious(): Promise<RPC.IKeyValue & { header: RPC.IResponseHeader }> {
     this.request.prev_kv = true;
     return this.exec().then(res => ({ ...res.prev_kv, header: res.header }));
   }
@@ -527,10 +497,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
 export class ComparatorBuilder {
   private request: RPC.ITxnRequest = {};
 
-  constructor(
-    private readonly kv: RPC.KVClient,
-    private readonly namespace: NSApplicator,
-  ) {}
+  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {}
 
   /**
    * Adds a new clause to the transaction.
@@ -553,9 +520,7 @@ export class ComparatorBuilder {
       key: this.namespace.applyKey(toBuffer(key)),
       result: comparator[cmp],
       target: RPC.CompareTarget[column],
-      [compareTarget[column]]: typeof value === 'number'
-        ? value
-        : toBuffer(value),
+      [compareTarget[column]]: typeof value === 'number' ? value : toBuffer(value),
     });
     return this;
   }

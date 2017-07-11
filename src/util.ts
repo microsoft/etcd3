@@ -78,9 +78,7 @@ export class NSApplicator {
    * Shortcut function to apply the namespace to a GRPC CRUD request. It returns
    * a new request, it does not modify the original.
    */
-  public applyToRequest<T extends { key?: Buffer; range_end?: Buffer }>(
-    req: T,
-  ): T {
+  public applyToRequest<T extends { key?: Buffer; range_end?: Buffer }>(req: T): T {
     if (this.prefix.length === 0) {
       return req;
     }
@@ -102,9 +100,7 @@ export class NSApplicator {
     }
 
     if (!buf.slice(0, this.prefix.length).equals(this.prefix)) {
-      throw new ClientRuntimeError(
-        `Cannot slice non-existent prefix ${this.prefix} from ${buf}!`,
-      );
+      throw new ClientRuntimeError(`Cannot slice non-existent prefix ${this.prefix} from ${buf}!`);
     }
 
     return buf.slice(this.prefix.length);
@@ -161,10 +157,7 @@ export function forOwn<T>(
  * onceEvent returns a promise that resolves once any of the listed events
  * fire on the emitter.
  */
-export function onceEvent(
-  emitter: EventEmitter,
-  ...events: string[]
-): Promise<any> {
+export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
     const teardown: (() => void)[] = [];
 

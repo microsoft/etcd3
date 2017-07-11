@@ -37,12 +37,8 @@ export class ExponentialBackoff implements IBackoffStrategy {
    * @inheritDoc
    */
   public getDelay(): number {
-    const count =
-      this.counter - Math.round(Math.random() * this.options.random);
-    return Math.min(
-      this.options.max,
-      this.options.initial * Math.pow(2, Math.max(count, 0)),
-    );
+    const count = this.counter - Math.round(Math.random() * this.options.random);
+    return Math.min(this.options.max, this.options.initial * 2 ** Math.max(count, 0));
   }
 
   /**

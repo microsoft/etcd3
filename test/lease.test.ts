@@ -1,19 +1,9 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import {
-  Etcd3,
-  EtcdLeaseInvalidError,
-  GRPCConnectFailedError,
-  Lease,
-} from '../src';
+import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '../src';
 import { onceEvent } from '../src/util';
-import {
-  createTestClientAndKeys,
-  getOptions,
-  proxy,
-  tearDownTestClient,
-} from './util';
+import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
 
 describe('lease()', () => {
   let client: Etcd3;
@@ -59,9 +49,7 @@ describe('lease()', () => {
   it('provides basic lease lifecycle', async () => {
     lease = client.lease(100);
     await lease.put('leased').value('foo');
-    expect((await client.get('leased').exec()).kvs[0].lease).to.equal(
-      await lease.grant(),
-    );
+    expect((await client.get('leased').exec()).kvs[0].lease).to.equal(await lease.grant());
     await lease.revoke();
     expect(await client.get('leased').buffer()).to.be.null;
   });
@@ -149,9 +137,7 @@ describe('lease()', () => {
     it('tears down if the lease gets revoked', async () => {
       await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
       clock.tick(20000);
-      expect(await onceEvent(lease, 'lost')).to.be.an.instanceof(
-        EtcdLeaseInvalidError,
-      );
+      expect(await onceEvent(lease, 'lost')).to.be.an.instanceof(EtcdLeaseInvalidError);
       expect(lease.revoked()).to.be.true;
     });
   });

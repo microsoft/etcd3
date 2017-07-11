@@ -19,11 +19,7 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
  */
-function runServiceCall(
-  client: grpc.Client,
-  method: string,
-  payload: object,
-): Promise<any> {
+function runServiceCall(client: grpc.Client, method: string, payload: object): Promise<any> {
   return new Promise((resolve, reject) => {
     (<any>client)[method](payload, (err: Error | null, res: any) => {
       if (err) {
@@ -48,9 +44,7 @@ class Authenticator {
    * Augments the call credentials with the configured username and password,
    * if any.
    */
-  public augmentCredentials(
-    original: grpc.ChannelCredentials,
-  ): Promise<grpc.ChannelCredentials> {
+  public augmentCredentials(original: grpc.ChannelCredentials): Promise<grpc.ChannelCredentials> {
     if (this.awaitingToken !== null) {
       return this.awaitingToken;
     }
@@ -73,12 +67,7 @@ class Authenticator {
         return Promise.reject(previousRejection);
       }
 
-      return this.getCredentialsFromHost(
-        hosts[index],
-        auth.username,
-        auth.password,
-        original,
-      )
+      return this.getCredentialsFromHost(hosts[index], auth.username, auth.password, original)
         .then(token => {
           this.awaitingToken = null;
           return grpc.credentials.combineChannelCredentials(
@@ -101,11 +90,10 @@ class Authenticator {
     password: string,
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
-    return runServiceCall(
-      new services.etcdserverpb.Auth(address, credentials),
-      'authenticate',
-      { name, password },
-    ).then(res => res.token);
+    return runServiceCall(new services.etcdserverpb.Auth(address, credentials), 'authenticate', {
+      name,
+      password,
+    }).then(res => res.token);
   }
 
   /**
@@ -125,10 +113,7 @@ export class Host {
     [name in keyof typeof Services]?: Promise<grpc.Client>
   } = Object.create(null);
 
-  constructor(
-    private host: string,
-    private channelCredentials: Promise<grpc.ChannelCredentials>,
-  ) {}
+  constructor(private host: string, private channelCredentials: Promise<grpc.ChannelCredentials>) {}
 
   /**
    * Returns the given GRPC service on the current host.
@@ -162,9 +147,7 @@ export class Host {
  * host can contain multiple discreet services.
  */
 export class ConnectionPool implements ICallable {
-  private pool = new SharedPool<Host>(
-    this.options.backoffStrategy || defaultBackoffStrategy,
-  );
+  private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
   private mockImpl: ICallable | null;
   private authenticator = new Authenticator(this.options);
 
@@ -196,11 +179,7 @@ export class ConnectionPool implements ICallable {
   /**
    * @override
    */
-  public exec(
-    serviceName: keyof typeof Services,
-    method: string,
-    payload: object,
-  ): Promise<any> {
+  public exec(serviceName: keyof typeof Services, method: string, payload: object): Promise<any> {
     if (this.mockImpl) {
       return this.mockImpl.exec(serviceName, method, payload);
     }
@@ -254,9 +233,7 @@ export class ConnectionPool implements ICallable {
     }
 
     if (hosts.length === 0) {
-      throw new Error(
-        'Cannot construct an etcd client with no hosts specified',
-      );
+      throw new Error('Cannot construct an etcd client with no hosts specified');
     }
 
     hosts.forEach(host => this.pool.add(new Host(host, credentials)));

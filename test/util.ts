@@ -6,9 +6,7 @@ import { Etcd3, IOptions } from '../src';
 
 const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${__dirname}/certs/certs/etcd0.localhost.crt`);
-const tlsKey = fs.readFileSync(
-  `${__dirname}/certs/private/etcd0.localhost.key`,
-);
+const tlsKey = fs.readFileSync(`${__dirname}/certs/private/etcd0.localhost.key`);
 const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
 const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
 
@@ -161,10 +159,7 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
  * Returns a promise that throws if the promise is resolved or rejected with
  * something other than the provided constructor
  */
-export function expectReject(
-  promise: Promise<any>,
-  err: { new (message: string): Error },
-) {
+export function expectReject(promise: Promise<any>, err: { new (message: string): Error }) {
   return promise
     .then(() => {
       throw new Error('expected to reject');

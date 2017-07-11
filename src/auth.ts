@@ -108,9 +108,7 @@ export class Role {
       user = user.name;
     }
 
-    return this.client
-      .userGrantRole({ user, role: this.name })
-      .then(() => this);
+    return this.client.userGrantRole({ user, role: this.name }).then(() => this);
   }
 
   /**
@@ -121,9 +119,7 @@ export class Role {
       user = user.name;
     }
 
-    return this.client
-      .userRevokeRole({ name: user, role: this.name })
-      .then(() => this);
+    return this.client.userRevokeRole({ name: user, role: this.name }).then(() => this);
   }
 }
 
@@ -145,9 +141,7 @@ export class User {
    * Changes the user's password.
    */
   public setPassword(password: string): Promise<this> {
-    return this.client
-      .userChangePassword({ name: this.name, password })
-      .then(() => this);
+    return this.client.userChangePassword({ name: this.name, password }).then(() => this);
   }
 
   /**
@@ -174,9 +168,7 @@ export class User {
       role = role.name;
     }
 
-    return this.client
-      .userGrantRole({ user: this.name, role })
-      .then(() => this);
+    return this.client.userGrantRole({ user: this.name, role }).then(() => this);
   }
 
   /**
@@ -187,8 +179,6 @@ export class User {
       role = role.name;
     }
 
-    return this.client
-      .userRevokeRole({ name: this.name, role })
-      .then(() => this);
+    return this.client.userRevokeRole({ name: this.name, role }).then(() => this);
   }
 }

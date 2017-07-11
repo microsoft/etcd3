@@ -3,9 +3,7 @@
  */
 export class ClientRuntimeError extends Error {
   constructor(message: string) {
-    super(
-      `${message} Please report this error at https://github.com/mixer/etcd3`,
-    );
+    super(`${message} Please report this error at https://github.com/mixer/etcd3`);
   }
 }
 
@@ -173,10 +171,7 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Endpoint read failed', GRPCProtocolError],
   ['Got config after disconnection', GRPCProtocolError],
   ['Failed to create subchannel', GRPCProtocolError],
-  [
-    'Attempt to send initial metadata after stream was closed',
-    GRPCProtocolError,
-  ],
+  ['Attempt to send initial metadata after stream was closed', GRPCProtocolError],
   ['Attempt to send message after stream was closed', GRPCProtocolError],
   ['Last stream closed after sending GOAWAY', GRPCProtocolError],
   ['Failed parsing HTTP/2', GRPCProtocolError],
@@ -199,10 +194,7 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['etcdserver: role is not granted to the user', EtcdRoleNotGrantedError],
   ['etcdserver: role name not found', EtcdRoleNotFoundError],
   ['etcdserver: user name not found', EtcdUserNotFoundError],
-  [
-    'etcdserver: authentication failed, invalid user ID or password',
-    EtcdAuthenticationFailedError,
-  ],
+  ['etcdserver: authentication failed, invalid user ID or password', EtcdAuthenticationFailedError],
   ['etcdserver: permission denied', EtcdPermissionDeniedError],
 ]);
 
@@ -216,10 +208,7 @@ function getMatchingGrpcError(message: string): IErrorCtor | null {
   return null;
 }
 
-function rewriteErrorName(
-  str: string,
-  ctor: new (...args: any[]) => Error,
-): string {
+function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): string {
   return str.replace(/^Error:/, `${ctor.name}:`);
 }
 

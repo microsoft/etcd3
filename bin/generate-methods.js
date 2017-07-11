@@ -76,9 +76,7 @@ function emit(string) {
 
 function template(name, params) {
   if (!templates[name]) {
-    templates[name] = _.template(
-      fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8')
-    );
+    templates[name] = _.template(fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8'));
   }
 
   params = Object.assign(params || {}, {
@@ -88,9 +86,7 @@ function template(name, params) {
     aliases: pbTypeAliases,
   });
 
-  emit(
-    templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, '')
-  );
+  emit(templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, ''));
 }
 
 function stripPackageNameFrom(name) {
@@ -165,9 +161,7 @@ function getCommentPrefixing(substring, from = 0, indentation = 1) {
     return '';
   }
 
-  return ['/**', ...comments, ' */']
-    .map(line => `${indent(indentation)}${line}`)
-    .join('\n');
+  return ['/**', ...comments, ' */'].map(line => `${indent(indentation)}${line}`).join('\n');
 }
 
 function generateMethodCalls(node, name) {

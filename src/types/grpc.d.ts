@@ -50,10 +50,7 @@ export class Server {
   /**
    * Add a proto service to the server, with a corresponding implementation.
    */
-  addService(
-    service: Service,
-    implementations: { [method: string]: grpcCall },
-  ): void;
+  addService(service: Service, implementations: { [method: string]: grpcCall }): void;
 
   /**
    * Binds the server to the given port, with SSL enabled if credentials are given.
@@ -195,9 +192,7 @@ export namespace credentials {
   /**
    * Combine any number of CallCredentials into a single CallCredentials object.
    */
-  export function combineCallCredentials(
-    ...credentials: CallCredentials[]
-  ): CallCredentials;
+  export function combineCallCredentials(...credentials: CallCredentials[]): CallCredentials;
 
   /**
    * Combine a ChannelCredentials with any number of CallCredentials into a
@@ -212,9 +207,7 @@ export namespace credentials {
    * Create a gRPC credential from a Google credential object.
    * todo(connor4312): type
    */
-  export function createFromGoogleCredential(
-    googleCredential: any,
-  ): CallCredentials;
+  export function createFromGoogleCredential(googleCredential: any): CallCredentials;
 
   /**
    * IMetadataGenerator can be passed into createFromMetadataGenerator.
@@ -230,9 +223,7 @@ export namespace credentials {
    * Create a gRPC credential from a Google credential object.
    * todo(connor4312): type
    */
-  export function createFromMetadataGenerator(
-    generator: IMetadataGenerator,
-  ): CallCredentials;
+  export function createFromMetadataGenerator(generator: IMetadataGenerator): CallCredentials;
 }
 
 export const status: Readonly<{

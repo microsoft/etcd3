@@ -29,8 +29,7 @@ const files = [
   },
   {
     path: 'etcdserver/etcdserverpb/rpc.proto',
-    prefix:
-      'package etcdserverpb;\nimport "./kv.proto";\nimport "./auth.proto";\n',
+    prefix: 'package etcdserverpb;\nimport "./kv.proto";\nimport "./auth.proto";\n',
   },
 ];
 
@@ -52,12 +51,9 @@ const uppercaseEnumFieldRe = /^(\s*)([A-Z_]+)(\s*=\s*[0-9]+;.*)$/;
  * to match TypeScript conventions better.
  */
 function lowerCaseEnumFields(line) {
-  return line.replace(
-    uppercaseEnumFieldRe,
-    (_match, indentation, name, value) => {
-      return `${indentation}${_.upperFirst(_.camelCase(name))}${value}`;
-    }
-  );
+  return line.replace(uppercaseEnumFieldRe, (_match, indentation, name, value) => {
+    return `${indentation}${_.upperFirst(_.camelCase(name))}${value}`;
+  });
 }
 
 const baseUrl = 'https://raw.githubusercontent.com/coreos/etcd/master';
@@ -79,10 +75,7 @@ Promise.all(
         );
       })
       .then(contents => {
-        fs.writeFileSync(
-          path.join(process.argv[2], path.basename(f.path)),
-          contents
-        );
+        fs.writeFileSync(path.join(process.argv[2], path.basename(f.path)), contents);
       });
   })
 ).then(() => process.exit(0));
