@@ -73,20 +73,53 @@
 						<section class="tsd-index-section ">
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/util_.nsapplicator.html" class="tsd-kind-icon">NSApplicator</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/util_.promisewrap.html" class="tsd-kind-icon">Promise<wbr>Wrap</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="util_.html#emptykey" class="tsd-kind-icon">empty<wbr>Key</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="util_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="util_.html#delay" class="tsd-kind-icon">delay</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="util_.html#endrangeforprefix" class="tsd-kind-icon">end<wbr>Range<wbr>For<wbr>Prefix</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter"><a href="util_.html#forown" class="tsd-kind-icon">for<wbr>Own</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter"><a href="util_.html#minby" class="tsd-kind-icon">min<wbr>By</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="util_.html#onceevent" class="tsd-kind-icon">once<wbr>Event</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter"><a href="util_.html#sample" class="tsd-kind-icon">sample</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="util_.html#tobuffer" class="tsd-kind-icon">to<wbr>Buffer</a></li>
 							</ul>
 						</section>
 					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
+					<a name="emptykey" class="tsd-anchor"></a>
+					<h3>empty<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">empty<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;Buffer.from([])</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L6">util.ts:6</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
+					<a name="zerokey" class="tsd-anchor"></a>
+					<h3>zero<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">zero<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> =&nbsp;Buffer.from([0])</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L5">util.ts:5</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -101,7 +134,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in util.ts:41</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L139">util.ts:139</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -119,6 +152,34 @@
 						</li>
 					</ul>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="endrangeforprefix" class="tsd-anchor"></a>
+					<h3>end<wbr>Range<wbr>For<wbr>Prefix</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">end<wbr>Range<wbr>For<wbr>Prefix<span class="tsd-signature-symbol">(</span>prefix<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L22">util.ts:22</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns the range_end value for a query for the provided prefix.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>prefix: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter">
 					<a name="forown" class="tsd-anchor"></a>
 					<h3>for<wbr>Own</h3>
@@ -129,7 +190,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in util.ts:48</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L146">util.ts:146</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -193,7 +254,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in util.ts:15</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L113">util.ts:113</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -238,6 +299,38 @@
 						</li>
 					</ul>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="onceevent" class="tsd-anchor"></a>
+					<h3>once<wbr>Event</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">once<wbr>Event<span class="tsd-signature-symbol">(</span>emitter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">EventEmitter</span>, <span class="tsd-signature-symbol">...</span>events<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L160">util.ts:160</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>onceEvent returns a promise that resolves once any of the listed events
+									fire on the emitter.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>emitter: <span class="tsd-signature-type">EventEmitter</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>events: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter">
 					<a name="sample" class="tsd-anchor"></a>
 					<h3>sample</h3>
@@ -248,7 +341,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in util.ts:34</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L132">util.ts:132</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -282,7 +375,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in util.ts:4</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L11">util.ts:11</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -336,6 +429,9 @@
 						<a href="lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="namespace_.html">"namespace"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -350,21 +446,39 @@
 					<li class="current tsd-kind-external-module">
 						<a href="util_.html">"util"</a>
 					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="watch_.html">"watch"</a>
+					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/util_.nsapplicator.html" class="tsd-kind-icon">NSApplicator</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/util_.promisewrap.html" class="tsd-kind-icon">Promise<wbr>Wrap</a>
 					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
+						<a href="util_.html#emptykey" class="tsd-kind-icon">empty<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
+						<a href="util_.html#zerokey" class="tsd-kind-icon">zero<wbr>Key</a>
+					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="util_.html#delay" class="tsd-kind-icon">delay</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="util_.html#endrangeforprefix" class="tsd-kind-icon">end<wbr>Range<wbr>For<wbr>Prefix</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="util_.html#forown" class="tsd-kind-icon">for<wbr>Own</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="util_.html#minby" class="tsd-kind-icon">min<wbr>By</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="util_.html#onceevent" class="tsd-kind-icon">once<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="util_.html#sample" class="tsd-kind-icon">sample</a>

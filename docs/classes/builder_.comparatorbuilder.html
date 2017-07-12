@@ -77,16 +77,16 @@
 					</div>
 					<pre><code>const id = uuid.v4();
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">lock</span><span class="hljs-params">()</span> {</span>
-  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'create'</span>, <span class="hljs-string">'=='</span>, <span class="hljs-number">0</span>)
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">lock</span><span class="hljs-params">()</span></span> {
+  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'Create'</span>, <span class="hljs-string">'=='</span>, <span class="hljs-number">0</span>)
     .<span class="hljs-keyword">then</span>(client.put(<span class="hljs-string">'my_lock'</span>).value(id))
     .<span class="hljs-keyword">else</span>(client.get(<span class="hljs-string">'my_lock'</span>))
     .commit()
     .<span class="hljs-keyword">then</span>(result =&gt; console.<span class="hljs-built_in">log</span>(result.succeeded === id ? <span class="hljs-string">'lock acquired'</span> : <span class="hljs-string">'already locked'</span>));
 }
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">unlock</span><span class="hljs-params">()</span> {</span>
-  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'value'</span>, <span class="hljs-string">'=='</span>, <span class="hljs-number">0</span>)
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">unlock</span><span class="hljs-params">()</span></span> {
+  <span class="hljs-keyword">return</span> client.<span class="hljs-keyword">if</span>(<span class="hljs-string">'my_lock'</span>, <span class="hljs-string">'Value'</span>, <span class="hljs-string">'=='</span>, id)
     .<span class="hljs-keyword">then</span>(client.delete().key(<span class="hljs-string">'my_lock'</span>))
     .commit();
 }
@@ -129,19 +129,22 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Comparator<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.comparatorbuilder.html" class="tsd-signature-type">ComparatorBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Comparator<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a>, namespace<span class="tsd-signature-symbol">: </span><a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.comparatorbuilder.html" class="tsd-signature-type">ComparatorBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:481</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L498">builder.ts:498</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>kv: <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a></h5>
+								</li>
+								<li>
+									<h5>namespace: <a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="builder_.comparatorbuilder.html" class="tsd-signature-type">ComparatorBuilder</a></h4>
@@ -161,7 +164,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:488</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L505">builder.ts:505</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -198,7 +201,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:532</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L549">builder.ts:549</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -220,7 +223,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:524</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L541">builder.ts:541</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -249,7 +252,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:515</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L532">builder.ts:532</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -304,6 +307,9 @@
 						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/namespace_.html">"namespace"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -317,6 +323,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/watch_.html">"watch"</a>
 					</li>
 				</ul>
 			</nav>

@@ -83,10 +83,10 @@
 						disconnect or wholesale etcd failure), the caller may lose the lock while
 					operations may still be running.</p>
 					<p>A quick example:</p>
-					<pre><code><span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'etcd3'</span>);
+					<pre><code><span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-keyword">require</span>(<span class="hljs-string">'etcd3'</span>);
 <span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
 
-client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-keyword">do</span>(() =&gt; {
   <span class="hljs-comment">// The lock will automatically be released when this promise returns</span>
   <span class="hljs-keyword">return</span> doMyAtomicAction();
 });
@@ -129,19 +129,22 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Lock<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lock_.lock.html" class="tsd-signature-type">Lock</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Lock<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a>, namespace<span class="tsd-signature-symbol">: </span><a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lock_.lock.html" class="tsd-signature-type">Lock</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in lock.ts:34</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L35">lock.ts:35</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>pool: <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></h5>
+								</li>
+								<li>
+									<h5>namespace: <a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a></h5>
 								</li>
 								<li>
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
@@ -164,7 +167,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in lock.ts:54</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L59">lock.ts:59</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -186,7 +189,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in lock.ts:88</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L93">lock.ts:93</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -237,7 +240,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in lock.ts:75</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L80">lock.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -259,7 +262,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in lock.ts:42</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L47">lock.ts:47</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -314,6 +317,9 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/namespace_.html">"namespace"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -327,6 +333,9 @@ client.lock(<span class="hljs-string">'my_resource'</span>).do(<span class="hljs
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/watch_.html">"watch"</a>
 					</li>
 				</ul>
 			</nav>

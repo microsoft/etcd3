@@ -9,7 +9,7 @@
     "test:unit": "mocha --compilers ts:ts-node/register --timeout 20000 -r test/_setup.ts test/*.test.ts",
     "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
-    "build:doc": "rm -rf docs && typedoc --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
+    "build:doc": "rm -rf docs && typedoc --gitRevision `git describe --abbrev=0 --tags` --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc && cp -R proto lib",
     "fmt": "npm-run-all --parallel fmt:ts fmt:js",
     "fmt:js": "prettier --single-quote --trailing-comma es5 --write --print-width 100 \"bin/*.js\"",
@@ -53,7 +53,7 @@
     "ts-node": "^3.0.2",
     "tslint": "^4.0.0",
     "tslint-microsoft-contrib": "4.0.0",
-    "typedoc": "^0.5.10",
+    "typedoc": "^0.7.1",
     "typescript": "2.3.0"
   },
   "dependencies": {

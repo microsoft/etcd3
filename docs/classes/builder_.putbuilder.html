@@ -129,19 +129,22 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Put<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Put<wbr>Builder<span class="tsd-signature-symbol">(</span>kv<span class="tsd-signature-symbol">: </span><a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a>, namespace<span class="tsd-signature-symbol">: </span><a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a>, key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="builder_.putbuilder.html" class="tsd-signature-type">PutBuilder</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:384</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L397">builder.ts:397</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>kv: <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a></h5>
+								</li>
+								<li>
+									<h5>namespace: <a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a></h5>
 								</li>
 								<li>
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
@@ -165,7 +168,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#catch">catch</a></p>
 								<ul>
-									<li>Defined in util.ts:75</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L204">util.ts:204</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -221,7 +224,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#createpromise">createPromise</a></p>
 								<ul>
-									<li>Defined in builder.ts:453</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L470">builder.ts:470</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -244,7 +247,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:439</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L456">builder.ts:456</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -260,13 +263,13 @@
 					<a name="getprevious" class="tsd-anchor"></a>
 					<h3>get<wbr>Previous</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Previous<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IKeyValue &amp; { header: IResponseHeader; }</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Previous<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ikeyvalue.html" class="tsd-signature-type">IKeyValue</a><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:421</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L438">builder.ts:438</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -276,7 +279,7 @@
 									takes place.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IKeyValue &amp; { header: IResponseHeader; }</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ikeyvalue.html" class="tsd-signature-type">IKeyValue</a><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -290,7 +293,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:411</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L428">builder.ts:428</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -312,7 +315,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:403</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L420">builder.ts:420</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -341,7 +344,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:446</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L463">builder.ts:463</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -364,7 +367,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#then">then</a></p>
 								<ul>
-									<li>Defined in util.ts:68</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L194">util.ts:194</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -425,7 +428,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:430</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L447">builder.ts:447</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -448,7 +451,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in builder.ts:394</li>
+									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L411">builder.ts:411</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -502,6 +505,9 @@
 						<a href="../modules/lock_.html">"lock"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/namespace_.html">"namespace"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/options_.html">"options"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -515,6 +521,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/watch_.html">"watch"</a>
 					</li>
 				</ul>
 			</nav>
