@@ -1,7 +1,11 @@
+## 0.2.3 2017-07-19
+
+ - **bug**: fix being unable to set lock TTLs ([#26](https://github.com/mixer/etcd3/pull/26))
+
 ## 0.2.2 2017-07-10
 
- - **bug**: fix critical installation issue from 0.2.1
- - **chore**: update grpc to 1.4.x
+ - **bug**: fix critical installation issue from 0.2.1 ([#23](https://github.com/mixer/etcd3/issues/23), [#24](https://github.com/mixer/etcd3/pull/24))
+ - **chore**: update grpc to 1.4.x ([#24](https://github.com/mixer/etcd3/pull/24))
 
 ## ~~0.2.1 2017-07-10~~
 

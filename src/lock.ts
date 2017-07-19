@@ -45,7 +45,7 @@ export class Lock {
    * to 30 seconds.
    */
   public ttl(seconds: number): this {
-    if (!this.lease) {
+    if (this.lease) {
       throw new Error('Cannot set a lock TTL after acquiring the lock');
     }
 
@@ -56,7 +56,7 @@ export class Lock {
   /**
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
-  public acquire(): Promise<void> {
+  public acquire(): Promise<this> {
     const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
     const kv = new RPC.KVClient(this.pool);
 
@@ -70,6 +70,8 @@ export class Lock {
             this.release();
             throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
           }
+
+          return this;
         });
     });
   }
