@@ -39,4 +39,15 @@ describe('lock()', () => {
     await client.lock('resource').do(assertCantLock);
     await assertAbleToLock();
   });
+
+  it('allows setting lock TTL before acquiring', async () => {
+    const lock = await client.lock('resource').ttl(10).acquire();
+    await lock.release();
+  });
+
+  it('disallows setting TTL while lock is acquired', async () => {
+    const lock = await client.lock('resource').acquire();
+    expect(() => lock.ttl(10)).to.throw(/Cannot set a lock TTL after acquiring the lock/);
+    await lock.release();
+  });
 });
