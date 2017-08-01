@@ -28,7 +28,7 @@ client.put('foo').value('bar')
 
 Our [TypeDoc docs are available here](https://mixer.github.io/etcd3/classes/index_.etcd3.html).
 
-Our [test cases](https://github.com/mixer/etcd3/blob/master/test/kv.test.ts) are also quite readable.
+Our [test cases](https://github.com/mixer/etcd3/blob/master/test/) are also quite readable.
 
 ### Contributing
 
