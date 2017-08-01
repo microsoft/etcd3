@@ -1,8 +1,12 @@
 language: node_js
 node_js:
+  - 5
   - 6
+  - 8
+  - 9
 env:
   - ETCD_VER=v3.1.5
+  - ETCD_VER=v3.2.4
 before_install:
   - curl -L https://github.com/coreos/etcd/releases/download/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
   - mkdir -p /tmp/etcd
