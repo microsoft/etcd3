@@ -1,5 +1,8 @@
-## TBA
+## 0.2.4 2017-08-02
 
+ - **bug**: connections failing when an `https` prefix is provided ([#29](https://github.com/mixer/etcd3/pull/29) thanks to [@jmreicha](https://github.com/jmreicha)
+ - **bug**: connections failing when using SSL without a custom root cert ([#29](https://github.com/mixer/etcd3/pull/29) thanks to [@jmreicha](https://github.com/jmreicha)
+ - **feature**: throw a more meaningful error when using credentials without SSL ([#29](https://github.com/mixer/etcd3/pull/29))
  - **test**: run tests with Node 8 and etcd3.2 ([#27](https://github.com/mixer/etcd3/pull/27)) thanks to [@shakefu](https://github.com/shakefu)
 
 ## 0.2.3 2017-07-19
