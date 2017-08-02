@@ -18,6 +18,14 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
 const secureProtocolPrefix = 'https:';
 
 /**
+ * Strips the https?:// from the start of the connection string.
+ * @param {string} name [description]
+ */
+function removeProtocolPrefix (name: string) {
+  return name.replace(/^https?:\/\//, '');
+}
+
+/**
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
  */
@@ -68,7 +76,8 @@ class Authenticator {
         return Promise.reject(previousRejection);
       }
 
-      return this.getCredentialsFromHost(hosts[index], auth.username, auth.password, original)
+      const host = removeProtocolPrefix(hosts[index]);
+      return this.getCredentialsFromHost(host, auth.username, auth.password, original)
         .then(token => {
           this.awaitingToken = null;
           return grpc.credentials.combineChannelCredentials(
@@ -110,11 +119,14 @@ class Authenticator {
 }
 
 export class Host {
+  private readonly host: string;
   private cachedServices: {
     [name in keyof typeof Services]?: Promise<grpc.Client>
   } = Object.create(null);
 
-  constructor(private host: string, private channelCredentials: Promise<grpc.ChannelCredentials>) {}
+  constructor(host: string, private channelCredentials: Promise<grpc.ChannelCredentials>) {
+    this.host = removeProtocolPrefix(host);
+  }
 
   /**
    * Returns the given GRPC service on the current host.
