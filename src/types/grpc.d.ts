@@ -184,7 +184,7 @@ export namespace credentials {
    * the second and third arguments must be passed.
    */
   export function createSsl(
-    rootCerts: Buffer,
+    rootCerts?: Buffer,
     privateKey?: Buffer,
     certChain?: Buffer,
   ): CallCredentials;
@@ -213,10 +213,10 @@ export namespace credentials {
    * IMetadataGenerator can be passed into createFromMetadataGenerator.
    */
   export interface IMetadataGenerator {
-    (target: { service_url: string }, callback: (
-      error: Error | null,
-      metadata?: Metadata,
-    ) => void): void;
+    (
+      target: { service_url: string },
+      callback: (error: Error | null, metadata?: Metadata) => void,
+    ): void;
   }
 
   /**
