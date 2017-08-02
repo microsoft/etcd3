@@ -21,7 +21,7 @@ const secureProtocolPrefix = 'https:';
  * Strips the https?:// from the start of the connection string.
  * @param {string} name [description]
  */
-function removeProtocolPrefix (name: string) {
+function removeProtocolPrefix(name: string) {
   return name.replace(/^https?:\/\//, '');
 }
 
