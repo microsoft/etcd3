@@ -345,11 +345,11 @@ export interface IRangeRequest {
   /**
    * sort_order is the order for returned sorted results.
    */
-  sort_order?: (SortOrder | keyof typeof SortOrder);
+  sort_order?: SortOrder | keyof typeof SortOrder;
   /**
    * sort_target is the key-value field to use for sorting.
    */
-  sort_target?: (SortTarget | keyof typeof SortTarget);
+  sort_target?: SortTarget | keyof typeof SortTarget;
   /**
    * serializable sets the range request to use serializable member-local reads.
    * Range requests are linearizable by default; linearizable requests have higher
@@ -497,11 +497,11 @@ export interface ICompare {
   /**
    * result is logical comparison operation for this comparison.
    */
-  result?: (CompareResult | keyof typeof CompareResult);
+  result?: CompareResult | keyof typeof CompareResult;
   /**
    * target is the key-value field to inspect for the comparison.
    */
-  target?: (CompareTarget | keyof typeof CompareTarget);
+  target?: CompareTarget | keyof typeof CompareTarget;
   /**
    * key is the subject key for the comparison operation.
    */
@@ -842,7 +842,7 @@ export interface IAlarmRequest {
    * may GET alarm statuses, ACTIVATE an alarm, or DEACTIVATE a
    * raised alarm.
    */
-  action?: (AlarmAction | keyof typeof AlarmAction);
+  action?: AlarmAction | keyof typeof AlarmAction;
   /**
    * memberID is the ID of the member associated with the alarm. If memberID is 0, the
    * alarm request covers all members.
@@ -851,7 +851,7 @@ export interface IAlarmRequest {
   /**
    * alarm is the type of alarm to consider for this request.
    */
-  alarm?: (AlarmType | keyof typeof AlarmType);
+  alarm?: AlarmType | keyof typeof AlarmType;
 }
 export interface IAlarmMember {
   /**

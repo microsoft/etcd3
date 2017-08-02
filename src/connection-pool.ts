@@ -15,6 +15,8 @@ export const defaultBackoffStrategy = new ExponentialBackoff({
   random: 1,
 });
 
+const secureProtocolPrefix = 'https:';
+
 /**
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
@@ -49,9 +51,8 @@ class Authenticator {
       return this.awaitingToken;
     }
 
-    const hosts = typeof this.options.hosts === 'string'
-      ? [this.options.hosts]
-      : this.options.hosts;
+    const hosts =
+      typeof this.options.hosts === 'string' ? [this.options.hosts] : this.options.hosts;
     const auth = this.options.auth;
 
     if (!auth) {
@@ -252,8 +253,35 @@ export class ConnectionPool implements ICallable {
         credentials.privateKey,
         credentials.certChain,
       );
+    } else if (this.hasSecureHost()) {
+      protocolCredentials = grpc.credentials.createSsl();
+    } else if (this.options.auth) {
+      throw new Error(
+        'grpc does not allow you to use password authentication without connecting ' +
+          'over SSL. See how to set up etcd with ssl here: https://git.io/v7uhX',
+      );
     }
 
     return this.authenticator.augmentCredentials(protocolCredentials);
+  }
+
+  /**
+   * Returns whether any configured host is set up to use TLS.
+   */
+  private hasSecureHost(): boolean {
+    const { hosts } = this.options;
+    if (typeof hosts === 'string') {
+      return hosts.startsWith(secureProtocolPrefix);
+    }
+
+    const countSecure = hosts.filter(host => host.startsWith(secureProtocolPrefix)).length;
+    if (countSecure === 0) {
+      return false;
+    }
+    if (countSecure < hosts.length) {
+      throw new Error('etcd3 cannot be configured with a mix of secure and insecure hosts');
+    }
+
+    return true;
   }
 }
