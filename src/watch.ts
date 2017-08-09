@@ -1,6 +1,11 @@
 import { EventEmitter } from 'events';
 
-import { castGrpcErrorMessage, ClientRuntimeError, EtcdError } from './errors';
+import {
+  castGrpcErrorMessage,
+  ClientRuntimeError,
+  EtcdError,
+  EtcdPermissionDeniedError,
+} from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
@@ -9,6 +14,126 @@ const enum State {
   Idle,
   Connecting,
   Connected,
+}
+
+const enum QueueState {
+  Idle,
+  ReadingRevision,
+  Attaching,
+  Destroyed,
+}
+
+class AttachQueue {
+  private state = QueueState.Idle;
+  private queue: Watcher[] = [];
+  private revision: number;
+
+  constructor(
+    private readonly stream: RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
+    private readonly kv: RPC.KVClient,
+  ) {}
+
+  /**
+   * Inserts a watcher to be attached to the stream.
+   */
+  public attach(watcher: Watcher | Watcher[]) {
+    this.queue = this.queue.concat(watcher);
+
+    if (this.state === QueueState.Idle) {
+      this.readQueue();
+    }
+  }
+
+  /**
+   * Remove the watcher from any pending attach queue.
+   */
+  public dequeue(watcher: Watcher) {
+    this.queue = this.queue.filter(w => w !== watcher);
+  }
+
+  /**
+   * Dispatches the "create" response to the waiting watcher and fires the
+   * next one as necessary.
+   */
+  public handleCreate(res: RPC.IWatchResponse) {
+    const watcher = this.queue.shift();
+    if (!watcher) {
+      throw new ClientRuntimeError('Could not find watcher corresponding to create response');
+    }
+
+    (<{ id: string }>watcher).id = res.watch_id;
+    watcher.emit('connected', res);
+    this.readQueue();
+  }
+
+  /**
+   * Halts future operations on the queue.
+   */
+  public destroy() {
+    this.state = QueueState.Destroyed;
+  }
+
+  /**
+   * Reads the next watcher to create off the queue and attaches it.
+   */
+  private readQueue() {
+    if (this.state === QueueState.Destroyed) {
+      return;
+    }
+    if (this.queue.length === 0) {
+      this.state = QueueState.Idle;
+      return;
+    }
+
+    const watcher = this.queue[0];
+    if (watcher.request.start_revision) {
+      if (!this.revision) {
+        return this.readRevision(watcher);
+      }
+
+      watcher.request.start_revision = Math.min(
+        Number(watcher.request.start_revision),
+        this.revision,
+      );
+    }
+
+    this.state = QueueState.Attaching;
+    watcher.emit('connecting', watcher.request);
+    this.stream.write({ create_request: watcher.request });
+  }
+
+  /**
+   * Gets and updates the latest revision in etcd. This is necessary to recover
+   * watchers that have a later revision if etcd data is wiped.
+   */
+  private readRevision(requester: Watcher) {
+    this.state = QueueState.ReadingRevision;
+
+    this.kv
+      .range({
+        key: this.queue[0].request.key,
+        keys_only: true,
+      })
+      .then(res => {
+        this.revision = Number(res.header.revision);
+        this.readQueue();
+      })
+      .catch(err => {
+        // If we got an error here, one of two things happened:
+        //  - the watch is on a key the user doesn't have access to, we should
+        //    throw away the watcher and move to the next one
+        //  - some other stream error occurred... try to bulldoze on but the
+        //    stream is probably about to die (or it may have already died)
+        if (err instanceof EtcdPermissionDeniedError) {
+          requester.emit('error', err);
+          this.queue.shift();
+        } else {
+          this.revision = 0;
+        }
+
+        this.readQueue();
+      });
+  }
 }
 
 /**
@@ -39,7 +164,12 @@ export class WatchManager {
    */
   private expectedClosers = new Set<Watcher>();
 
-  constructor(private readonly client: RPC.WatchClient) {}
+  /**
+   * Queue for attaching watchers. Unique and re-created per stream.
+   */
+  private queue: null | AttachQueue;
+
+  constructor(private readonly client: RPC.WatchClient, private readonly kv: RPC.KVClient) {}
 
   /**
    * Attach registers the watcher on the connection.
@@ -54,7 +184,7 @@ export class WatchManager {
       case State.Connecting:
         break;
       case State.Connected:
-        this.getStream().write({ create_request: watcher.request });
+        this.queue!.attach(watcher);
         break;
       default:
         throw new ClientRuntimeError(`Unknown watcher state ${this.state}`);
@@ -122,10 +252,12 @@ export class WatchManager {
     this.expectedClosers.clear();
 
     this.state = State.Connecting;
+
     this.client
       .watch()
       .then(stream => {
         this.state = State.Connected;
+        this.queue = new AttachQueue(stream, this.kv);
         this.stream = stream
           .on('data', res => this.handleResponse(res))
           .on('error', err => this.handleError(err));
@@ -135,9 +267,7 @@ export class WatchManager {
           return this.destroyStream();
         }
 
-        this.watchers.forEach(watcher => {
-          stream.write({ create_request: watcher.request });
-        });
+        this.queue!.attach(this.watchers);
       })
       .catch(err => this.handleError(err));
   }
@@ -154,6 +284,7 @@ export class WatchManager {
     }
 
     this.getStream().end();
+    this.queue!.destroy();
   }
 
   /**
@@ -162,6 +293,7 @@ export class WatchManager {
    */
   private handleError(err: Error) {
     if (this.state === State.Connected) {
+      this.queue!.destroy();
       this.getStream().end();
     }
     this.state = State.Idle;
@@ -172,22 +304,6 @@ export class WatchManager {
     });
 
     this.establishStream();
-  }
-
-  /**
-   * Handles a create response, assigning the watcher ID to the next pending
-   * watcher.
-   */
-  private handleCreateResponse(res: RPC.IWatchResponse) {
-    // responses are in-order, the response we get will be for the first
-    // watcher that's waiting for its ID.
-    const target = this.watchers.find(watcher => watcher.id === null);
-    if (!target) {
-      throw new ClientRuntimeError('Could not find watcher corresponding to create response');
-    }
-
-    (<{ id: string }>target).id = res.watch_id;
-    target.emit('connected', res);
   }
 
   /**
@@ -218,7 +334,7 @@ export class WatchManager {
    */
   private handleResponse(res: RPC.IWatchResponse) {
     if (res.created) {
-      this.handleCreateResponse(res);
+      this.queue!.handleCreate(res);
       return;
     }
 
@@ -309,15 +425,19 @@ export class WatchBuilder {
   }
 
   /**
+   * watcher() creates but does not connect the watcher. Use create() instead;
+   * this is mostly for testing purposes.
+   * @private
+   */
+  public watcher(): Watcher {
+    return new Watcher(this.manager, this.namespace, this.namespace.applyToRequest(this.request));
+  }
+
+  /**
    * Resolves the watch request into a Watcher, and fires off to etcd.
    */
   public create(): Promise<Watcher> {
-    const watcher = new Watcher(
-      this.manager,
-      this.namespace,
-      this.namespace.applyToRequest(this.request),
-    );
-
+    const watcher = this.watcher();
     return onceEvent(watcher, 'connected').then(() => watcher);
   }
 }
@@ -357,6 +477,11 @@ export class Watcher extends EventEmitter {
       this.request.start_revision = Number(changes.header.revision) + 1;
     });
   }
+
+  /**
+   * connecting is fired when we send a request to etcd to queue this watcher.
+   */
+  public on(event: 'connecting', handler: (req: RPC.IWatchRequest) => void): this;
 
   /**
    * connected is fired after etcd knowledges the watcher is connected.

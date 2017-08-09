@@ -32,7 +32,7 @@ export class Namespace {
   public readonly kv = new RPC.KVClient(this.pool);
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
   public readonly watchClient = new RPC.WatchClient(this.pool);
-  private readonly watchManager = new WatchManager(this.watchClient);
+  private readonly watchManager = new WatchManager(this.watchClient, this.kv);
 
   constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}
   /**

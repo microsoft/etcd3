@@ -51,45 +51,61 @@ describe('watch', () => {
     });
   }
 
-  it('is resilient to network interruptions', async () => {
-    await proxy.activate();
-    const proxiedClient = await createTestClientAndKeys();
+  describe('network interruptions', () => {
+    it('is resilient to network interruptions', async () => {
+      await proxy.activate();
+      const proxiedClient = await createTestClientAndKeys();
 
-    const watcher = await proxiedClient.watch().key('foo1').create();
-    proxy.pause();
-    await onceEvent(watcher, 'disconnected');
-    proxy.resume();
-    await onceEvent(watcher, 'connected');
-    await expectWatching(watcher, 'foo1');
+      const watcher = await proxiedClient.watch().key('foo1').create();
+      proxy.pause();
+      await onceEvent(watcher, 'disconnected');
+      proxy.resume();
+      await onceEvent(watcher, 'connected');
+      await expectWatching(watcher, 'foo1');
 
-    proxiedClient.close();
-    proxy.deactivate();
-  });
-
-  it('replays historical updates.', async () => {
-    await proxy.activate();
-    const proxiedClient = await createTestClientAndKeys();
-
-    const watcher = await proxiedClient.watch().key('foo1').create();
-
-    await Promise.all([
-      client.put('foo1').value('update 1'),
-      onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-        expect(watcher.request.start_revision).to.equal(1 + Number(res.header.revision));
-      }),
-    ]);
-
-    proxy.pause();
-    await onceEvent(watcher, 'disconnected');
-    await client.put('foo1').value('update 2');
-    proxy.resume();
-    await onceEvent(watcher, 'put').then((res: IKeyValue) => {
-      expect(res.key.toString()).to.equal('foo1');
-      expect(res.value.toString()).to.equal('update 2');
+      proxiedClient.close();
+      proxy.deactivate();
     });
 
-    proxiedClient.close();
-    proxy.deactivate();
+    it('replays historical updates', async () => {
+      await proxy.activate();
+      const proxiedClient = await createTestClientAndKeys();
+
+      const watcher = await proxiedClient.watch().key('foo1').create();
+
+      await Promise.all([
+        client.put('foo1').value('update 1'),
+        onceEvent(watcher, 'data').then((res: IWatchResponse) => {
+          expect(watcher.request.start_revision).to.equal(1 + Number(res.header.revision));
+        }),
+      ]);
+
+      proxy.pause();
+      await onceEvent(watcher, 'disconnected');
+      await client.put('foo1').value('update 2');
+      proxy.resume();
+      await onceEvent(watcher, 'put').then((res: IKeyValue) => {
+        expect(res.key.toString()).to.equal('foo1');
+        expect(res.value.toString()).to.equal('update 2');
+      });
+
+      proxiedClient.close();
+      proxy.deactivate();
+    });
+
+    it('caps watchers revisions', async () => {
+      await proxy.activate();
+      const proxiedClient = await createTestClientAndKeys();
+
+      const watcher = await proxiedClient.watch().key('foo1').create();
+      proxy.pause();
+      await onceEvent(watcher, 'disconnected');
+      const actualRevision = Number(watcher.request.start_revision);
+      watcher.request.start_revision = 999999;
+      proxy.resume();
+      await onceEvent(watcher, 'connected');
+      expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+    });
   });
 
   describe('subscription', () => {
@@ -109,6 +125,21 @@ describe('watch', () => {
       ]);
 
       expect(getWatchers()).to.deep.equal(watchers);
+    });
+
+    it('subscribes in series', async () => {
+      const watcher1 = client.watch().key('foo1').watcher();
+      const watcher2 = client.watch().key('bar').watcher();
+      const events: string[] = [];
+
+      watcher1.on('connecting', () => events.push('connecting1'));
+      watcher1.on('connected', () => events.push('connected1'));
+      watcher2.on('connecting', () => events.push('connecting2'));
+      watcher2.on('connected', () => events.push('connected2'));
+
+      await onceEvent(watcher2, 'connected');
+
+      expect(events).to.deep.equal(['connecting1', 'connected1', 'connecting2', 'connected2']);
     });
 
     it('subscribes after the connection is fully established', async () => {
