@@ -57,7 +57,7 @@ export class SharedPool<T> {
       return Promise.resolve(lastChosen.resource);
     }
 
-    const nextAvailable = minBy(available, r => r.availableAfter);
+    const nextAvailable = minBy(this.resources, r => r.availableAfter);
     this.contentionCount++;
 
     return delay(nextAvailable[0].availableAfter - now).then(() => {
