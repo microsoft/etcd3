@@ -33,60 +33,76 @@ export class GRPCInternalError extends GRPCGenericError {}
 
 /**
  * GRPCCancelledError is emitted when an ongoing call is cancelled.
+ * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L48-L49
  */
 export class GRPCCancelledError extends GRPCGenericError {}
 
 /**
+ * Unknown error.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L50-L57
  */
 export class GRPCUnknownError extends GRPCGenericError {}
 
 /**
+ * Client specified an invalid argument.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L58-L64
  */
 export class GRPCInvalidArgumentError extends GRPCGenericError {}
 
 /**
+ * Deadline expired before operation could complete.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L65-L72
  */
 export class GRPCDeadlineExceededError extends GRPCGenericError {}
 
 /**
+ * Some requested entity (e.g., file or directory) was not found.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L73-L74
  */
 export class GRPCNotFoundError extends GRPCGenericError {}
 
 /**
+ * Some entity that we attempted to create (e.g., file or directory) already exists.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L75-L79
  */
 export class GRPCAlreadyExistsError extends GRPCGenericError {}
 
 /**
+ * Some resource has been exhausted, perhaps a per-user quota, or
+ * perhaps the entire file system is out of space.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L89-L93
  */
 export class GRPCResourceExhastedError extends GRPCGenericError {}
 
 /**
+ * Operation was rejected because the system is not in a state
+ * required for the operation's execution.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L94-L116
  */
 export class GRPCFailedPreconditionError extends GRPCGenericError {}
 
 /**
+ * The operation was aborted, typically due to a concurrency issue
+ * like sequencer check failures, transaction aborts, etc.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L117-L124
  */
 export class GRPCAbortedError extends GRPCGenericError {}
 
 /**
+ * Operation is not implemented or not supported/enabled in this service.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L143-L144
  */
 export class GRPCNotImplementedError extends GRPCGenericError {}
 
 /**
+ * Operation was attempted past the valid range.  E.g., seeking or reading
+ * past end of file.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L125-L142
  */
 export class GRPCOutOfRangeError extends GRPCGenericError {}
 
 /**
+ * Unrecoverable data loss or corruption.
  * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L159-L160
  */
 export class GRPCDataLossError extends GRPCGenericError {}

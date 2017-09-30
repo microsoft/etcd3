@@ -23,6 +23,12 @@ const enum QueueState {
   Destroyed,
 }
 
+/**
+ * AttachQueue holds a queue of Watchers waiting to be attached to the server.
+ * Etcd does not guarentee that watchers are attached in order, so to properly
+ * respond to leases and ensure state is consistent, watchers must be attached
+ * one at a time.
+ */
 class AttachQueue {
   private state = QueueState.Idle;
   private queue: Watcher[] = [];

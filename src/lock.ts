@@ -65,13 +65,16 @@ export class Lock {
         .and(this.key, 'Create', '==', 0)
         .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
         .commit()
-        .then(res => {
-          if (!res.succeeded) {
-            this.release();
-            throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
+        .then<this>(res => {
+          if (res.succeeded) {
+            return this;
           }
 
-          return this;
+          return this.release()
+            .catch(() => undefined)
+            .then(() => {
+              throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
+            });
         });
     });
   }
@@ -93,10 +96,13 @@ export class Lock {
    * returns resolves or throws.
    */
   public do<T>(fn: () => T | Promise<T>): Promise<T> {
-    return this.acquire().then(fn).then(value => this.release().then(() => value)).catch(err =>
-      this.release().then(() => {
-        throw err;
-      }),
-    );
+    return this.acquire()
+      .then(fn)
+      .then(value => this.release().then(() => value))
+      .catch(err =>
+        this.release().then(() => {
+          throw err;
+        }),
+      );
   }
 }

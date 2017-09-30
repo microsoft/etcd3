@@ -38,36 +38,6 @@ export class Range {
   }
 
   /**
-   * Returns whether the byte range includes the provided value.
-   */
-  public includes(value: string | Buffer) {
-    value = toBuffer(value);
-    return compare(this.start, value) <= 0 && compare(this.end, value) > 0;
-  }
-
-  /**
-   * Compares the other range to this one, returning:
-   *  -1 if this range comes before the other one
-   *  1 if this range comes after the other one
-   *  0 if they overlap
-   */
-  public compare(other: Range): number {
-    const ivbCmpBegin = compare(this.start, other.start);
-    const ivbCmpEnd = compare(this.start, other.end);
-    const iveCmpBegin = compare(this.end, other.start);
-
-    if (ivbCmpBegin < 0 && iveCmpBegin <= 0) {
-      return -1;
-    }
-
-    if (ivbCmpEnd >= 0) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  /**
    * Prefix returns a Range that maps to all keys
    * prefixed with the provided string.
    */
@@ -96,5 +66,35 @@ export class Range {
     }
 
     return new Range(v.start, v.end);
+  }
+
+  /**
+   * Returns whether the byte range includes the provided value.
+   */
+  public includes(value: string | Buffer) {
+    value = toBuffer(value);
+    return compare(this.start, value) <= 0 && compare(this.end, value) > 0;
+  }
+
+  /**
+   * Compares the other range to this one, returning:
+   *  -1 if this range comes before the other one
+   *  1 if this range comes after the other one
+   *  0 if they overlap
+   */
+  public compare(other: Range): number {
+    const ivbCmpBegin = compare(this.start, other.start);
+    const ivbCmpEnd = compare(this.start, other.end);
+    const iveCmpBegin = compare(this.end, other.start);
+
+    if (ivbCmpBegin < 0 && iveCmpBegin <= 0) {
+      return -1;
+    }
+
+    if (ivbCmpEnd >= 0) {
+      return 1;
+    }
+
+    return 0;
   }
 }

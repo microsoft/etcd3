@@ -56,7 +56,10 @@ describe('watch', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      const watcher = await proxiedClient
+        .watch()
+        .key('foo1')
+        .create();
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       proxy.resume();
@@ -71,7 +74,10 @@ describe('watch', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      const watcher = await proxiedClient
+        .watch()
+        .key('foo1')
+        .create();
 
       await Promise.all([
         client.put('foo1').value('update 1'),
@@ -97,7 +103,10 @@ describe('watch', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      const watcher = await proxiedClient
+        .watch()
+        .key('foo1')
+        .create();
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       const actualRevision = Number(watcher.request.start_revision);
@@ -110,14 +119,23 @@ describe('watch', () => {
 
   describe('subscription', () => {
     it('subscribes before the connection is established', async () => {
-      const watcher = await client.watch().key('foo1').create();
+      const watcher = await client
+        .watch()
+        .key('foo1')
+        .create();
       await expectWatching(watcher, 'foo1');
       expect(getWatchers()).to.deep.equal([watcher]);
     });
 
     it('subscribes while the connection is still being established', async () => {
-      const watcher1 = client.watch().key('foo1').create();
-      const watcher2 = client.watch().key('bar').create();
+      const watcher1 = client
+        .watch()
+        .key('foo1')
+        .create();
+      const watcher2 = client
+        .watch()
+        .key('bar')
+        .create();
 
       const watchers = await Promise.all([
         watcher1.then(w => expectWatching(w, 'foo1')),
@@ -128,8 +146,14 @@ describe('watch', () => {
     });
 
     it('subscribes in series', async () => {
-      const watcher1 = client.watch().key('foo1').watcher();
-      const watcher2 = client.watch().key('bar').watcher();
+      const watcher1 = client
+        .watch()
+        .key('foo1')
+        .watcher();
+      const watcher2 = client
+        .watch()
+        .key('bar')
+        .watcher();
       const events: string[] = [];
 
       watcher1.on('connecting', () => events.push('connecting1'));
@@ -143,9 +167,15 @@ describe('watch', () => {
     });
 
     it('subscribes after the connection is fully established', async () => {
-      const watcher1 = await client.watch().key('foo1').create();
+      const watcher1 = await client
+        .watch()
+        .key('foo1')
+        .create();
       await expectWatching(watcher1, 'foo1');
-      const watcher2 = await client.watch().key('bar').create();
+      const watcher2 = await client
+        .watch()
+        .key('bar')
+        .create();
       await expectWatching(watcher2, 'bar');
       expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
     });
@@ -153,7 +183,10 @@ describe('watch', () => {
 
   describe('unsubscribing', () => {
     it('unsubscribes while the connection is established', async () => {
-      const watcher = await client.watch().key('foo1').create();
+      const watcher = await client
+        .watch()
+        .key('foo1')
+        .create();
       await watcher.cancel();
       await expectNotWatching(watcher, 'foo1');
       expect(getWatchers()).to.deep.equal([]);
@@ -163,7 +196,10 @@ describe('watch', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      const watcher = await proxiedClient
+        .watch()
+        .key('foo1')
+        .create();
       proxy.pause();
       await watcher.cancel();
 

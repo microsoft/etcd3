@@ -4,6 +4,8 @@
  - **bug**: watchers response ack's could be delivered incorrectly when watching keys concurrently ([#33](https://github.com/mixer/etcd3/pull/33), [#30](https://github.com/mixer/etcd3/issues/30)) thanks to [@styleex](https://github.com/styleex)
  - **bug**: watchers not receiving events after reconnection in rare cases ([#33](https://github.com/mixer/etcd3/pull/33), [#31](https://github.com/mixer/etcd3/issues/31)) thanks to [@styleex](https://github.com/styleex)
  - **bug**: error thrown when the connection pool is drain / no servers are available ([#33](https://github.com/mixer/etcd3/pull/33), [#7](https://github.com/mixer/etcd3/issues/7)) thanks to [@SimonSchick](https://github.com/SimonSchick)
+ - **bug**: fix possibly unhandled rejection in the connection pool ([#35](https://github.com/mixer/etcd3/issues/35))
+ - **chore**: update grpc to 1.6, and update development dependencies
 
 ## 0.2.4 2017-08-02
 

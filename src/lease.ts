@@ -77,9 +77,6 @@ export class Lease extends EventEmitter {
 
   private client = new RPC.LeaseClient(this.pool);
   private lastKeepAlive: number;
-  private teardown: () => void = () => {
-    /* noop */
-  };
 
   constructor(
     private readonly pool: ConnectionPool,
@@ -154,7 +151,7 @@ export class Lease extends EventEmitter {
   public keepaliveOnce(): Promise<RPC.ILeaseKeepAliveResponse> {
     return Promise.all([this.client.leaseKeepAlive(), this.grant()]).then(([stream, id]) => {
       return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
-        stream.on('data', res => resolve(res));
+        stream.on('data', resolve);
         stream.on('error', err => reject(castGrpcError(err)));
         stream.write({ ID: id });
       }).then(res => {
@@ -223,6 +220,10 @@ export class Lease extends EventEmitter {
     return super.on(event, handler);
   }
 
+  private teardown: () => void = () => {
+    /* noop */
+  };
+
   /**
    * Tears down resources associated with the lease.
    */
@@ -278,7 +279,9 @@ export class Lease extends EventEmitter {
 
   private fireKeepAlive(stream: RPC.IRequestStream<RPC.ILeaseKeepAliveRequest>) {
     this.emit('keepaliveFired');
-    this.grant().then(id => stream.write({ ID: id })).catch(() => this.close()); // will only throw if the initial grant failed
+    this.grant()
+      .then(id => stream.write({ ID: id }))
+      .catch(() => this.close()); // will only throw if the initial grant failed
   }
 
   private handleKeepaliveError(err: Error) {

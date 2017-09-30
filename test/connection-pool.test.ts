@@ -12,8 +12,8 @@ function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
 }
 
 describe('connection pool', () => {
-  const key = new Buffer('foo');
-  const value = new Buffer('bar');
+  const key = Buffer.from('foo');
+  const value = Buffer.from('bar');
   let pool: ConnectionPool | null;
 
   afterEach(() => {

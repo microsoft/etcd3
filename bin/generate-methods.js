@@ -86,7 +86,11 @@ function template(name, params) {
     aliases: pbTypeAliases,
   });
 
-  emit(templates[name](params).replace(/^\-\- *\n/gm, '').replace(/^\-\-/gm, ''));
+  emit(
+    templates[name](params)
+      .replace(/^\-\- *\n/gm, '')
+      .replace(/^\-\-/gm, '')
+  );
 }
 
 function stripPackageNameFrom(name) {

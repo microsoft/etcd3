@@ -41,7 +41,10 @@ describe('lock()', () => {
   });
 
   it('allows setting lock TTL before acquiring', async () => {
-    const lock = await client.lock('resource').ttl(10).acquire();
+    const lock = await client
+      .lock('resource')
+      .ttl(10)
+      .acquire();
     await lock.release();
   });
 

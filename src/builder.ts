@@ -117,18 +117,11 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
 /**
  * SingleRangeBuilder is a query builder that looks up a single key.
  */
-export class SingleRangeBuilder extends RangeBuilder<string> {
+export class SingleRangeBuilder extends RangeBuilder<string | null> {
   constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator, key: string | Buffer) {
     super(namespace);
     this.request.key = toBuffer(key);
     this.request.limit = 1;
-  }
-
-  /**
-   * @override
-   */
-  protected createPromise(): Promise<string> {
-    return this.string();
   }
 
   /**
@@ -162,6 +155,13 @@ export class SingleRangeBuilder extends RangeBuilder<string> {
    */
   public exec(): Promise<RPC.IRangeResponse> {
     return this.kv.range(this.namespace.applyToRequest(this.request));
+  }
+
+  /**
+   * @override
+   */
+  protected createPromise(): Promise<string | null> {
+    return this.string();
   }
 }
 

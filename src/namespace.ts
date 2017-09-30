@@ -28,10 +28,10 @@ import { WatchBuilder, WatchManager } from './watch';
  * applications and when using Etcd's access control.
  */
 export class Namespace {
-  private readonly nsApplicator = new NSApplicator(this.prefix);
   public readonly kv = new RPC.KVClient(this.pool);
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
   public readonly watchClient = new RPC.WatchClient(this.pool);
+  private readonly nsApplicator = new NSApplicator(this.prefix);
   private readonly watchManager = new WatchManager(this.watchClient, this.kv);
 
   constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}

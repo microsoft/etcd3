@@ -131,7 +131,7 @@ describe('roles and auth', () => {
       // We need to set up a root user and root role first, otherwise etcd
       // will yell at us.
       const rootUser = await client.user('root').create('password');
-      rootUser.addRole('root');
+      await rootUser.addRole('root');
 
       await client.user('connor').create('password');
 
@@ -185,7 +185,13 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expectReject(authedClient.put('wut').value('bar').exec(), EtcdPermissionDeniedError);
+      await expectReject(
+        authedClient
+          .put('wut')
+          .value('bar')
+          .exec(),
+        EtcdPermissionDeniedError,
+      );
 
       authedClient.close();
     });
@@ -201,7 +207,10 @@ describe('roles and auth', () => {
       );
 
       await expectReject(
-        authedClient.put('foo').value('bar').exec(),
+        authedClient
+          .put('foo')
+          .value('bar')
+          .exec(),
         EtcdAuthenticationFailedError,
       );
 

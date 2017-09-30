@@ -118,6 +118,11 @@ class Authenticator {
   }
 }
 
+/**
+ * A Host is one instance of the etcd server, which can contain multiple
+ * services. It holds GRPC clients to communicate with the host, and will
+ * be removed from the connection pool upon server failures.
+ */
 export class Host {
   private readonly host: string;
   private cachedServices: {
@@ -152,7 +157,7 @@ export class Host {
    */
   public close() {
     forOwn(this.cachedServices, (service: Promise<grpc.Client>) => {
-      service.then(c => grpc.closeClient(c));
+      service.then(c => grpc.closeClient(c)).catch(() => undefined);
     });
 
     this.cachedServices = Object.create(null);
@@ -229,7 +234,7 @@ export class ConnectionPool implements ICallable {
     service: keyof typeof Services,
   ): Promise<{ host: Host; client: grpc.Client }> {
     if (this.mockImpl) {
-      return this.mockImpl.getConnection(service);
+      return <any>this.mockImpl.getConnection(service);
     }
 
     return this.pool.pull().then(host => {

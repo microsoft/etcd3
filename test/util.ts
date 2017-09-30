@@ -17,7 +17,7 @@ const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
  */
 export class Proxy {
   public isActive = false;
-  public connections: { end: () => void }[] = [];
+  public connections: { end(): void }[] = [];
   private server: tls.Server;
   private host: string;
   private port: number;

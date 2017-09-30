@@ -137,7 +137,7 @@ export function sample<T>(items: T[]): T {
  * Returns a promise that resolves after a certain amount of time.
  */
 export function delay(duration: number): Promise<void> {
-  return new Promise<void>(resolve => setTimeout(() => resolve(), duration));
+  return new Promise<void>(resolve => setTimeout(resolve, duration));
 }
 
 /**
@@ -184,11 +184,6 @@ export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<a
  */
 export abstract class PromiseWrap<T> implements PromiseLike<T> {
   /**
-   * createPromise should ben override to run the promised action.
-   */
-  protected abstract createPromise(): Promise<T>;
-
-  /**
    * then implements Promiselike.then()
    */
   public then<R, V>(
@@ -201,7 +196,12 @@ export abstract class PromiseWrap<T> implements PromiseLike<T> {
   /**
    * catch implements Promiselike.catch()
    */
-  public catch<R>(onRejected: (err: any) => R | Promise<R>): Promise<R> {
+  public catch<R>(onRejected: (err: any) => R | Promise<R>): Promise<T | R> {
     return this.createPromise().catch(onRejected);
   }
+
+  /**
+   * createPromise should ben override to run the promised action.
+   */
+  protected abstract createPromise(): Promise<T>;
 }

@@ -11,7 +11,7 @@
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
     "build:doc": "rm -rf docs && typedoc --gitRevision `git describe --abbrev=0 --tags` --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc && cp -R proto lib",
-    "fmt": "npm-run-all --parallel fmt:ts fmt:js",
+    "fmt": "npm-run-all --parallel fmt:ts fmt:js && npm run -s test:lint -- --fix",
     "fmt:js": "prettier --single-quote --trailing-comma es5 --write --print-width 100 \"bin/*.js\"",
     "fmt:ts": "prettier --single-quote --trailing-comma all --parser typescript --print-width 100 --write \"{src,test}/**/*.ts\"",
     "prepublish": "npm run -s build:ts"
@@ -50,13 +50,13 @@
     "prettier": "^1.4.4",
     "protobufjs": "^6.7.3",
     "sinon": "^2.1.0",
-    "ts-node": "^3.0.2",
-    "tslint": "^4.0.0",
-    "tslint-microsoft-contrib": "4.0.0",
+    "ts-node": "^3.3.0",
+    "tslint": "^5.7.0",
+    "tslint-microsoft-contrib": "^5.0.1",
     "typedoc": "^0.7.1",
-    "typescript": "2.3.0"
+    "typescript": "^2.5.2"
   },
   "dependencies": {
-    "grpc": "^1.4.1"
+    "grpc": "^1.6.0"
   }
 }

@@ -24,6 +24,7 @@ export interface IExponentialOptions {
 }
 
 /**
+ * ExponentialBackoff implements a random exponential backoff strategy.
  * @see https://en.wikipedia.org/wiki/Exponential_backoff
  */
 export class ExponentialBackoff implements IBackoffStrategy {

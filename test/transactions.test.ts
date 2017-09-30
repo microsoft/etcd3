@@ -10,7 +10,10 @@ describe('transactions', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   it('runs a simple if', async () => {
-    await client.if('foo1', 'Value', '==', 'bar1').then(client.put('foo1').value('bar2')).commit();
+    await client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(client.put('foo1').value('bar2'))
+      .commit();
 
     expect(await client.get('foo1').string()).to.equal('bar2');
   });
