@@ -1,4 +1,4 @@
-### 0.2.5 TBA
+### 0.2.5 2017-09-30
 
  - **feature**: allow passing GRPC options to the client constructor ([#36](https://github.com/mixer/etcd3/issues/36))
  - **bug**: watchers response ack's could be delivered incorrectly when watching keys concurrently ([#33](https://github.com/mixer/etcd3/pull/33), [#30](https://github.com/mixer/etcd3/issues/30)) thanks to [@styleex](https://github.com/styleex)
