@@ -124,7 +124,11 @@ export class Host {
     [name in keyof typeof Services]?: Promise<grpc.Client>
   } = Object.create(null);
 
-  constructor(host: string, private channelCredentials: Promise<grpc.ChannelCredentials>) {
+  constructor(
+    host: string,
+    private readonly channelCredentials: Promise<grpc.ChannelCredentials>,
+    private readonly channelOptions?: grpc.ChannelOptions,
+  ) {
     this.host = removeProtocolPrefix(host);
   }
 
@@ -138,7 +142,7 @@ export class Host {
     }
 
     return this.channelCredentials.then(credentials => {
-      return new services.etcdserverpb[name](this.host, credentials);
+      return new services.etcdserverpb[name](this.host, credentials, this.channelOptions);
     });
   }
 
@@ -238,10 +242,10 @@ export class ConnectionPool implements ICallable {
    */
   private seedHosts() {
     const credentials = this.buildAuthentication();
-    const { hosts } = this.options;
+    const { hosts, grpcOptions } = this.options;
 
     if (typeof hosts === 'string') {
-      this.pool.add(new Host(hosts, credentials));
+      this.pool.add(new Host(hosts, credentials, grpcOptions));
       return;
     }
 
@@ -249,7 +253,7 @@ export class ConnectionPool implements ICallable {
       throw new Error('Cannot construct an etcd client with no hosts specified');
     }
 
-    hosts.forEach(host => this.pool.add(new Host(host, credentials)));
+    hosts.forEach(host => this.pool.add(new Host(host, credentials, grpcOptions)));
   }
 
   /**

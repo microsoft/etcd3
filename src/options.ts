@@ -1,3 +1,5 @@
+import { ChannelOptions } from 'grpc';
+
 import { IBackoffStrategy } from './backoff/backoff';
 
 /**
@@ -17,6 +19,22 @@ export interface IOptions {
     privateKey?: Buffer;
     certChain?: Buffer;
   };
+
+  /**
+   * Internal options to configure the GRPC client. These are channel options
+   * as enumerated in their [C++ documentation](https://grpc.io/grpc/cpp/group__grpc__arg__keys.html).
+   * For example:
+   *
+   * ```js
+   * const etcd = new Etcd3({
+   *   // ...
+   *   grpcOptions: {
+   *     'grpc.http2.max_ping_strikes': 3,
+   *   },
+   * })
+   * ```
+   */
+  grpcOptions?: ChannelOptions;
 
   /**
    * Etcd password auth, if using.

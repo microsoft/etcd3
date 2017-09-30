@@ -1,5 +1,6 @@
 ### 0.2.5 TBA
 
+ - **feature**: allow passing GRPC options to the client constructor ([#36](https://github.com/mixer/etcd3/issues/36))
  - **bug**: watchers response ack's could be delivered incorrectly when watching keys concurrently ([#33](https://github.com/mixer/etcd3/pull/33), [#30](https://github.com/mixer/etcd3/issues/30)) thanks to [@styleex](https://github.com/styleex)
  - **bug**: watchers not receiving events after reconnection in rare cases ([#33](https://github.com/mixer/etcd3/pull/33), [#31](https://github.com/mixer/etcd3/issues/31)) thanks to [@styleex](https://github.com/styleex)
  - **bug**: error thrown when the connection pool is drain / no servers are available ([#33](https://github.com/mixer/etcd3/pull/33), [#7](https://github.com/mixer/etcd3/issues/7)) thanks to [@SimonSchick](https://github.com/SimonSchick)
