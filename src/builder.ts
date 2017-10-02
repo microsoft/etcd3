@@ -143,6 +143,14 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
   }
 
   /**
+   * Runs the built request, and returns the value parsed as a number. Resolves
+   * as NaN if the value can't be parsed as a number.
+   */
+  public number(): Promise<number | null> {
+    return this.string().then(value => (value === null ? null : Number(value)));
+  }
+
+  /**
    * Runs the built request and returns the value of the returned key as a
    * buffer, or `null` if it isn't found.
    */
@@ -259,6 +267,14 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public strings(encoding: string = 'utf8'): Promise<{ [key: string]: string }> {
     return this.mapValues(buf => buf.toString(encoding));
+  }
+
+  /**
+   * Runs the built request and returns the values of keys as numbers. May
+   * resolve to NaN if the keys do not contain numbers.
+   */
+  public numbers(): Promise<{ [key: string]: number }> {
+    return this.mapValues(buf => Number(buf.toString()));
   }
 
   /**
@@ -408,7 +424,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   /**
    * value sets the value that will be stored in the key.
    */
-  public value(value: string | Buffer): this {
+  public value(value: string | Buffer | number): this {
     this.request.value = toBuffer(value);
     return this;
   }
@@ -520,7 +536,7 @@ export class ComparatorBuilder {
       key: this.namespace.applyKey(toBuffer(key)),
       result: comparator[cmp],
       target: RPC.CompareTarget[column],
-      [compareTarget[column]]: typeof value === 'number' ? value : toBuffer(value),
+      [compareTarget[column]]: value,
     });
     return this;
   }
@@ -529,8 +545,8 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is truthy.
    */
-  public then(...clauses: IOperation[]): this {
-    this.request.success = clauses.map(clause => clause.op());
+  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
+    this.request.success = this.mapOperations(clauses);
     return this;
   }
 
@@ -538,8 +554,8 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is falsey.
    */
-  public else(...clauses: IOperation[]): this {
-    this.request.failure = clauses.map(clause => clause.op());
+  public else(...clauses: (RPC.IRequestOp | IOperation)[]): this {
+    this.request.failure = this.mapOperations(clauses);
     return this;
   }
 
@@ -548,5 +564,18 @@ export class ComparatorBuilder {
    */
   public commit(): Promise<RPC.ITxnResponse> {
     return this.kv.txn(this.request);
+  }
+
+  /**
+   * Low-level method to add
+   */
+  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]): RPC.IRequestOp[] {
+    return ops.map(op => {
+      if (typeof (<IOperation>op).op === 'function') {
+        return (<IOperation>op).op();
+      }
+
+      return <RPC.IRequestOp>op;
+    });
   }
 }

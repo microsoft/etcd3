@@ -8,9 +8,12 @@ export const emptyKey = Buffer.from([]);
 /**
  * Converts the input to a buffer, if it is not already.
  */
-export function toBuffer(input: string | Buffer): Buffer {
+export function toBuffer(input: string | Buffer | number): Buffer {
   if (input instanceof Buffer) {
     return input;
+  }
+  if (typeof input === 'number') {
+    input = String(input);
   }
 
   return Buffer.from(input);

@@ -4,6 +4,7 @@ import { Lease } from './lease';
 import { Lock } from './lock';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
+import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
 import { NSApplicator, toBuffer } from './util';
 import { WatchBuilder, WatchManager } from './watch';
 
@@ -35,6 +36,7 @@ export class Namespace {
   private readonly watchManager = new WatchManager(this.watchClient, this.kv);
 
   constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}
+
   /**
    * `.get()` starts a query to look up a single key from etcd.
    */
@@ -78,6 +80,24 @@ export class Namespace {
    */
   public lock(key: string | Buffer): Lock {
     return new Lock(this.pool, this.nsApplicator, key);
+  }
+
+  /**
+   * `stm()` creates a new software transaction, see more details about how
+   * this works and why you might find this useful
+   * on the SoftwareTransaction class.
+   */
+  public stm(options?: Partial<ISTMOptions>): SoftwareTransaction {
+    return new SoftwareTransaction(
+      {
+        isolation: Isolation.SerializableSnapshot,
+        prefetch: [],
+        retries: 3,
+        ...options,
+      },
+      this.nsApplicator,
+      this.kv,
+    );
   }
 
   /**
