@@ -173,6 +173,17 @@ export class EtcdAuthenticationFailedError extends Error {}
  */
 export class EtcdPermissionDeniedError extends Error {}
 
+/**
+ * An STMConflictError is thrown from the `SoftwareTransaction.transact`
+ * if we continue to get conflicts and exceed the maximum number
+ * of retries.
+ */
+export class STMConflictError extends Error {
+  constructor() {
+    super('A conflict occurred executing the software transaction');
+  }
+}
+
 interface IErrorCtor {
   new (message: string): Error;
 }
