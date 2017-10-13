@@ -1,5 +1,9 @@
 import * as grpc from 'grpc';
 
+/**
+ * A singleton to set a token and put it inside a grpc.Metadata object.
+ * Before calls, the metadata object will be asked and pass to the exec function.
+ */
 export class SimpleToken {
 
     private static _instance: SimpleToken;

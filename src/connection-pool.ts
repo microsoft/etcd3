@@ -87,7 +87,7 @@ class Authenticator {
               original,
               this.createMetadataAugmenter(token),
             );
-          } catch(e) {
+          } catch (e) {
             // The the token in meta of the singleton
             SimpleToken.Instance.setToken(token);
 
