@@ -5,6 +5,7 @@ import { castGrpcError, GRPCGenericError } from './errors';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
+import { SimpleToken } from './simple-token';
 import { forOwn } from './util';
 
 const services = grpc.load(`${__dirname}/../proto/rpc.proto`);
@@ -30,8 +31,9 @@ function removeProtocolPrefix(name: string) {
  * into a Promise.
  */
 function runServiceCall(client: grpc.Client, method: string, payload: object): Promise<any> {
+  const metadata: grpc.Metadata = SimpleToken.Instance.metadata;
   return new Promise((resolve, reject) => {
-    (<any>client)[method](payload, (err: Error | null, res: any) => {
+    (<any>client)[method](payload, metadata, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -80,10 +82,18 @@ class Authenticator {
       return this.getCredentialsFromHost(host, auth.username, auth.password, original)
         .then(token => {
           this.awaitingToken = null;
-          return grpc.credentials.combineChannelCredentials(
-            original,
-            this.createMetadataAugmenter(token),
-          );
+          try {
+            return grpc.credentials.combineChannelCredentials(
+              original,
+              this.createMetadataAugmenter(token),
+            );
+          } catch(e) {
+            // The the token in meta of the singleton
+            SimpleToken.Instance.setToken(token);
+
+            // If we have an insecure connection but a name/password auth, we just return the channel
+            return original;
+          }
         })
         .catch(err => attempt(index + 1, err));
     };
@@ -276,11 +286,6 @@ export class ConnectionPool implements ICallable {
       );
     } else if (this.hasSecureHost()) {
       protocolCredentials = grpc.credentials.createSsl();
-    } else if (this.options.auth) {
-      throw new Error(
-        'grpc does not allow you to use password authentication without connecting ' +
-          'over SSL. See how to set up etcd with ssl here: https://git.io/v7uhX',
-      );
     }
 
     return this.authenticator.augmentCredentials(protocolCredentials);
