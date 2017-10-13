@@ -45,21 +45,6 @@ describe('connection pool', () => {
     ).to.throw(/mix of secure and insecure hosts/);
   });
 
-  it('rejects passing a password with insecure hosts', () => {
-    // Some people opened issues about this, so rather than letting grpc throw
-    // its cryptic error, let's make sure we throw a nicer one.
-    expect(
-      () =>
-        new ConnectionPool(
-          getOptions({
-            hosts: 'http://server1', // tslint:disable-line
-            credentials: undefined,
-            auth: { username: 'connor', password: 'password' },
-          }),
-        ),
-    ).to.throw(/grpc does not allow/);
-  });
-
   it('rejects hitting invalid hosts', () => {
     pool = new ConnectionPool(getOptionsWithBadHost());
     const kv = new KVClient(pool);
