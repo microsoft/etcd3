@@ -19,6 +19,7 @@
       "node_modules/@types"
     ],
     "types": [
+      "chai-as-promised",
       "chai-subset",
       "mocha",
       "node"

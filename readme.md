@@ -1,6 +1,6 @@
 # etcd3 [![Build Status](https://travis-ci.org/mixer/etcd3.svg?branch=master)](https://travis-ci.org/mixer/etcd3)
 
-etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes load balancing, reconnections, transactions, software transactional memory, high-level query builders and lease management, mocking, and is type-safe for TypeScript consumers.
+etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://mixer.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://mixer.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://mixer.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://mixer.github.io/etcd3/classes/index_.etcd3.html#stm), [high-level query builders](https://mixer.github.io/etcd3/classes/index_.etcd3.html#delete) and [lease management](https://mixer.github.io/etcd3/classes/lease_.lease.html), [watchers](https://mixer.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://mixer.github.io/etcd3/classes/index_.etcd3.html#mock), and is type-safe for TypeScript consumers.
 
 ### Quickstart
 
