@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
 
 import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '../src';
@@ -28,8 +29,15 @@ describe('watch', () => {
     return Promise.all([
       client.put(key).value('updated!'),
       onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).to.equal(key);
-        expect(res.value.toString()).to.equal('updated!');
+        try {
+          expect(res.key.toString()).to.equal(key);
+          expect(res.value.toString()).to.equal('updated!');
+        } catch (e) {
+          // todo(connor4312): temp debug logic for an intermittent failure in this test
+          // tslint:disable-next-line
+          console.log(JSON.stringify([watcher.request, res]));
+          throw e;
+        }
       }),
     ]).then(() => watcher);
   }
@@ -60,6 +68,7 @@ describe('watch', () => {
         .watch()
         .key('foo1')
         .create();
+
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       proxy.resume();
@@ -82,7 +91,9 @@ describe('watch', () => {
       await Promise.all([
         client.put('foo1').value('update 1'),
         onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-          expect(watcher.request.start_revision).to.equal(1 + Number(res.header.revision));
+          expect(watcher.request.start_revision).to.equal(
+            new BigNumber(res.header.revision).add(1).toString(),
+          );
         }),
       ]);
 
