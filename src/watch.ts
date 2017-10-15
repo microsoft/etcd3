@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
 import {
@@ -476,12 +477,10 @@ export class Watcher extends EventEmitter {
         this.emit(ev.type.toLowerCase(), ev.kv, ev.prev_kv);
       });
 
-      this.request.start_revision = Number(changes.header.revision) + 1;
+      this.updateRevision(changes);
     });
 
-    this.on('connected', changes => {
-      this.request.start_revision = Number(changes.header.revision) + 1;
-    });
+    this.on('connected', changes => this.updateRevision(changes));
   }
 
   /**
@@ -555,5 +554,12 @@ export class Watcher extends EventEmitter {
    */
   public cancel(): Promise<void> {
     return this.manager.detach(this);
+  }
+
+  /**
+   * Updates the current revision based on the revision in the watch header.
+   */
+  private updateRevision(req: RPC.IWatchResponse) {
+    this.request.start_revision = new BigNumber(req.header.revision).add(1).toString();
   }
 }
