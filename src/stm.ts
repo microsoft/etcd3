@@ -110,14 +110,6 @@ class ReadSet {
   }
 
   /**
-   * injectKeyValue manually inserts the value as the find response
-   * when looking up the given key.
-   */
-  public injectKeyValue(key: string, value?: Buffer) {
-    this.reads[key] = Promise.resolve(keyValueToResponse(key, value));
-  }
-
-  /**
    * runRequest sets read options and executes the outgoing request.
    */
   public runRequest(kv: RPC.KVClient, req: RPC.IRangeRequest): Promise<RPC.IRangeResponse> {
@@ -127,8 +119,12 @@ class ReadSet {
     }
 
     const promise = kv.range(req).then(res => {
-      this.earliestMod = BigNumber.min(new BigNumber(res.kvs[0].mod_revision), this.earliestMod);
       this.completedReads.push({ key: req.key!, res });
+
+      if (res.kvs.length > 0) {
+        this.earliestMod = BigNumber.min(new BigNumber(res.kvs[0].mod_revision), this.earliestMod);
+      }
+
       return res;
     });
 
@@ -239,6 +235,7 @@ class WriteSet {
    * Inserts a put operation into the set.
    */
   public addPut(put: RPC.IPutRequest) {
+    this.purgeExistingOperationOn(put.key!);
     this.ops.push({ op: WriteKind.Write, req: put });
   }
 
@@ -249,7 +246,20 @@ class WriteSet {
     if (req.range_end) {
       this.ops.push({ req, op: WriteKind.DeleteRange, range: new Range(req.key!, req.range_end) });
     } else {
+      this.purgeExistingOperationOn(req.key!);
       this.ops.push({ req, op: WriteKind.DeleteKey, key: req.key! });
+    }
+  }
+
+  private purgeExistingOperationOn(key: Buffer) {
+    for (let i = 0; i < this.ops.length; i++) {
+      const { op, req } = this.ops[i];
+      if (op === WriteKind.Write || op === WriteKind.DeleteKey) {
+        if (req.key!.equals(key)) {
+          this.ops.splice(i, 1);
+          break;
+        }
+      }
     }
   }
 }
@@ -284,7 +294,7 @@ class BasicTransaction {
    * Schedules the put request in the writeSet.
    */
   public put(req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
-    this.assertNoOption('put', req, 'lease', 'prev_kv');
+    this.assertNoOption('put', req, ['lease', 'prev_kv']);
     this.writeSet.addPut(req);
     return Promise.resolve(<any>{});
   }
@@ -293,7 +303,7 @@ class BasicTransaction {
    * Schedules the put request in the writeSet.
    */
   public deleteRange(req: RPC.IDeleteRangeRequest): Promise<RPC.IDeleteRangeResponse> {
-    this.assertNoOption('delete', req, 'prev_kv');
+    this.assertNoOption('delete', req, ['prev_kv']);
     this.writeSet.addDeletion(req);
     return Promise.resolve({
       header: <any>undefined,
@@ -303,18 +313,17 @@ class BasicTransaction {
   }
 
   protected assertReadInvariants(range: RPC.IRangeRequest) {
-    this.assertNoOption(
-      'read',
-      range,
+    this.assertNoOption('read', range, [
       'revision',
+      'range_end',
       'min_mod_revision',
       'max_mod_revision',
       'min_create_revision',
       'max_create_revision',
-    );
+    ]);
   }
 
-  protected assertNoOption<T>(req: string, obj: T, ...keys: (keyof T)[]) {
+  protected assertNoOption<T>(req: string, obj: T, keys: (keyof T)[]) {
     keys.forEach(key => {
       if (obj[key] !== undefined) {
         throw new Error(`"${key}" is not supported in ${req} requests within STM transactions`);
@@ -343,16 +352,6 @@ class SerializableTransaction extends BasicTransaction {
    */
   public range(kv: RPC.KVClient, req: RPC.IRangeRequest): Promise<RPC.IRangeResponse> {
     this.assertReadInvariants(req);
-
-    this.assertNoOption(
-      'read',
-      req,
-      'revision',
-      'min_mod_revision',
-      'max_mod_revision',
-      'min_create_revision',
-      'max_create_revision',
-    );
 
     const existingWrite = this.writeSet.findExistingWrite(req.key!);
     if (existingWrite !== null) {

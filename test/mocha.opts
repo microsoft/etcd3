@@ -1,0 +1,4 @@
+--compilers ts:ts-node/register
+--timeout 20000
+--require test/_setup.ts
+test/*.test.ts

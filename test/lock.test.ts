@@ -10,13 +10,9 @@ describe('lock()', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   const assertCantLock = () => {
-    return client
-      .lock('resource')
-      .acquire()
-      .then(() => {
-        throw new Error('expected to throw');
-      })
-      .catch(err => expect(err).to.be.an.instanceof(EtcdLockFailedError));
+    return expect(client.lock('resource').acquire()).to.eventually.be.rejectedWith(
+      EtcdLockFailedError,
+    );
   };
 
   const assertAbleToLock = async () => {
