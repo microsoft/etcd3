@@ -1,7 +1,7 @@
 import * as grpc from 'grpc';
 
 import { ExponentialBackoff } from './backoff/exponential';
-import { castGrpcError, GRPCGenericError } from './errors';
+import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
@@ -213,6 +213,11 @@ export class ConnectionPool implements ICallable {
           return res;
         })
         .catch(err => {
+          if (err instanceof EtcdInvalidAuthTokenError) {
+            this.authenticator.invalidateMetadata();
+            return this.exec(serviceName, method, payload);
+          }
+
           if (err instanceof GRPCGenericError) {
             this.pool.fail(host);
             host.close();
@@ -234,7 +239,10 @@ export class ConnectionPool implements ICallable {
     service: keyof typeof Services,
   ): Promise<{ host: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
-      return <any>this.mockImpl.getConnection(service);
+      return {
+        metadata: new grpc.Metadata(),
+        ...(<any>this.mockImpl.getConnection(service)),
+      };
     }
 
     return Promise.all([

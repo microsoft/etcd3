@@ -164,6 +164,12 @@ export class EtcdLockFailedError extends Error {}
 export class EtcdAuthenticationFailedError extends Error {}
 
 /**
+ * EtcdInvalidAuthTokenError is thrown when an invalid or expired authentication
+ * token is presented.
+ */
+export class EtcdInvalidAuthTokenError extends Error {}
+
+/**
  * EtcdPermissionDeniedError is thrown when the user attempts to modify a key
  * that they don't have access to.
  *
@@ -212,6 +218,7 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['etcdserver: user name not found', EtcdUserNotFoundError],
   ['etcdserver: authentication failed, invalid user ID or password', EtcdAuthenticationFailedError],
   ['etcdserver: permission denied', EtcdPermissionDeniedError],
+  ['etcdserver: invalid auth token', EtcdInvalidAuthTokenError],
 ]);
 
 function getMatchingGrpcError(message: string): IErrorCtor | null {

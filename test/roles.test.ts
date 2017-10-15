@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as grpc from 'grpc';
 
 import {
   Etcd3,
@@ -215,6 +216,27 @@ describe('roles and auth', () => {
       );
 
       authedClient.close();
+    });
+
+    it('automatically retrieves a new token if the existing one is invalid', async () => {
+      const authedClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'connor',
+            password: 'password',
+          },
+        }),
+      );
+      const auth = (<any>authedClient).pool.authenticator;
+      const badMeta = new grpc.Metadata();
+      badMeta.add('token', 'lol');
+      auth.awaitingMetadata = Promise.resolve(badMeta);
+
+      await authedClient.put('foo').value('bar'); // should retry and not throw
+      authedClient.close();
+
+      const updatedMeta: grpc.Metadata = await auth.awaitingMetadata;
+      expect(updatedMeta.get('token')).to.not.deep.equal(badMeta.get('token'));
     });
   });
 });
