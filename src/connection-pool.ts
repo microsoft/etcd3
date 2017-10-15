@@ -5,7 +5,6 @@ import { castGrpcError, GRPCGenericError } from './errors';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
-import { SimpleToken } from './simple-token';
 import { forOwn } from './util';
 
 const services = grpc.load(`${__dirname}/../proto/rpc.proto`);
@@ -30,8 +29,12 @@ function removeProtocolPrefix(name: string) {
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
  */
-function runServiceCall(client: grpc.Client, method: string, payload: object): Promise<any> {
-  const metadata: grpc.Metadata = SimpleToken.Instance.metadata;
+function runServiceCall(
+  client: grpc.Client,
+  metadata: grpc.Metadata,
+  method: string,
+  payload: object,
+): Promise<any> {
   return new Promise((resolve, reject) => {
     (<any>client)[method](payload, metadata, (err: Error | null, res: any) => {
       if (err) {
@@ -48,17 +51,27 @@ function runServiceCall(client: grpc.Client, method: string, payload: object): P
  * based on the algorithm in {@link https://git.io/vHzwh}.
  */
 class Authenticator {
-  private awaitingToken: Promise<grpc.ChannelCredentials> | null = null;
+  private awaitingMetadata: Promise<grpc.Metadata> | null = null;
 
-  constructor(private options: IOptions) {}
+  constructor(
+    private readonly options: IOptions,
+    private readonly credentials: grpc.ChannelCredentials,
+  ) {}
 
   /**
-   * Augments the call credentials with the configured username and password,
-   * if any.
+   * Invalides the cached metadata. Clients should call this if they detect
+   * that the authentication is no longer valid.
    */
-  public augmentCredentials(original: grpc.ChannelCredentials): Promise<grpc.ChannelCredentials> {
-    if (this.awaitingToken !== null) {
-      return this.awaitingToken;
+  public invalidateMetadata(): void {
+    this.awaitingMetadata = null;
+  }
+
+  /**
+   * Returns metadata used to make a call to etcd.
+   */
+  public getMetadata(): Promise<grpc.Metadata> {
+    if (this.awaitingMetadata !== null) {
+      return this.awaitingMetadata;
     }
 
     const hosts =
@@ -66,39 +79,26 @@ class Authenticator {
     const auth = this.options.auth;
 
     if (!auth) {
-      return Promise.resolve(original);
+      return Promise.resolve(new grpc.Metadata());
     }
 
-    const attempt = (
-      index: number,
-      previousRejection?: Error,
-    ): Promise<grpc.ChannelCredentials> => {
+    const attempt = (index: number, previousRejection?: Error): Promise<grpc.Metadata> => {
       if (index >= hosts.length) {
-        this.awaitingToken = null;
+        this.awaitingMetadata = null;
         return Promise.reject(previousRejection);
       }
 
+      const meta = new grpc.Metadata();
       const host = removeProtocolPrefix(hosts[index]);
-      return this.getCredentialsFromHost(host, auth.username, auth.password, original)
+      return this.getCredentialsFromHost(host, auth.username, auth.password, this.credentials)
         .then(token => {
-          this.awaitingToken = null;
-          try {
-            return grpc.credentials.combineChannelCredentials(
-              original,
-              this.createMetadataAugmenter(token),
-            );
-          } catch (e) {
-            // The the token in meta of the singleton
-            SimpleToken.Instance.setToken(token);
-
-            // If we have an insecure connection but a name/password auth, we just return the channel
-            return original;
-          }
+          meta.set('token', token);
+          return meta;
         })
         .catch(err => attempt(index + 1, err));
     };
 
-    return (this.awaitingToken = attempt(0));
+    return (this.awaitingMetadata = attempt(0));
   }
 
   /**
@@ -110,21 +110,12 @@ class Authenticator {
     password: string,
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
-    return runServiceCall(new services.etcdserverpb.Auth(address, credentials), 'authenticate', {
-      name,
-      password,
-    }).then(res => res.token);
-  }
-
-  /**
-   * Creates a metadata generator that adds the auth token to grpc calls.
-   */
-  private createMetadataAugmenter(token: string): grpc.ChannelCredentials {
-    return grpc.credentials.createFromMetadataGenerator((_ctx, callback) => {
-      const metadata = new grpc.Metadata();
-      metadata.add('token', token);
-      callback(null, metadata);
-    });
+    return runServiceCall(
+      new services.etcdserverpb.Auth(address, credentials),
+      new grpc.Metadata(),
+      'authenticate',
+      { name, password },
+    ).then(res => res.token);
   }
 }
 
@@ -135,13 +126,11 @@ class Authenticator {
  */
 export class Host {
   private readonly host: string;
-  private cachedServices: {
-    [name in keyof typeof Services]?: Promise<grpc.Client>
-  } = Object.create(null);
+  private cachedServices: { [name in keyof typeof Services]?: grpc.Client } = Object.create(null);
 
   constructor(
     host: string,
-    private readonly channelCredentials: Promise<grpc.ChannelCredentials>,
+    private readonly channelCredentials: grpc.ChannelCredentials,
     private readonly channelOptions?: grpc.ChannelOptions,
   ) {
     this.host = removeProtocolPrefix(host);
@@ -150,15 +139,19 @@ export class Host {
   /**
    * Returns the given GRPC service on the current host.
    */
-  public getServiceClient(name: keyof typeof Services): Promise<grpc.Client> {
+  public getServiceClient(name: keyof typeof Services): grpc.Client {
     const service = this.cachedServices[name];
     if (service) {
-      return Promise.resolve(service);
+      return service;
     }
 
-    return this.channelCredentials.then(credentials => {
-      return new services.etcdserverpb[name](this.host, credentials, this.channelOptions);
-    });
+    const newService = new services.etcdserverpb[name](
+      this.host,
+      this.channelCredentials,
+      this.channelOptions,
+    );
+    this.cachedServices[name] = newService;
+    return newService;
   }
 
   /**
@@ -166,10 +159,7 @@ export class Host {
    * existing client
    */
   public close() {
-    forOwn(this.cachedServices, (service: Promise<grpc.Client>) => {
-      service.then(c => grpc.closeClient(c)).catch(() => undefined);
-    });
-
+    forOwn(this.cachedServices, (service: grpc.Client) => grpc.closeClient(service));
     this.cachedServices = Object.create(null);
   }
 }
@@ -181,7 +171,7 @@ export class Host {
 export class ConnectionPool implements ICallable {
   private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
   private mockImpl: ICallable | null;
-  private authenticator = new Authenticator(this.options);
+  private authenticator: Authenticator;
 
   constructor(private options: IOptions) {
     this.seedHosts();
@@ -216,8 +206,8 @@ export class ConnectionPool implements ICallable {
       return this.mockImpl.exec(serviceName, method, payload);
     }
 
-    return this.getConnection(serviceName).then(({ host, client }) => {
-      return runServiceCall(client, method, payload)
+    return this.getConnection(serviceName).then(({ host, client, metadata }) => {
+      return runServiceCall(client, metadata, method, payload)
         .then(res => {
           this.pool.succeed(host);
           return res;
@@ -242,13 +232,17 @@ export class ConnectionPool implements ICallable {
    */
   public getConnection(
     service: keyof typeof Services,
-  ): Promise<{ host: Host; client: grpc.Client }> {
+  ): Promise<{ host: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
       return <any>this.mockImpl.getConnection(service);
     }
 
-    return this.pool.pull().then(host => {
-      return host.getServiceClient(service).then(client => ({ host, client }));
+    return Promise.all([
+      this.pool.pull(),
+      this.authenticator.getMetadata(),
+    ]).then(([host, metadata]) => {
+      const client = host.getServiceClient(service);
+      return { client, host, metadata };
     });
   }
 
@@ -274,7 +268,7 @@ export class ConnectionPool implements ICallable {
   /**
    * Creates authentication credentials to use for etcd clients.
    */
-  private buildAuthentication(): Promise<grpc.ChannelCredentials> {
+  private buildAuthentication(): grpc.ChannelCredentials {
     const { credentials } = this.options;
 
     let protocolCredentials = grpc.credentials.createInsecure();
@@ -288,7 +282,8 @@ export class ConnectionPool implements ICallable {
       protocolCredentials = grpc.credentials.createSsl();
     }
 
-    return this.authenticator.augmentCredentials(protocolCredentials);
+    this.authenticator = new Authenticator(this.options, protocolCredentials);
+    return protocolCredentials;
   }
 
   /**
