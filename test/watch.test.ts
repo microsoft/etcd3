@@ -72,6 +72,9 @@ describe('watch', () => {
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       proxy.resume();
+      // todo(connor4312): temp debug logic for an intermittent failure in this test
+      // tslint:disable-next-line
+      console.log('reconnecting with', watcher.request);
       await onceEvent(watcher, 'connected');
       await expectWatching(watcher, 'foo1');
 
