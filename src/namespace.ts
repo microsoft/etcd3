@@ -33,7 +33,7 @@ export class Namespace {
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
   public readonly watchClient = new RPC.WatchClient(this.pool);
   private readonly nsApplicator = new NSApplicator(this.prefix);
-  private readonly watchManager = new WatchManager(this.watchClient, this.kv);
+  private readonly watchManager = new WatchManager(this.watchClient);
 
   constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}
 

@@ -29,15 +29,8 @@ describe('watch', () => {
     return Promise.all([
       client.put(key).value('updated!'),
       onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        try {
-          expect(res.key.toString()).to.equal(key);
-          expect(res.value.toString()).to.equal('updated!');
-        } catch (e) {
-          // todo(connor4312): temp debug logic for an intermittent failure in this test
-          // tslint:disable-next-line
-          console.log(JSON.stringify([watcher.request, res]));
-          throw e;
-        }
+        expect(res.key.toString()).to.equal(key);
+        expect(res.value.toString()).to.equal('updated!');
       }),
     ]).then(() => watcher);
   }
@@ -72,9 +65,6 @@ describe('watch', () => {
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       proxy.resume();
-      // todo(connor4312): temp debug logic for an intermittent failure in this test
-      // tslint:disable-next-line
-      console.log('reconnecting with', watcher.request);
       await onceEvent(watcher, 'connected');
       await expectWatching(watcher, 'foo1');
 
