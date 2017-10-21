@@ -1,3 +1,5 @@
+import * as grpc from 'grpc';
+
 import { Range } from './range';
 import { AuthClient, Permission } from './rpc';
 import { toBuffer } from './util';
@@ -38,23 +40,26 @@ export class Role {
   /**
    * Creates the role in etcd.
    */
-  public create(): Promise<this> {
-    return this.client.roleAdd({ name: this.name }).then(() => this);
+  public create(options?: grpc.CallOptions): Promise<this> {
+    return this.client.roleAdd({ name: this.name }, options).then(() => this);
   }
 
   /**
    * Deletes the role from etcd.
    */
-  public delete(): Promise<this> {
-    return this.client.roleDelete({ role: this.name }).then(() => this);
+  public delete(options?: grpc.CallOptions): Promise<this> {
+    return this.client.roleDelete({ role: this.name }, options).then(() => this);
   }
 
   /**
    * Removes a permission from the role in etcd.
    */
-  public revoke(req: IPermissionRequest | IPermissionRequest[]): Promise<this> {
+  public revoke(
+    req: IPermissionRequest | IPermissionRequest[],
+    options?: grpc.CallOptions,
+  ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r))).then(() => this);
+      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
     }
 
     const range = getRange(req);
@@ -70,29 +75,35 @@ export class Role {
   /**
    * Grants one or more permissions to this role.
    */
-  public grant(req: IPermissionRequest | IPermissionRequest[]): Promise<this> {
+  public grant(
+    req: IPermissionRequest | IPermissionRequest[],
+    options?: grpc.CallOptions,
+  ): Promise<this> {
     if (req instanceof Array) {
       return Promise.all(req.map(r => this.grant(r))).then(() => this);
     }
 
     const range = getRange(req);
     return this.client
-      .roleGrantPermission({
-        name: this.name,
-        perm: {
-          permType: req.permission,
-          key: range.start,
-          range_end: range.end,
+      .roleGrantPermission(
+        {
+          name: this.name,
+          perm: {
+            permType: req.permission,
+            key: range.start,
+            range_end: range.end,
+          },
         },
-      })
+        options,
+      )
       .then(() => this);
   }
 
   /**
    * Returns a list of permissions the role has.
    */
-  public permissions(): Promise<IPermissionResult[]> {
-    return this.client.roleGet({ role: this.name }).then(response => {
+  public permissions(options?: grpc.CallOptions): Promise<IPermissionResult[]> {
+    return this.client.roleGet({ role: this.name }, options).then(response => {
       return response.perm.map(perm => ({
         permission: perm.permType,
         range: new Range(perm.key, perm.range_end),
@@ -103,23 +114,23 @@ export class Role {
   /**
    * Grants a user access to the role.
    */
-  public addUser(user: string | User): Promise<this> {
+  public addUser(user: string | User, options?: grpc.CallOptions): Promise<this> {
     if (user instanceof User) {
       user = user.name;
     }
 
-    return this.client.userGrantRole({ user, role: this.name }).then(() => this);
+    return this.client.userGrantRole({ user, role: this.name }, options).then(() => this);
   }
 
   /**
    * Removes a user's access to the role.
    */
-  public removeUser(user: string | User): Promise<this> {
+  public removeUser(user: string | User, options?: grpc.CallOptions): Promise<this> {
     if (user instanceof User) {
       user = user.name;
     }
 
-    return this.client.userRevokeRole({ name: user, role: this.name }).then(() => this);
+    return this.client.userRevokeRole({ name: user, role: this.name }, options).then(() => this);
   }
 }
 
@@ -133,29 +144,29 @@ export class User {
   /**
    * Creates the user, with the provided password.
    */
-  public create(password: string): Promise<this> {
-    return this.client.userAdd({ name: this.name, password }).then(() => this);
+  public create(password: string, options?: grpc.CallOptions): Promise<this> {
+    return this.client.userAdd({ name: this.name, password }, options).then(() => this);
   }
 
   /**
    * Changes the user's password.
    */
-  public setPassword(password: string): Promise<this> {
-    return this.client.userChangePassword({ name: this.name, password }).then(() => this);
+  public setPassword(password: string, options?: grpc.CallOptions): Promise<this> {
+    return this.client.userChangePassword({ name: this.name, password }, options).then(() => this);
   }
 
   /**
    * Deletes the user from etcd.
    */
-  public delete(): Promise<this> {
-    return this.client.userDelete({ name: this.name }).then(() => this);
+  public delete(options?: grpc.CallOptions): Promise<this> {
+    return this.client.userDelete({ name: this.name }, options).then(() => this);
   }
 
   /**
    * Returns a list of roles this user has.
    */
-  public roles(): Promise<Role[]> {
-    return this.client.userGet({ name: this.name }).then(res => {
+  public roles(options?: grpc.CallOptions): Promise<Role[]> {
+    return this.client.userGet({ name: this.name }, options).then(res => {
       return res.roles.map(role => new Role(this.client, role));
     });
   }
@@ -163,22 +174,22 @@ export class User {
   /**
    * Adds the user to a role.
    */
-  public addRole(role: string | Role): Promise<this> {
+  public addRole(role: string | Role, options?: grpc.CallOptions): Promise<this> {
     if (role instanceof Role) {
       role = role.name;
     }
 
-    return this.client.userGrantRole({ user: this.name, role }).then(() => this);
+    return this.client.userGrantRole({ user: this.name, role }, options).then(() => this);
   }
 
   /**
    * Removes the user's access to a role.
    */
-  public removeRole(role: string | Role): Promise<this> {
+  public removeRole(role: string | Role, options?: grpc.CallOptions): Promise<this> {
     if (role instanceof Role) {
       role = role.name;
     }
 
-    return this.client.userRevokeRole({ name: this.name, role }).then(() => this);
+    return this.client.userRevokeRole({ name: this.name, role }, options).then(() => this);
   }
 }

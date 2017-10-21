@@ -1,6 +1,6 @@
 --<%= getCommentPrefixing(`rpc ${name}(`) %>
-  public <%= _.lowerFirst(name) %>(): Promise<IDuplexStream<<%= requestTsType %>, <%= responseTsType %>>> {
+  public <%= _.lowerFirst(name) %>(options?: grpc.CallOptions): Promise<IDuplexStream<<%= requestTsType %>, <%= responseTsType %>>> {
     return this.client
       .getConnection('<%= service %>')
-      .then(({ client, metadata }) => (<any> client).<%= _.lowerFirst(name) %>(metadata));
+      .then(({ client, metadata }) => (<any> client).<%= _.lowerFirst(name) %>(metadata, options));
   }

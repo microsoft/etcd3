@@ -32,11 +32,12 @@ function removeProtocolPrefix(name: string) {
 function runServiceCall(
   client: grpc.Client,
   metadata: grpc.Metadata,
+  options: grpc.CallOptions | undefined,
   method: string,
   payload: object,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    (<any>client)[method](payload, metadata, (err: Error | null, res: any) => {
+    (<any>client)[method](payload, metadata, options, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -113,6 +114,7 @@ class Authenticator {
     return runServiceCall(
       new services.etcdserverpb.Auth(address, credentials),
       new grpc.Metadata(),
+      undefined,
       'authenticate',
       { name, password },
     ).then(res => res.token);
@@ -201,13 +203,18 @@ export class ConnectionPool implements ICallable {
   /**
    * @override
    */
-  public exec(serviceName: keyof typeof Services, method: string, payload: object): Promise<any> {
+  public exec(
+    serviceName: keyof typeof Services,
+    method: string,
+    payload: object,
+    options?: grpc.CallOptions,
+  ): Promise<any> {
     if (this.mockImpl) {
       return this.mockImpl.exec(serviceName, method, payload);
     }
 
     return this.getConnection(serviceName).then(({ host, client, metadata }) => {
-      return runServiceCall(client, metadata, method, payload)
+      return runServiceCall(client, metadata, options, method, payload)
         .then(res => {
           this.pool.succeed(host);
           return res;
@@ -215,7 +222,7 @@ export class ConnectionPool implements ICallable {
         .catch(err => {
           if (err instanceof EtcdInvalidAuthTokenError) {
             this.authenticator.invalidateMetadata();
-            return this.exec(serviceName, method, payload);
+            return this.exec(serviceName, method, payload, options);
           }
 
           if (err instanceof GRPCGenericError) {
@@ -223,7 +230,7 @@ export class ConnectionPool implements ICallable {
             host.close();
 
             if (this.pool.available().length && this.options.retry) {
-              return this.exec(serviceName, method, payload);
+              return this.exec(serviceName, method, payload, options);
             }
           }
 

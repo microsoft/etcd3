@@ -15,6 +15,39 @@ export class Service {
 }
 
 /**
+ * The deadline of an operation. If it is a date, the deadline is reached at
+ * the date and time specified. If it is a finite number, it is treated as
+ * a number of milliseconds since the Unix Epoch. If it is Infinity, the
+ * deadline will never be reached. If it is -Infinity, the deadline has already
+ * passed.
+ */
+export type Deadline = number | Date;
+
+/**
+ * Options that can be set on a call.
+ */
+export interface CallOptions {
+  /**
+   * The deadline for the entire call to complete.
+   */
+  deadline?: Deadline;
+  /**
+   * Server hostname to set on the call. Only meaningful if different from
+   * the server address used to construct the client.
+   */
+  host?: string;
+  /**
+   * Indicates which properties of a parent call should propagate to this
+   * call. Bitwise combination of flags in `grpc.propagate`.
+   */
+  propagate_flags: number;
+  /**
+   * The credentials that should be used to make this particular call.
+   */
+  credentials: CallCredentials;
+}
+
+/**
  * Describes some generic GRPC call or service function. This is super generic,
  * you'll probably want to override or cast these based on your specific typing.
  */

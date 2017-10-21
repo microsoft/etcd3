@@ -4,7 +4,13 @@
 import * as grpc from 'grpc';
 
 export interface ICallable {
-  exec(service: keyof typeof Services, method: string, params: object): Promise<any>;
+  exec(
+    service: keyof typeof Services,
+    method: string,
+    params: object,
+    options?: grpc.CallOptions,
+  ): Promise<any>;
+
   getConnection(
     service: keyof typeof Services,
   ): Promise<{ client: grpc.Client; metadata: grpc.Metadata }>;
@@ -28,24 +34,27 @@ export class KVClient {
   /**
    * Range gets the keys in the range from the key-value store.
    */
-  public range(req: IRangeRequest): Promise<IRangeResponse> {
-    return this.client.exec('KV', 'range', req);
+  public range(req: IRangeRequest, options?: grpc.CallOptions): Promise<IRangeResponse> {
+    return this.client.exec('KV', 'range', req, options);
   }
   /**
    * Put puts the given key into the key-value store.
    * A put request increments the revision of the key-value store
    * and generates one event in the event history.
    */
-  public put(req: IPutRequest): Promise<IPutResponse> {
-    return this.client.exec('KV', 'put', req);
+  public put(req: IPutRequest, options?: grpc.CallOptions): Promise<IPutResponse> {
+    return this.client.exec('KV', 'put', req, options);
   }
   /**
    * DeleteRange deletes the given range from the key-value store.
    * A delete request increments the revision of the key-value store
    * and generates a delete event in the event history for every deleted key.
    */
-  public deleteRange(req: IDeleteRangeRequest): Promise<IDeleteRangeResponse> {
-    return this.client.exec('KV', 'deleteRange', req);
+  public deleteRange(
+    req: IDeleteRangeRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IDeleteRangeResponse> {
+    return this.client.exec('KV', 'deleteRange', req, options);
   }
   /**
    * Txn processes multiple requests in a single transaction.
@@ -53,16 +62,19 @@ export class KVClient {
    * and generates events with the same revision for every completed request.
    * It is not allowed to modify the same key several times within one txn.
    */
-  public txn(req: ITxnRequest): Promise<ITxnResponse> {
-    return this.client.exec('KV', 'txn', req);
+  public txn(req: ITxnRequest, options?: grpc.CallOptions): Promise<ITxnResponse> {
+    return this.client.exec('KV', 'txn', req, options);
   }
   /**
    * Compact compacts the event history in the etcd key-value store. The key-value
    * store should be periodically compacted or the event history will continue to grow
    * indefinitely.
    */
-  public compact(req: ICompactionRequest): Promise<ICompactionResponse> {
-    return this.client.exec('KV', 'compact', req);
+  public compact(
+    req: ICompactionRequest,
+    options?: grpc.CallOptions,
+  ): Promise<ICompactionResponse> {
+    return this.client.exec('KV', 'compact', req, options);
   }
 }
 
@@ -75,10 +87,10 @@ export class WatchClient {
    * for several watches at once. The entire event history can be watched starting from the
    * last compaction revision.
    */
-  public watch(): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
+  public watch(options?: grpc.CallOptions): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
     return this.client
       .getConnection('Watch')
-      .then(({ client, metadata }) => (<any>client).watch(metadata));
+      .then(({ client, metadata }) => (<any>client).watch(metadata, options));
   }
 }
 
@@ -89,35 +101,46 @@ export class LeaseClient {
    * within a given time to live period. All keys attached to the lease will be expired and
    * deleted if the lease expires. Each expired key generates a delete event in the event history.
    */
-  public leaseGrant(req: ILeaseGrantRequest): Promise<ILeaseGrantResponse> {
-    return this.client.exec('Lease', 'leaseGrant', req);
+  public leaseGrant(
+    req: ILeaseGrantRequest,
+    options?: grpc.CallOptions,
+  ): Promise<ILeaseGrantResponse> {
+    return this.client.exec('Lease', 'leaseGrant', req, options);
   }
   /**
    * LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted.
    */
-  public leaseRevoke(req: ILeaseRevokeRequest): Promise<ILeaseRevokeResponse> {
-    return this.client.exec('Lease', 'leaseRevoke', req);
+  public leaseRevoke(
+    req: ILeaseRevokeRequest,
+    options?: grpc.CallOptions,
+  ): Promise<ILeaseRevokeResponse> {
+    return this.client.exec('Lease', 'leaseRevoke', req, options);
   }
   /**
    * LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
    * to the server and streaming keep alive responses from the server to the client.
    */
-  public leaseKeepAlive(): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
+  public leaseKeepAlive(
+    options?: grpc.CallOptions,
+  ): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
     return this.client
       .getConnection('Lease')
-      .then(({ client, metadata }) => (<any>client).leaseKeepAlive(metadata));
+      .then(({ client, metadata }) => (<any>client).leaseKeepAlive(metadata, options));
   }
   /**
    * LeaseTimeToLive retrieves lease information.
    */
-  public leaseTimeToLive(req: ILeaseTimeToLiveRequest): Promise<ILeaseTimeToLiveResponse> {
-    return this.client.exec('Lease', 'leaseTimeToLive', req);
+  public leaseTimeToLive(
+    req: ILeaseTimeToLiveRequest,
+    options?: grpc.CallOptions,
+  ): Promise<ILeaseTimeToLiveResponse> {
+    return this.client.exec('Lease', 'leaseTimeToLive', req, options);
   }
   /**
    * LeaseLeases lists all existing leases.
    */
-  public leaseLeases(): Promise<ILeaseLeasesResponse> {
-    return this.client.exec('Lease', 'leaseLeases', {});
+  public leaseLeases(options?: grpc.CallOptions): Promise<ILeaseLeasesResponse> {
+    return this.client.exec('Lease', 'leaseLeases', {}, options);
   }
 }
 
@@ -126,26 +149,35 @@ export class ClusterClient {
   /**
    * MemberAdd adds a member into the cluster.
    */
-  public memberAdd(req: IMemberAddRequest): Promise<IMemberAddResponse> {
-    return this.client.exec('Cluster', 'memberAdd', req);
+  public memberAdd(
+    req: IMemberAddRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IMemberAddResponse> {
+    return this.client.exec('Cluster', 'memberAdd', req, options);
   }
   /**
    * MemberRemove removes an existing member from the cluster.
    */
-  public memberRemove(req: IMemberRemoveRequest): Promise<IMemberRemoveResponse> {
-    return this.client.exec('Cluster', 'memberRemove', req);
+  public memberRemove(
+    req: IMemberRemoveRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IMemberRemoveResponse> {
+    return this.client.exec('Cluster', 'memberRemove', req, options);
   }
   /**
    * MemberUpdate updates the member configuration.
    */
-  public memberUpdate(req: IMemberUpdateRequest): Promise<IMemberUpdateResponse> {
-    return this.client.exec('Cluster', 'memberUpdate', req);
+  public memberUpdate(
+    req: IMemberUpdateRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IMemberUpdateResponse> {
+    return this.client.exec('Cluster', 'memberUpdate', req, options);
   }
   /**
    * MemberList lists all the members in the cluster.
    */
-  public memberList(): Promise<IMemberListResponse> {
-    return this.client.exec('Cluster', 'memberList', {});
+  public memberList(options?: grpc.CallOptions): Promise<IMemberListResponse> {
+    return this.client.exec('Cluster', 'memberList', {}, options);
   }
 }
 
@@ -154,46 +186,51 @@ export class MaintenanceClient {
   /**
    * Alarm activates, deactivates, and queries alarms regarding cluster health.
    */
-  public alarm(req: IAlarmRequest): Promise<IAlarmResponse> {
-    return this.client.exec('Maintenance', 'alarm', req);
+  public alarm(req: IAlarmRequest, options?: grpc.CallOptions): Promise<IAlarmResponse> {
+    return this.client.exec('Maintenance', 'alarm', req, options);
   }
   /**
    * Status gets the status of the member.
    */
-  public status(): Promise<IStatusResponse> {
-    return this.client.exec('Maintenance', 'status', {});
+  public status(options?: grpc.CallOptions): Promise<IStatusResponse> {
+    return this.client.exec('Maintenance', 'status', {}, options);
   }
   /**
    * Defragment defragments a member's backend database to recover storage space.
    */
-  public defragment(): Promise<IDefragmentResponse> {
-    return this.client.exec('Maintenance', 'defragment', {});
+  public defragment(options?: grpc.CallOptions): Promise<IDefragmentResponse> {
+    return this.client.exec('Maintenance', 'defragment', {}, options);
   }
   /**
    * Hash computes the hash of the KV's backend.
    * This is designed for testing; do not use this in production when there
    * are ongoing transactions.
    */
-  public hash(): Promise<IHashResponse> {
-    return this.client.exec('Maintenance', 'hash', {});
+  public hash(options?: grpc.CallOptions): Promise<IHashResponse> {
+    return this.client.exec('Maintenance', 'hash', {}, options);
   }
   /**
    * HashKV computes the hash of all MVCC keys up to a given revision.
    */
-  public hashKV(req: IHashKVRequest): Promise<IHashKVResponse> {
-    return this.client.exec('Maintenance', 'hashKV', req);
+  public hashKV(req: IHashKVRequest, options?: grpc.CallOptions): Promise<IHashKVResponse> {
+    return this.client.exec('Maintenance', 'hashKV', req, options);
   }
   /**
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
-  public snapshot(): Promise<IResponseStream<ISnapshotResponse>> {
-    return this.client.getConnection('Maintenance').then(cnx => (<any>cnx.client).snapshot({}));
+  public snapshot(options?: grpc.CallOptions): Promise<IResponseStream<ISnapshotResponse>> {
+    return this.client
+      .getConnection('Maintenance')
+      .then(({ client, metadata }) => (<any>client).snapshot(metadata, options, {}));
   }
   /**
    * MoveLeader requests current leader node to transfer its leadership to transferee.
    */
-  public moveLeader(req: IMoveLeaderRequest): Promise<IMoveLeaderResponse> {
-    return this.client.exec('Maintenance', 'moveLeader', req);
+  public moveLeader(
+    req: IMoveLeaderRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IMoveLeaderResponse> {
+    return this.client.exec('Maintenance', 'moveLeader', req, options);
   }
 }
 
@@ -202,104 +239,134 @@ export class AuthClient {
   /**
    * AuthEnable enables authentication.
    */
-  public authEnable(): Promise<IAuthEnableResponse> {
-    return this.client.exec('Auth', 'authEnable', {});
+  public authEnable(options?: grpc.CallOptions): Promise<IAuthEnableResponse> {
+    return this.client.exec('Auth', 'authEnable', {}, options);
   }
   /**
    * AuthDisable disables authentication.
    */
-  public authDisable(): Promise<IAuthDisableResponse> {
-    return this.client.exec('Auth', 'authDisable', {});
+  public authDisable(options?: grpc.CallOptions): Promise<IAuthDisableResponse> {
+    return this.client.exec('Auth', 'authDisable', {}, options);
   }
   /**
    * Authenticate processes an authenticate request.
    */
-  public authenticate(req: IAuthenticateRequest): Promise<IAuthenticateResponse> {
-    return this.client.exec('Auth', 'authenticate', req);
+  public authenticate(
+    req: IAuthenticateRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthenticateResponse> {
+    return this.client.exec('Auth', 'authenticate', req, options);
   }
   /**
    * UserAdd adds a new user.
    */
-  public userAdd(req: IAuthUserAddRequest): Promise<IAuthUserAddResponse> {
-    return this.client.exec('Auth', 'userAdd', req);
+  public userAdd(
+    req: IAuthUserAddRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthUserAddResponse> {
+    return this.client.exec('Auth', 'userAdd', req, options);
   }
   /**
    * UserGet gets detailed user information.
    */
-  public userGet(req: IAuthUserGetRequest): Promise<IAuthUserGetResponse> {
-    return this.client.exec('Auth', 'userGet', req);
+  public userGet(
+    req: IAuthUserGetRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthUserGetResponse> {
+    return this.client.exec('Auth', 'userGet', req, options);
   }
   /**
    * UserList gets a list of all users.
    */
-  public userList(): Promise<IAuthUserListResponse> {
-    return this.client.exec('Auth', 'userList', {});
+  public userList(options?: grpc.CallOptions): Promise<IAuthUserListResponse> {
+    return this.client.exec('Auth', 'userList', {}, options);
   }
   /**
    * UserDelete deletes a specified user.
    */
-  public userDelete(req: IAuthUserDeleteRequest): Promise<IAuthUserDeleteResponse> {
-    return this.client.exec('Auth', 'userDelete', req);
+  public userDelete(
+    req: IAuthUserDeleteRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthUserDeleteResponse> {
+    return this.client.exec('Auth', 'userDelete', req, options);
   }
   /**
    * UserChangePassword changes the password of a specified user.
    */
   public userChangePassword(
     req: IAuthUserChangePasswordRequest,
+    options?: grpc.CallOptions,
   ): Promise<IAuthUserChangePasswordResponse> {
-    return this.client.exec('Auth', 'userChangePassword', req);
+    return this.client.exec('Auth', 'userChangePassword', req, options);
   }
   /**
    * UserGrant grants a role to a specified user.
    */
-  public userGrantRole(req: IAuthUserGrantRoleRequest): Promise<IAuthUserGrantRoleResponse> {
-    return this.client.exec('Auth', 'userGrantRole', req);
+  public userGrantRole(
+    req: IAuthUserGrantRoleRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthUserGrantRoleResponse> {
+    return this.client.exec('Auth', 'userGrantRole', req, options);
   }
   /**
    * UserRevokeRole revokes a role of specified user.
    */
-  public userRevokeRole(req: IAuthUserRevokeRoleRequest): Promise<IAuthUserRevokeRoleResponse> {
-    return this.client.exec('Auth', 'userRevokeRole', req);
+  public userRevokeRole(
+    req: IAuthUserRevokeRoleRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthUserRevokeRoleResponse> {
+    return this.client.exec('Auth', 'userRevokeRole', req, options);
   }
   /**
    * RoleAdd adds a new role.
    */
-  public roleAdd(req: IAuthRoleAddRequest): Promise<IAuthRoleAddResponse> {
-    return this.client.exec('Auth', 'roleAdd', req);
+  public roleAdd(
+    req: IAuthRoleAddRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthRoleAddResponse> {
+    return this.client.exec('Auth', 'roleAdd', req, options);
   }
   /**
    * RoleGet gets detailed role information.
    */
-  public roleGet(req: IAuthRoleGetRequest): Promise<IAuthRoleGetResponse> {
-    return this.client.exec('Auth', 'roleGet', req);
+  public roleGet(
+    req: IAuthRoleGetRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthRoleGetResponse> {
+    return this.client.exec('Auth', 'roleGet', req, options);
   }
   /**
    * RoleList gets lists of all roles.
    */
-  public roleList(): Promise<IAuthRoleListResponse> {
-    return this.client.exec('Auth', 'roleList', {});
+  public roleList(options?: grpc.CallOptions): Promise<IAuthRoleListResponse> {
+    return this.client.exec('Auth', 'roleList', {}, options);
   }
   /**
    * RoleDelete deletes a specified role.
    */
-  public roleDelete(req: IAuthRoleDeleteRequest): Promise<IAuthRoleDeleteResponse> {
-    return this.client.exec('Auth', 'roleDelete', req);
+  public roleDelete(
+    req: IAuthRoleDeleteRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IAuthRoleDeleteResponse> {
+    return this.client.exec('Auth', 'roleDelete', req, options);
   }
   /**
    * RoleGrantPermission grants a permission of a specified key or range to a specified role.
    */
   public roleGrantPermission(
     req: IAuthRoleGrantPermissionRequest,
+    options?: grpc.CallOptions,
   ): Promise<IAuthRoleGrantPermissionResponse> {
-    return this.client.exec('Auth', 'roleGrantPermission', req);
+    return this.client.exec('Auth', 'roleGrantPermission', req, options);
   }
   /**
    * RoleRevokePermission revokes a key or range permission of a specified role.
    */
   public roleRevokePermission(
     req: IAuthRoleRevokePermissionRequest,
+    options?: grpc.CallOptions,
   ): Promise<IAuthRoleRevokePermissionResponse> {
-    return this.client.exec('Auth', 'roleRevokePermission', req);
+    return this.client.exec('Auth', 'roleRevokePermission', req, options);
   }
 }
 

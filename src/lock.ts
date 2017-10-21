@@ -1,6 +1,8 @@
-import { EtcdLockFailedError } from './';
+import * as grpc from 'grpc';
+
 import { ComparatorBuilder, PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
+import { EtcdLockFailedError } from './errors';
 import { Lease } from './lease';
 import * as RPC from './rpc';
 import { NSApplicator } from './util';
@@ -33,6 +35,7 @@ import { NSApplicator } from './util';
 export class Lock {
   private leaseTTL = 30;
   private lease: Lease | null;
+  private callOptions: grpc.CallOptions | undefined;
 
   constructor(
     private readonly pool: ConnectionPool,
@@ -54,6 +57,14 @@ export class Lock {
   }
 
   /**
+   * Sets the GRPC call options for this request.
+   */
+  public options(options: grpc.CallOptions): this {
+    this.callOptions = options;
+    return this;
+  }
+
+  /**
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
   public acquire(): Promise<this> {
@@ -64,6 +75,7 @@ export class Lock {
       return new ComparatorBuilder(kv, this.namespace)
         .and(this.key, 'Create', '==', 0)
         .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
+        .options(this.callOptions)
         .commit()
         .then<this>(res => {
           if (res.succeeded) {
@@ -87,7 +99,7 @@ export class Lock {
       throw new Error('Attempted to release a lock which was not acquired');
     }
 
-    return this.lease.revoke();
+    return this.lease.revoke(this.callOptions);
   }
 
   /**

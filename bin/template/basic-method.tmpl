@@ -1,4 +1,4 @@
 --<%= getCommentPrefixing(`rpc ${name}(`) %>
-  public <%= _.lowerFirst(name) %>(<%= req.empty ? '' : `req: ${requestTsType}` %>): Promise<<%= responseTsType %>> {
-    return this.client.exec('<%= service %>', '<%= _.lowerFirst(name) %>', <%= req.empty ? '{}' : 'req' %>);
+  public <%= _.lowerFirst(name) %>(<%= req.empty ? '' : `req: ${requestTsType}, ` %>options?: grpc.CallOptions): Promise<<%= responseTsType %>> {
+    return this.client.exec('<%= service %>', '<%= _.lowerFirst(name) %>', <%= req.empty ? '{}' : 'req' %>, options);
   }

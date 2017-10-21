@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as grpc from 'grpc';
 
 import { PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
@@ -82,6 +83,7 @@ export class Lease extends EventEmitter {
     private readonly pool: ConnectionPool,
     private readonly namespace: NSApplicator,
     private ttl: number,
+    private readonly options?: grpc.CallOptions,
   ) {
     super();
 
@@ -90,7 +92,7 @@ export class Lease extends EventEmitter {
     }
 
     this.leaseID = this.client
-      .leaseGrant({ TTL: ttl })
+      .leaseGrant({ TTL: ttl }, this.options)
       .then(res => {
         this.state = State.Alive;
         this.lastKeepAlive = Date.now();
@@ -122,12 +124,12 @@ export class Lease extends EventEmitter {
    * Revoke frees the lease from etcd. Keys that the lease owns will be
    * evicted.
    */
-  public revoke(): Promise<void> {
+  public revoke(options: grpc.CallOptions | undefined = this.options): Promise<void> {
     this.close();
     return this.leaseID.then(id => {
       if (!(id instanceof Error)) {
         // if an error, we didn't grant in the first place
-        return this.client.leaseRevoke({ ID: id }).then(() => undefined);
+        return this.client.leaseRevoke({ ID: id }, options).then(() => undefined);
       }
 
       return undefined;
@@ -148,8 +150,10 @@ export class Lease extends EventEmitter {
   /**
    * keepaliveOnce fires an immediate keepalive for the lease.
    */
-  public keepaliveOnce(): Promise<RPC.ILeaseKeepAliveResponse> {
-    return Promise.all([this.client.leaseKeepAlive(), this.grant()]).then(([stream, id]) => {
+  public keepaliveOnce(
+    options: grpc.CallOptions | undefined = this.options,
+  ): Promise<RPC.ILeaseKeepAliveResponse> {
+    return Promise.all([this.client.leaseKeepAlive(options), this.grant()]).then(([stream, id]) => {
       return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
         stream.on('data', resolve);
         stream.on('error', err => reject(castGrpcError(err)));
