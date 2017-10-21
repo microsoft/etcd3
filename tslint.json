@@ -6,7 +6,6 @@
   "rules": {
     // Basic
     "no-multiline-string": false,
-    "max-file-line-count": [true, 600],
     "jsdoc-format": true,
     "cyclomatic-complexity": [true, 20],
     "no-default-export": false,

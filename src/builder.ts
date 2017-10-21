@@ -1,3 +1,5 @@
+import * as grpc from 'grpc';
+
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, PromiseWrap, toBuffer } from './util';
@@ -54,6 +56,7 @@ function assertWithin<T>(map: T, value: keyof T, thing: string) {
  */
 export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperation {
   protected request: RPC.IRangeRequest = {};
+  protected callOptions: grpc.CallOptions | undefined;
 
   constructor(protected readonly namespace: NSApplicator) {
     super();
@@ -104,6 +107,14 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
    */
   public maxCreateRevision(maxCreateRevision: number | string): this {
     this.request.max_create_revision = maxCreateRevision;
+    return this;
+  }
+
+  /**
+   * Sets the GRPC call options for this request.
+   */
+  public options(options: grpc.CallOptions | undefined): this {
+    this.callOptions = options;
     return this;
   }
 
@@ -163,7 +174,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.namespace.applyToRequest(this.request));
+    return this.kv.range(this.namespace.applyToRequest(this.request), this.callOptions);
   }
 
   /**
@@ -290,13 +301,15 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.namespace.applyToRequest(this.request)).then(res => {
-      for (let i = 0; i < res.kvs.length; i++) {
-        res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
-      }
+    return this.kv
+      .range(this.namespace.applyToRequest(this.request), this.callOptions)
+      .then(res => {
+        for (let i = 0; i < res.kvs.length; i++) {
+          res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
+        }
 
-      return res;
-    });
+        return res;
+      });
   }
 
   /**
@@ -327,6 +340,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
  */
 export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   private request: RPC.IDeleteRangeRequest = {};
+  private callOptions: grpc.CallOptions | undefined;
 
   constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {
     super();
@@ -383,11 +397,20 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
     this.request.prev_kv = true;
     return this.exec().then(res => res.prev_kvs);
   }
+
+  /**
+   * Sets the GRPC call options for this request.
+   */
+  public options(options: grpc.CallOptions | undefined): this {
+    this.callOptions = options;
+    return this;
+  }
+
   /**
    * exec runs the delete put request.
    */
   public exec(): Promise<RPC.IDeleteRangeResponse> {
-    return this.kv.deleteRange(this.namespace.applyToRequest(this.request));
+    return this.kv.deleteRange(this.namespace.applyToRequest(this.request), this.callOptions);
   }
 
   /**
@@ -412,6 +435,7 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
  */
 export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   private request: RPC.IPutRequest = {};
+  private callOptions: grpc.CallOptions | undefined;
 
   constructor(
     private readonly kv: RPC.KVClient,
@@ -448,6 +472,14 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   }
 
   /**
+   * Sets the GRPC call options for this request.
+   */
+  public options(options: grpc.CallOptions | undefined): this {
+    this.callOptions = options;
+    return this;
+  }
+
+  /**
    * getPrevious instructs etcd to *try* to get the previous value of the
    * key before setting it. One may not always be available if a compaction
    * takes place.
@@ -471,7 +503,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * exec runs the put request.
    */
   public exec(): Promise<RPC.IPutResponse> {
-    return this.kv.put(this.namespace.applyToRequest(this.request));
+    return this.kv.put(this.namespace.applyToRequest(this.request), this.callOptions);
   }
 
   /**
@@ -513,8 +545,17 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  */
 export class ComparatorBuilder {
   private request: RPC.ITxnRequest = {};
+  private callOptions: grpc.CallOptions | undefined;
 
   constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {}
+
+  /**
+   * Sets the GRPC call options for this request.
+   */
+  public options(options: grpc.CallOptions | undefined): this {
+    this.callOptions = options;
+    return this;
+  }
 
   /**
    * Adds a new clause to the transaction.
@@ -564,7 +605,7 @@ export class ComparatorBuilder {
    * Runs the generated transaction and returns its result.
    */
   public commit(): Promise<RPC.ITxnResponse> {
-    return this.kv.txn(this.request);
+    return this.kv.txn(this.request, this.callOptions);
   }
 
   /**

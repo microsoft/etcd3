@@ -4,8 +4,16 @@
 import * as grpc from 'grpc';
 
 export interface ICallable {
-  exec(service: keyof typeof Services, method: string, params: object): Promise<any>;
-  getConnection(service: keyof typeof Services): Promise<{ client: grpc.Client, metadata: grpc.Metadata }>;
+  exec(
+    service: keyof typeof Services,
+    method: string,
+    params: object,
+    options?: grpc.CallOptions,
+  ): Promise<any>;
+
+  getConnection(
+    service: keyof typeof Services,
+  ): Promise<{ client: grpc.Client, metadata: grpc.Metadata }>;
 }
 
 export interface IResponseStream<T> {

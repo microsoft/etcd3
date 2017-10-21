@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import * as grpc from 'grpc';
 
 import * as Builder from './builder';
 import { ClientRuntimeError, STMConflictError } from './errors';
@@ -55,6 +56,11 @@ export interface ISTMOptions {
    * Isolation level for the transaction. Defaults to SerializableSnapshot.
    */
   isolation: Isolation;
+
+  /**
+   * Options to pass into the STM transaction's commit.
+   */
+  callOptions?: grpc.CallOptions;
 }
 
 /**
@@ -505,10 +511,13 @@ export class SoftwareTransaction {
 
     this.tx.writeSet.addChanges(cmp);
 
-    return cmp.commit().then(result => {
-      if (!result.succeeded) {
-        throw new STMConflictError();
-      }
-    });
+    return cmp
+      .options(this.options.callOptions)
+      .commit()
+      .then(result => {
+        if (!result.succeeded) {
+          throw new STMConflictError();
+        }
+      });
   }
 }

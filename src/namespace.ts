@@ -1,3 +1,5 @@
+import * as grpc from 'grpc';
+
 import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
 import { Lease } from './lease';
@@ -70,8 +72,8 @@ export class Namespace {
    * automatically kept alive for you until it is revoked. See the
    * documentation on the Lease class for some examples.
    */
-  public lease(ttl: number): Lease {
-    return new Lease(this.pool, this.nsApplicator, ttl);
+  public lease(ttl: number, options?: grpc.CallOptions): Lease {
+    return new Lease(this.pool, this.nsApplicator, ttl, options);
   }
 
   /**
