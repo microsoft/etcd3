@@ -8,10 +8,12 @@ export * from './auth';
 export * from './builder';
 export * from './errors';
 export * from './lease';
+export * from './lock';
 export * from './namespace';
 export * from './options';
 export * from './range';
 export * from './rpc';
+export * from './stm';
 export { WatchBuilder, Watcher } from './watch';
 
 /**
