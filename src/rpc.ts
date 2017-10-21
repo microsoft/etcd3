@@ -5,7 +5,9 @@ import * as grpc from 'grpc';
 
 export interface ICallable {
   exec(service: keyof typeof Services, method: string, params: object): Promise<any>;
-  getConnection(service: keyof typeof Services): Promise<{ client: grpc.Client }>;
+  getConnection(
+    service: keyof typeof Services,
+  ): Promise<{ client: grpc.Client; metadata: grpc.Metadata }>;
 }
 
 export interface IResponseStream<T> {
@@ -74,7 +76,9 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
-    return this.client.getConnection('Watch').then(cnx => (<any>cnx.client).watch());
+    return this.client
+      .getConnection('Watch')
+      .then(({ client, metadata }) => (<any>client).watch(metadata));
   }
 }
 
@@ -99,7 +103,9 @@ export class LeaseClient {
    * to the server and streaming keep alive responses from the server to the client.
    */
   public leaseKeepAlive(): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
-    return this.client.getConnection('Lease').then(cnx => (<any>cnx.client).leaseKeepAlive());
+    return this.client
+      .getConnection('Lease')
+      .then(({ client, metadata }) => (<any>client).leaseKeepAlive(metadata));
   }
   /**
    * LeaseTimeToLive retrieves lease information.
@@ -1084,25 +1090,6 @@ export interface IAuthRoleGrantPermissionResponse {
 export interface IAuthRoleRevokePermissionResponse {
   header: IResponseHeader;
 }
-export interface IUser {
-  name?: Buffer;
-  password?: Buffer;
-  roles?: string[];
-}
-export enum Permission {
-  Read = 0,
-  Write = 1,
-  Readwrite = 2,
-}
-export interface IPermission {
-  permType: keyof typeof Permission;
-  key: Buffer;
-  range_end: Buffer;
-}
-export interface IRole {
-  name?: Buffer;
-  keyPermission?: IPermission[];
-}
 export interface IKeyValue {
   /**
    * key is the first key for the range. If range_end is not given, the request only looks up key.
@@ -1140,6 +1127,25 @@ export interface IEvent {
    * The previous key-value pairs will be returned in the delete response.
    */
   prev_kv: IKeyValue;
+}
+export interface IUser {
+  name?: Buffer;
+  password?: Buffer;
+  roles?: string[];
+}
+export enum Permission {
+  Read = 0,
+  Write = 1,
+  Readwrite = 2,
+}
+export interface IPermission {
+  permType: keyof typeof Permission;
+  key: Buffer;
+  range_end: Buffer;
+}
+export interface IRole {
+  name?: Buffer;
+  keyPermission?: IPermission[];
 }
 export const Services = {
   KV: KVClient,

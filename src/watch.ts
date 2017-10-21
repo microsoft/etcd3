@@ -1,12 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
-import {
-  castGrpcErrorMessage,
-  ClientRuntimeError,
-  EtcdError,
-  EtcdPermissionDeniedError,
-} from './errors';
+import { castGrpcErrorMessage, ClientRuntimeError, EtcdError } from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
@@ -33,12 +28,8 @@ const enum QueueState {
 class AttachQueue {
   private state = QueueState.Idle;
   private queue: Watcher[] = [];
-  private revision: number;
 
-  constructor(
-    private readonly stream: RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
-    private readonly kv: RPC.KVClient,
-  ) {}
+  constructor(private readonly stream: RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>) {}
 
   /**
    * Inserts a watcher to be attached to the stream.
@@ -78,6 +69,7 @@ class AttachQueue {
    */
   public destroy() {
     this.state = QueueState.Destroyed;
+    this.queue = [];
   }
 
   /**
@@ -93,53 +85,9 @@ class AttachQueue {
     }
 
     const watcher = this.queue[0];
-    if (watcher.request.start_revision) {
-      if (!this.revision) {
-        return this.readRevision(watcher);
-      }
-
-      watcher.request.start_revision = Math.min(
-        Number(watcher.request.start_revision),
-        this.revision,
-      );
-    }
-
     this.state = QueueState.Attaching;
     watcher.emit('connecting', watcher.request);
     this.stream.write({ create_request: watcher.request });
-  }
-
-  /**
-   * Gets and updates the latest revision in etcd. This is necessary to recover
-   * watchers that have a later revision if etcd data is wiped.
-   */
-  private readRevision(requester: Watcher) {
-    this.state = QueueState.ReadingRevision;
-
-    this.kv
-      .range({
-        key: this.queue[0].request.key,
-        keys_only: true,
-      })
-      .then(res => {
-        this.revision = Number(res.header.revision);
-        this.readQueue();
-      })
-      .catch(err => {
-        // If we got an error here, one of two things happened:
-        //  - the watch is on a key the user doesn't have access to, we should
-        //    throw away the watcher and move to the next one
-        //  - some other stream error occurred... try to bulldoze on but the
-        //    stream is probably about to die (or it may have already died)
-        if (err instanceof EtcdPermissionDeniedError) {
-          requester.emit('error', err);
-          this.queue.shift();
-        } else {
-          this.revision = 0;
-        }
-
-        this.readQueue();
-      });
   }
 }
 
@@ -176,7 +124,7 @@ export class WatchManager {
    */
   private queue: null | AttachQueue;
 
-  constructor(private readonly client: RPC.WatchClient, private readonly kv: RPC.KVClient) {}
+  constructor(private readonly client: RPC.WatchClient) {}
 
   /**
    * Attach registers the watcher on the connection.
@@ -264,7 +212,7 @@ export class WatchManager {
       .watch()
       .then(stream => {
         this.state = State.Connected;
-        this.queue = new AttachQueue(stream, this.kv);
+        this.queue = new AttachQueue(stream);
         this.stream = stream
           .on('data', res => this.handleResponse(res))
           .on('error', err => this.handleError(err));
