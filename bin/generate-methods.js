@@ -225,14 +225,19 @@ function walk(ast, iterator, path = []) {
   });
 }
 
-function markResponsesFor(message) {
+function markResponsesFor(message, seen = []) {
+  const name = message.node.name;
+  if (seen.includes(name)) {
+    return;
+  }
+
   message.response = true;
 
   _(message.node.fields)
     .values()
     .map(f => messages.find(f.type))
     .filter(Boolean)
-    .forEach(markResponsesFor);
+    .forEach(m => markResponsesFor(m, seen.concat(name)));
 }
 
 function prepareForGeneration(ast) {
@@ -256,7 +261,7 @@ function prepareForGeneration(ast) {
         .values()
         .map(m => messages.find(m.responseType))
         .filter(Boolean)
-        .forEach(markResponsesFor);
+        .forEach(m => markResponsesFor(m));
     }
   });
 }

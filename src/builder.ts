@@ -33,6 +33,7 @@ export const compareTarget: { [key in keyof typeof RPC.CompareTarget]: keyof RPC
   Version: 'version',
   Create: 'create_revision',
   Mod: 'mod_revision',
+  Lease: 'lease',
 };
 
 /**
