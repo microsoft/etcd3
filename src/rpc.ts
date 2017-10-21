@@ -107,6 +107,12 @@ export class LeaseClient {
   public leaseTimeToLive(req: ILeaseTimeToLiveRequest): Promise<ILeaseTimeToLiveResponse> {
     return this.client.exec('Lease', 'leaseTimeToLive', req);
   }
+  /**
+   * LeaseLeases lists all existing leases.
+   */
+  public leaseLeases(): Promise<ILeaseLeasesResponse> {
+    return this.client.exec('Lease', 'leaseLeases', {});
+  }
 }
 
 export class ClusterClient {
@@ -158,7 +164,7 @@ export class MaintenanceClient {
     return this.client.exec('Maintenance', 'defragment', {});
   }
   /**
-   * Hash returns the hash of the local KV state for consistency checking purpose.
+   * Hash computes the hash of the KV's backend.
    * This is designed for testing; do not use this in production when there
    * are ongoing transactions.
    */
@@ -166,10 +172,22 @@ export class MaintenanceClient {
     return this.client.exec('Maintenance', 'hash', {});
   }
   /**
+   * HashKV computes the hash of all MVCC keys up to a given revision.
+   */
+  public hashKV(req: IHashKVRequest): Promise<IHashKVResponse> {
+    return this.client.exec('Maintenance', 'hashKV', req);
+  }
+  /**
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(): Promise<IResponseStream<ISnapshotResponse>> {
     return this.client.getConnection('Maintenance').then(cnx => (<any>cnx.client).snapshot({}));
+  }
+  /**
+   * MoveLeader requests current leader node to transfer its leadership to transferee.
+   */
+  public moveLeader(req: IMoveLeaderRequest): Promise<IMoveLeaderResponse> {
+    return this.client.exec('Maintenance', 'moveLeader', req);
   }
 }
 
@@ -475,11 +493,13 @@ export interface IRequestOp {
   request_range?: IRangeRequest;
   request_put?: IPutRequest;
   request_delete_range?: IDeleteRangeRequest;
+  request_txn?: ITxnRequest;
 }
 export interface IResponseOp {
   response_range: IRangeResponse;
   response_put: IPutResponse;
   response_delete_range: IDeleteRangeResponse;
+  response_txn: ITxnResponse;
 }
 export enum CompareResult {
   Equal = 0,
@@ -492,6 +512,7 @@ export enum CompareTarget {
   Create = 1,
   Mod = 2,
   Value = 3,
+  Lease = 4,
 }
 export interface ICompare {
   /**
@@ -522,6 +543,15 @@ export interface ICompare {
    * value is the value of the given key, in bytes.
    */
   value?: Buffer;
+  /**
+   * lease is the lease id of the given key.
+   */
+  lease?: string | number;
+  /**
+   * range_end compares the given target to all keys in the range [key, range_end).
+   * See RangeRequest for more details on key ranges.
+   */
+  range_end?: Buffer;
 }
 export interface ITxnRequest {
   /**
@@ -555,7 +585,7 @@ export interface ITxnResponse {
 }
 export interface ICompactionRequest {
   /**
-   * revision is the key-value store revision for the compaction operation. 
+   * revision is the key-value store revision for the compaction operation.
    */
   revision?: string | number;
   /**
@@ -568,10 +598,27 @@ export interface ICompactionRequest {
 export interface ICompactionResponse {
   header: IResponseHeader;
 }
+export interface IHashKVRequest {
+  /**
+   * revision is the key-value store revision for the hash operation.
+   */
+  revision?: string | number;
+}
+export interface IHashKVResponse {
+  header: IResponseHeader;
+  /**
+   * hash is the hash value computed from the responding member's MVCC keys up to a given revision.
+   */
+  hash: string;
+  /**
+   * compact_revision is the compacted revision of key-value store when hash begins.
+   */
+  compact_revision: string;
+}
 export interface IHashResponse {
   header: IResponseHeader;
   /**
-   * hash is the hash value computed from the responding member's key-value store.
+   * hash is the hash value computed from the responding member's KV's backend.
    */
   hash: string;
 }
@@ -746,6 +793,13 @@ export interface ILeaseTimeToLiveResponse {
    */
   keys: Buffer[];
 }
+export interface ILeaseStatus {
+  ID: string;
+}
+export interface ILeaseLeasesResponse {
+  header: IResponseHeader;
+  leases: ILeaseStatus[];
+}
 export interface IMember {
   /**
    * ID is the member ID for this member.
@@ -821,6 +875,15 @@ export interface IMemberListResponse {
 export interface IDefragmentResponse {
   header: IResponseHeader;
 }
+export interface IMoveLeaderRequest {
+  /**
+   * targetID is the node ID for the new leader.
+   */
+  targetID?: string | number;
+}
+export interface IMoveLeaderResponse {
+  header: IResponseHeader;
+}
 export enum AlarmType {
   /**
    * default, used to query if any alarm is active
@@ -830,6 +893,10 @@ export enum AlarmType {
    * space quota is exhausted
    */
   Nospace = 1,
+  /**
+   * kv store corruption detected
+   */
+  Corrupt = 2,
 }
 export enum AlarmAction {
   Get = 0,
@@ -1017,6 +1084,25 @@ export interface IAuthRoleGrantPermissionResponse {
 export interface IAuthRoleRevokePermissionResponse {
   header: IResponseHeader;
 }
+export interface IUser {
+  name?: Buffer;
+  password?: Buffer;
+  roles?: string[];
+}
+export enum Permission {
+  Read = 0,
+  Write = 1,
+  Readwrite = 2,
+}
+export interface IPermission {
+  permType: keyof typeof Permission;
+  key: Buffer;
+  range_end: Buffer;
+}
+export interface IRole {
+  name?: Buffer;
+  keyPermission?: IPermission[];
+}
 export interface IKeyValue {
   /**
    * key is the first key for the range. If range_end is not given, the request only looks up key.
@@ -1054,25 +1140,6 @@ export interface IEvent {
    * The previous key-value pairs will be returned in the delete response.
    */
   prev_kv: IKeyValue;
-}
-export interface IUser {
-  name?: Buffer;
-  password?: Buffer;
-  roles?: string[];
-}
-export enum Permission {
-  Read = 0,
-  Write = 1,
-  Readwrite = 2,
-}
-export interface IPermission {
-  permType: keyof typeof Permission;
-  key: Buffer;
-  range_end: Buffer;
-}
-export interface IRole {
-  name?: Buffer;
-  keyPermission?: IPermission[];
 }
 export const Services = {
   KV: KVClient,
