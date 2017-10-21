@@ -1,4 +1,15 @@
-### 0.2.5 2017-09-30
+## 0.2.6 2017-10-22
+
+ - **feature**: add software transactional memory ([#39](https://github.com/mixer/etcd3/pull/39))
+ - **feature**: allow password auth over insecure channels ([#41](https://github.com/mixer/etcd3/pull/41)) thanks to [@reptilbud](https://github.com/reptilbud)
+ - **feature**: allow GRPC call options to be passed into operations ([#43](https://github.com/mixer/etcd3/issues/43), [`cc456cc`](https://github.com/mixer/etcd3/commit/cc456cc))
+  - **bug**: fix incorrect watcher catchup logic in very large etcd revisions ([`66b1e90`](https://github.com/mixer/etcd3/commit/66b1e9050bb03f8d8760b07d7764529a262ccb0b))
+  - **bug**: automatically refresh access tokens if they are expired or invalidated ([`9127329`](https://github.com/mixer/etcd3/commit/9127329963042693a60a8e3568c0230937ccc952))
+  - **bug**: call stack error in etcd3's codegen ([#44](https://github.com/mixer/etcd3/issues/44), [`8856981`](https://github.com/mixer/etcd3/commit/8856981))
+  - **bug**: lock and STM typings not being exported ([#45](https://github.com/mixer/etcd3/issues/45), [`4578138`](https://github.com/mixer/etcd3/commit/4578138))
+  - **bug**: old data sometimes being replayed incorrectly when watchers reconnect ([#42](https://github.com/mixer/etcd3/issues/42), [`7474f96`](https://github.com/mixer/etcd3/commit/7474f96))
+
+## 0.2.5 2017-09-30
 
  - **feature**: allow passing GRPC options to the client constructor ([#36](https://github.com/mixer/etcd3/issues/36))
  - **bug**: watchers response ack's could be delivered incorrectly when watching keys concurrently ([#33](https://github.com/mixer/etcd3/pull/33), [#30](https://github.com/mixer/etcd3/issues/30)) thanks to [@styleex](https://github.com/styleex)
