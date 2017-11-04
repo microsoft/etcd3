@@ -92,7 +92,8 @@ describe('watch', () => {
 
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
-      await client.put('foo1').value('update 2');
+      // tslint:disable-next-line
+      console.log('putting', await client.put('foo1').value('update 2'));
       proxy.resume();
       await onceEvent(watcher, 'put').then((res: IKeyValue) => {
         expect(res.key.toString()).to.equal('foo1');

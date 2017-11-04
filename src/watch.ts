@@ -288,6 +288,8 @@ export class WatchManager {
    * Dispatches some watch response on the event stream.
    */
   private handleResponse(res: RPC.IWatchResponse) {
+    // tslint:disable-next-line
+    console.log('got stream data', res);
     if (res.created) {
       this.queue!.handleCreate(res);
       return;
