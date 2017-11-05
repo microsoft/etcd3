@@ -1,4 +1,4 @@
-## 0.2.6 2017-10-22
+## 0.2.6 2017-11-11
 
  - **feature**: add software transactional memory ([#39](https://github.com/mixer/etcd3/pull/39))
  - **feature**: allow password auth over insecure channels ([#41](https://github.com/mixer/etcd3/pull/41)) thanks to [@reptilbud](https://github.com/reptilbud)
