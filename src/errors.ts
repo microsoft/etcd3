@@ -230,6 +230,7 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['etcdserver: authentication failed, invalid user ID or password', EtcdAuthenticationFailedError],
   ['etcdserver: permission denied', EtcdPermissionDeniedError],
   ['etcdserver: invalid auth token', EtcdInvalidAuthTokenError],
+  ['etcdserver: requested lease not found', EtcdLeaseInvalidError],
 ]);
 
 function getMatchingGrpcError(message: string): IErrorCtor | null {

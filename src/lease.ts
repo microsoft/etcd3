@@ -24,13 +24,28 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  * put requests before executing them.
  */
 class LeaseClientWrapper implements RPC.ICallable {
-  constructor(private readonly leaseID: Promise<string | Error>, private pool: ConnectionPool) {}
+  constructor(
+    private pool: ConnectionPool,
+    private readonly lease: {
+      leaseID: Promise<string | Error>;
+      emitLoss(err: EtcdError): void;
+    },
+  ) {}
 
   public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
-    return this.leaseID.then(throwIfError).then(lease => {
-      payload.lease = lease;
-      return this.pool.exec(service, method, payload);
-    });
+    return this.lease.leaseID
+      .then(throwIfError)
+      .then(lease => {
+        payload.lease = lease;
+        return this.pool.exec(service, method, payload);
+      })
+      .catch(err => {
+        if (err instanceof EtcdLeaseInvalidError) {
+          this.lease.emitLoss(err);
+        }
+
+        throw err;
+      });
   }
 
   public getConnection(): never {
@@ -100,8 +115,7 @@ export class Lease extends EventEmitter {
         return res.ID;
       })
       .catch(err => {
-        this.state = State.Revoked;
-        this.emit('lost', err);
+        this.emitLoss(err);
         // return, don't throw, from here so that if no one is listening to
         // grant() we don't crash the process.
         return err;
@@ -142,7 +156,7 @@ export class Lease extends EventEmitter {
    */
   public put(key: string | Buffer): PutBuilder {
     return new PutBuilder(
-      new RPC.KVClient(new LeaseClientWrapper(this.leaseID, this.pool)),
+      new RPC.KVClient(new LeaseClientWrapper(this.pool, <any>this)),
       this.namespace,
       key,
     );
@@ -163,8 +177,7 @@ export class Lease extends EventEmitter {
         stream.end();
         if (leaseExpired(res)) {
           const err = new EtcdLeaseInvalidError(res.ID);
-          this.close();
-          this.emit('lost', err);
+          this.emitLoss(err);
           throw err;
         }
 
@@ -238,6 +251,15 @@ export class Lease extends EventEmitter {
   }
 
   /**
+   * Emits the error as having caused this lease to die, and tears
+   * down the lease.
+   */
+  private emitLoss(err: EtcdError) {
+    this.close();
+    this.emit('lost', err);
+  }
+
+  /**
    * keepalive starts a loop keeping the lease alive.
    */
   private keepalive() {
@@ -295,8 +317,7 @@ export class Lease extends EventEmitter {
     this.teardown();
 
     if (err instanceof EtcdLeaseInvalidError) {
-      this.close();
-      this.emit('lost', err);
+      this.emitLoss(err);
     } else {
       setTimeout(() => this.keepalive(), 100);
     }
