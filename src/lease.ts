@@ -100,6 +100,7 @@ export class Lease extends EventEmitter {
         return res.ID;
       })
       .catch(err => {
+        this.state = State.Revoked;
         this.emit('lost', err);
         // return, don't throw, from here so that if no one is listening to
         // grant() we don't crash the process.
@@ -162,8 +163,8 @@ export class Lease extends EventEmitter {
         stream.end();
         if (leaseExpired(res)) {
           const err = new EtcdLeaseInvalidError(res.ID);
-          this.emit('lost', err);
           this.close();
+          this.emit('lost', err);
           throw err;
         }
 
@@ -244,11 +245,12 @@ export class Lease extends EventEmitter {
     // far past the end of our key's TTL, there's no way we're going to be
     // able to renew it. Fire a "lost".
     if (Date.now() - this.lastKeepAlive > 2 * 1000 * this.ttl) {
+      this.close();
       this.emit(
         'lost',
         new GRPCConnectFailedError('We lost connection to etcd and our lease has expired.'),
       );
-      return this.close();
+      return;
     }
 
     this.client
@@ -293,8 +295,8 @@ export class Lease extends EventEmitter {
     this.teardown();
 
     if (err instanceof EtcdLeaseInvalidError) {
-      this.emit('lost', err);
       this.close();
+      this.emit('lost', err);
     } else {
       setTimeout(() => this.keepalive(), 100);
     }
