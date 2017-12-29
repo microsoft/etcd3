@@ -96,7 +96,11 @@ describe('lease()', () => {
   it('emits a lost event if the lease is invalidated', async () => {
     lease = client.lease(100);
     let err: Error;
-    lease.on('lost', e => (err = e));
+    lease.on('lost', e => {
+      expect(lease.revoked()).to.be.true;
+      err = e;
+    });
+
     expect(lease.revoked()).to.be.false;
     await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
 
