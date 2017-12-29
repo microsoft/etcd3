@@ -116,6 +116,19 @@ describe('lease()', () => {
       });
   });
 
+  it('emits a loss if the touched key is lost', async () => {
+    (<any>lease).leaseID = Promise.resolve('123456789');
+    const lost = onceEvent(lease, 'lost');
+
+    try {
+      await lease.put('foo').value('bar');
+    } catch (e) {
+      expect(e).to.be.an.instanceof(EtcdLeaseInvalidError);
+      expect(e).to.equal(await lost);
+      expect(lease.revoked()).to.be.true;
+    }
+  });
+
   describe('crons', () => {
     let clock: sinon.SinonFakeTimers;
 

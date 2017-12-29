@@ -1,6 +1,8 @@
-## 0.2.7 TBA
+## 0.2.7 2017-12-30
 
- - **bug**: fixed successive watches not attaching ([#53](https://github.com/mixer/etcd3/pull/53))
+ - **bug**: when we detect a lease is lost by touching a key, mark the lease as revoked ([#50](https://github.com/mixer/etcd3/pull/50))
+ - **bug**: when a lease is lost, make sure the lease state is revoked ([#52](https://github.com/mixer/etcd3/pull/52))
+ - **bug**: fixed successive watches not attaching ([#51](https://github.com/mixer/etcd3/pull/51))
 
 ## 0.2.6 2017-11-11
 
