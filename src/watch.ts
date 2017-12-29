@@ -16,7 +16,6 @@ const enum QueueState {
   Idle,
   ReadingRevision,
   Attaching,
-  Destroyed,
 }
 
 /**
@@ -68,7 +67,7 @@ class AttachQueue {
    * Halts future operations on the queue.
    */
   public destroy() {
-    this.state = QueueState.Destroyed;
+    this.setState(QueueState.Idle);
     this.queue = [];
   }
 
@@ -76,18 +75,19 @@ class AttachQueue {
    * Reads the next watcher to create off the queue and attaches it.
    */
   private readQueue() {
-    if (this.state === QueueState.Destroyed) {
-      return;
-    }
     if (this.queue.length === 0) {
-      this.state = QueueState.Idle;
+      this.setState(QueueState.Idle);
       return;
     }
 
     const watcher = this.queue[0];
-    this.state = QueueState.Attaching;
+    this.setState(QueueState.Attaching);
     watcher.emit('connecting', watcher.request);
     this.stream.write({ create_request: watcher.request });
+  }
+
+  private setState(state: QueueState) {
+    this.state = state;
   }
 }
 

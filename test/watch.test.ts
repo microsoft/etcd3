@@ -184,6 +184,22 @@ describe('watch', () => {
       await expectWatching(watcher2, 'bar');
       expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
     });
+
+    it('allows successive resubscription (issue #51)', async () => {
+      const watcher1 = await client
+        .watch()
+        .key('foo1')
+        .create();
+      await expectWatching(watcher1, 'foo1');
+      await watcher1.cancel();
+
+      const watcher2 = await client
+        .watch()
+        .key('foo1')
+        .create();
+      await expectWatching(watcher2, 'foo1');
+      await watcher2.cancel();
+    });
   });
 
   describe('unsubscribing', () => {

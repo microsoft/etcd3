@@ -1,3 +1,7 @@
+## 0.2.7 TBA
+
+ - **bug**: fixed successive watches not attaching ([#53](https://github.com/mixer/etcd3/pull/53))
+
 ## 0.2.6 2017-11-11
 
  - **feature**: add software transactional memory ([#39](https://github.com/mixer/etcd3/pull/39))
