@@ -127,6 +127,7 @@
 						<section class="tsd-index-section tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="builder_.rangebuilder.html#calloptions" class="tsd-kind-icon">call<wbr>Options</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="builder_.rangebuilder.html#namespace" class="tsd-kind-icon">namespace</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="builder_.rangebuilder.html#request" class="tsd-kind-icon">request</a></li>
 							</ul>
@@ -141,6 +142,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#mincreaterevision" class="tsd-kind-icon">min<wbr>Create<wbr>Revision</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#minmodrevision" class="tsd-kind-icon">min<wbr>Mod<wbr>Revision</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#op" class="tsd-kind-icon">op</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#options" class="tsd-kind-icon">options</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#revision" class="tsd-kind-icon">revision</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.rangebuilder.html#serializable" class="tsd-kind-icon">serializable</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited"><a href="builder_.rangebuilder.html#then" class="tsd-kind-icon">then</a></li>
@@ -161,7 +163,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L55">builder.ts:55</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L59">builder.ts:59</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -178,12 +180,22 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="calloptions" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> call<wbr>Options</h3>
+					<div class="tsd-signature tsd-kind-icon">call<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L59">builder.ts:59</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 					<a name="namespace" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> namespace</h3>
 					<div class="tsd-signature tsd-kind-icon">namespace<span class="tsd-signature-symbol">:</span> <a href="util_.nsapplicator.html" class="tsd-signature-type">NSApplicator</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L57">builder.ts:57</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L61">builder.ts:61</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -193,7 +205,7 @@
 					<div class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">:</span> <a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L55">builder.ts:55</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L58">builder.ts:58</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -204,14 +216,14 @@
 					<a name="catch" class="tsd-anchor"></a>
 					<h3>catch</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">catch&lt;R&gt;<span class="tsd-signature-symbol">(</span>onRejected<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">catch&lt;R&gt;<span class="tsd-signature-symbol">(</span>onRejected<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#catch">catch</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L204">util.ts:204</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/util.ts#L202">util.ts:202</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -252,7 +264,7 @@
 									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -267,7 +279,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#createpromise">createPromise</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L189">util.ts:189</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/util.ts#L209">util.ts:209</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -289,7 +301,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L104">builder.ts:104</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L108">builder.ts:108</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -317,7 +329,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L88">builder.ts:88</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L92">builder.ts:92</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -345,7 +357,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L96">builder.ts:96</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L100">builder.ts:100</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -373,7 +385,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L80">builder.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L84">builder.ts:84</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -402,7 +414,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/builder_.ioperation.html">IOperation</a>.<a href="../interfaces/builder_.ioperation.html#op">op</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L112">builder.ts:112</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L124">builder.ts:124</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -411,6 +423,34 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="options" class="tsd-anchor"></a>
+					<h3>options</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L116">builder.ts:116</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sets the GRPC call options for this request.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -424,7 +464,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L64">builder.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L68">builder.ts:68</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -452,7 +492,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L72">builder.ts:72</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L76">builder.ts:76</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -481,7 +521,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="util_.promisewrap.html">PromiseWrap</a>.<a href="util_.promisewrap.html#then">then</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/util.ts#L194">util.ts:194</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/util.ts#L192">util.ts:192</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -583,6 +623,9 @@
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -613,6 +656,9 @@
 								<a href="builder_.rangebuilder.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="builder_.rangebuilder.html#calloptions" class="tsd-kind-icon">call<wbr>Options</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 								<a href="builder_.rangebuilder.html#namespace" class="tsd-kind-icon">namespace</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
@@ -638,6 +684,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.rangebuilder.html#op" class="tsd-kind-icon">op</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="builder_.rangebuilder.html#options" class="tsd-kind-icon">options</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.rangebuilder.html#revision" class="tsd-kind-icon">revision</a>

@@ -92,6 +92,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.leaseclient.html#leasegrant" class="tsd-kind-icon">lease<wbr>Grant</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.leaseclient.html#leasekeepalive" class="tsd-kind-icon">lease<wbr>Keep<wbr>Alive</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.leaseclient.html#leaseleases" class="tsd-kind-icon">lease<wbr>Leases</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.leaseclient.html#leaserevoke" class="tsd-kind-icon">lease<wbr>Revoke</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="rpc_.leaseclient.html#leasetimetolive" class="tsd-kind-icon">lease<wbr>Time<wbr>ToLive</a></li>
 							</ul>
@@ -111,7 +112,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L81">rpc.ts:81</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L97">rpc.ts:97</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -131,13 +132,13 @@
 					<a name="leasegrant" class="tsd-anchor"></a>
 					<h3>lease<wbr>Grant</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">lease<wbr>Grant<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileasegrantrequest.html" class="tsd-signature-type">ILeaseGrantRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasegrantresponse.html" class="tsd-signature-type">ILeaseGrantResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">lease<wbr>Grant<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileasegrantrequest.html" class="tsd-signature-type">ILeaseGrantRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasegrantresponse.html" class="tsd-signature-type">ILeaseGrantResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L88">rpc.ts:88</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L104">rpc.ts:104</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -152,6 +153,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.ileasegrantrequest.html" class="tsd-signature-type">ILeaseGrantRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasegrantresponse.html" class="tsd-signature-type">ILeaseGrantResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -161,13 +165,13 @@
 					<a name="leasekeepalive" class="tsd-anchor"></a>
 					<h3>lease<wbr>Keep<wbr>Alive</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">lease<wbr>Keep<wbr>Alive<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iduplexstream.html" class="tsd-signature-type">IDuplexStream</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasekeepaliverequest.html" class="tsd-signature-type">ILeaseKeepAliveRequest</a><span class="tsd-signature-symbol">, </span><a href="../interfaces/rpc_.ileasekeepaliveresponse.html" class="tsd-signature-type">ILeaseKeepAliveResponse</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">lease<wbr>Keep<wbr>Alive<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iduplexstream.html" class="tsd-signature-type">IDuplexStream</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasekeepaliverequest.html" class="tsd-signature-type">ILeaseKeepAliveRequest</a><span class="tsd-signature-symbol">, </span><a href="../interfaces/rpc_.ileasekeepaliveresponse.html" class="tsd-signature-type">ILeaseKeepAliveResponse</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L101">rpc.ts:101</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L123">rpc.ts:123</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -176,7 +180,41 @@
 									to the server and streaming keep alive responses from the server to the client.</p>
 								</div>
 							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iduplexstream.html" class="tsd-signature-type">IDuplexStream</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasekeepaliverequest.html" class="tsd-signature-type">ILeaseKeepAliveRequest</a><span class="tsd-signature-symbol">, </span><a href="../interfaces/rpc_.ileasekeepaliveresponse.html" class="tsd-signature-type">ILeaseKeepAliveResponse</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="leaseleases" class="tsd-anchor"></a>
+					<h3>lease<wbr>Leases</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">lease<wbr>Leases<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileaseleasesresponse.html" class="tsd-signature-type">ILeaseLeasesResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L142">rpc.ts:142</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>LeaseLeases lists all existing leases.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileaseleasesresponse.html" class="tsd-signature-type">ILeaseLeasesResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -184,13 +222,13 @@
 					<a name="leaserevoke" class="tsd-anchor"></a>
 					<h3>lease<wbr>Revoke</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">lease<wbr>Revoke<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileaserevokerequest.html" class="tsd-signature-type">ILeaseRevokeRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileaserevokeresponse.html" class="tsd-signature-type">ILeaseRevokeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">lease<wbr>Revoke<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileaserevokerequest.html" class="tsd-signature-type">ILeaseRevokeRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileaserevokeresponse.html" class="tsd-signature-type">ILeaseRevokeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L94">rpc.ts:94</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L113">rpc.ts:113</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -203,6 +241,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.ileaserevokerequest.html" class="tsd-signature-type">ILeaseRevokeRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileaserevokeresponse.html" class="tsd-signature-type">ILeaseRevokeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -212,13 +253,13 @@
 					<a name="leasetimetolive" class="tsd-anchor"></a>
 					<h3>lease<wbr>Time<wbr>ToLive</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">lease<wbr>Time<wbr>ToLive<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileasetimetoliverequest.html" class="tsd-signature-type">ILeaseTimeToLiveRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasetimetoliveresponse.html" class="tsd-signature-type">ILeaseTimeToLiveResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">lease<wbr>Time<wbr>ToLive<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ileasetimetoliverequest.html" class="tsd-signature-type">ILeaseTimeToLiveRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasetimetoliveresponse.html" class="tsd-signature-type">ILeaseTimeToLiveResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L107">rpc.ts:107</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L133">rpc.ts:133</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -230,6 +271,9 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.ileasetimetoliverequest.html" class="tsd-signature-type">ILeaseTimeToLiveRequest</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ileasetimetoliveresponse.html" class="tsd-signature-type">ILeaseTimeToLiveResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -287,6 +331,9 @@
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -309,6 +356,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="rpc_.leaseclient.html#leasekeepalive" class="tsd-kind-icon">lease<wbr>Keep<wbr>Alive</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="rpc_.leaseclient.html#leaseleases" class="tsd-kind-icon">lease<wbr>Leases</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="rpc_.leaseclient.html#leaserevoke" class="tsd-kind-icon">lease<wbr>Revoke</a>

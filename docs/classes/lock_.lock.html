@@ -116,6 +116,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#acquire" class="tsd-kind-icon">acquire</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="lock_.lock.html#do" class="tsd-kind-icon">do</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#options" class="tsd-kind-icon">options</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#release" class="tsd-kind-icon">release</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lock_.lock.html#ttl" class="tsd-kind-icon">ttl</a></li>
 							</ul>
@@ -135,7 +136,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L35">lock.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L38">lock.ts:38</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -161,13 +162,13 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 					<a name="acquire" class="tsd-anchor"></a>
 					<h3>acquire</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">acquire<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">acquire<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L59">lock.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L70">lock.ts:70</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -175,7 +176,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 									<p>Acquire attempts to acquire the lock, rejecting if it&#39;s unable to.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -189,7 +190,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L93">lock.ts:93</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L110">lock.ts:110</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -231,6 +232,34 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="options" class="tsd-anchor"></a>
+					<h3>options</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L62">lock.ts:62</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sets the GRPC call options for this request.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>options: <span class="tsd-signature-type">CallOptions</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="release" class="tsd-anchor"></a>
 					<h3>release</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -240,7 +269,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L80">lock.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L97">lock.ts:97</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -262,7 +291,7 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lock.ts#L47">lock.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lock.ts#L50">lock.ts:50</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -332,6 +361,9 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -354,6 +386,9 @@ client.lock(<span class="hljs-string">'my_resource'</span>).<span class="hljs-ke
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
 								<a href="lock_.lock.html#do" class="tsd-kind-icon">do</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="lock_.lock.html#options" class="tsd-kind-icon">options</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="lock_.lock.html#release" class="tsd-kind-icon">release</a>

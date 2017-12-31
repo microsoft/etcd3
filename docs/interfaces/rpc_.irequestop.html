@@ -87,6 +87,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.irequestop.html#request_delete_range" class="tsd-kind-icon">request_<wbr>delete_<wbr>range</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.irequestop.html#request_put" class="tsd-kind-icon">request_<wbr>put</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.irequestop.html#request_range" class="tsd-kind-icon">request_<wbr>range</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="rpc_.irequestop.html#request_txn" class="tsd-kind-icon">request_<wbr>txn</a></li>
 							</ul>
 						</section>
 					</div>
@@ -100,7 +101,7 @@
 					<div class="tsd-signature tsd-kind-icon">request_<wbr>delete_<wbr>range<span class="tsd-signature-symbol">:</span> <a href="rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L477">rpc.ts:477</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L568">rpc.ts:568</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -110,7 +111,7 @@
 					<div class="tsd-signature tsd-kind-icon">request_<wbr>put<span class="tsd-signature-symbol">:</span> <a href="rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L476">rpc.ts:476</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L567">rpc.ts:567</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -120,7 +121,17 @@
 					<div class="tsd-signature tsd-kind-icon">request_<wbr>range<span class="tsd-signature-symbol">:</span> <a href="rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L475">rpc.ts:475</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L566">rpc.ts:566</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="request_txn" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> request_<wbr>txn</h3>
+					<div class="tsd-signature tsd-kind-icon">request_<wbr>txn<span class="tsd-signature-symbol">:</span> <a href="rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L569">rpc.ts:569</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -175,6 +186,9 @@
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -197,6 +211,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="rpc_.irequestop.html#request_range" class="tsd-kind-icon">request_<wbr>range</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="rpc_.irequestop.html#request_txn" class="tsd-kind-icon">request_<wbr>txn</a>
 							</li>
 						</ul>
 					</li>

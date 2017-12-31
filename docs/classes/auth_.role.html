@@ -130,7 +130,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L35">auth.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L37">auth.ts:37</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -155,7 +155,7 @@
 					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L36">auth.ts:36</a></li>
+							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L38">auth.ts:38</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -166,13 +166,13 @@
 					<a name="adduser" class="tsd-anchor"></a>
 					<h3>add<wbr>User</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">add<wbr>User<span class="tsd-signature-symbol">(</span>user<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>User<span class="tsd-signature-symbol">(</span>user<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L106">auth.ts:106</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L117">auth.ts:117</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -185,6 +185,9 @@
 								<li>
 									<h5>user: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -194,13 +197,13 @@
 					<a name="create" class="tsd-anchor"></a>
 					<h3>create</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">create<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L41">auth.ts:41</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L43">auth.ts:43</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -208,6 +211,12 @@
 									<p>Creates the role in etcd.</p>
 								</div>
 							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -216,13 +225,13 @@
 					<a name="delete" class="tsd-anchor"></a>
 					<h3>delete</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L48">auth.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L50">auth.ts:50</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -230,6 +239,12 @@
 									<p>Deletes the role from etcd.</p>
 								</div>
 							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -238,13 +253,13 @@
 					<a name="grant" class="tsd-anchor"></a>
 					<h3>grant</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">grant<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">grant<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L73">auth.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L78">auth.ts:78</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -257,6 +272,9 @@
 								<li>
 									<h5>req: <a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -266,13 +284,13 @@
 					<a name="permissions" class="tsd-anchor"></a>
 					<h3>permissions</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">permissions<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/auth_.ipermissionresult.html" class="tsd-signature-type">IPermissionResult</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">permissions<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/auth_.ipermissionresult.html" class="tsd-signature-type">IPermissionResult</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L94">auth.ts:94</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L105">auth.ts:105</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -280,6 +298,12 @@
 									<p>Returns a list of permissions the role has.</p>
 								</div>
 							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/auth_.ipermissionresult.html" class="tsd-signature-type">IPermissionResult</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
@@ -288,13 +312,13 @@
 					<a name="removeuser" class="tsd-anchor"></a>
 					<h3>remove<wbr>User</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">remove<wbr>User<span class="tsd-signature-symbol">(</span>user<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">remove<wbr>User<span class="tsd-signature-symbol">(</span>user<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L117">auth.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L128">auth.ts:128</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -307,6 +331,9 @@
 								<li>
 									<h5>user: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="auth_.user.html" class="tsd-signature-type">User</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -316,13 +343,13 @@
 					<a name="revoke" class="tsd-anchor"></a>
 					<h3>revoke</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">revoke<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">revoke<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/auth.ts#L55">auth.ts:55</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/auth.ts#L57">auth.ts:57</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -334,6 +361,9 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>req: <a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol"> | </span><a href="../modules/auth_.html#ipermissionrequest" class="tsd-signature-type">IPermissionRequest</a><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -389,6 +419,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>

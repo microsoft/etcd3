@@ -112,7 +112,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L24">rpc.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L32">rpc.ts:32</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -132,13 +132,13 @@
 					<a name="compact" class="tsd-anchor"></a>
 					<h3>compact</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">compact<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.icompactionresponse.html" class="tsd-signature-type">ICompactionResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">compact<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.icompactionresponse.html" class="tsd-signature-type">ICompactionResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L62">rpc.ts:62</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L73">rpc.ts:73</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -153,6 +153,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.icompactionresponse.html" class="tsd-signature-type">ICompactionResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -162,13 +165,13 @@
 					<a name="deleterange" class="tsd-anchor"></a>
 					<h3>delete<wbr>Range</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<wbr>Range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L45">rpc.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L53">rpc.ts:53</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -183,6 +186,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.ideleterangeresponse.html" class="tsd-signature-type">IDeleteRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -192,13 +198,13 @@
 					<a name="put" class="tsd-anchor"></a>
 					<h3>put</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iputresponse.html" class="tsd-signature-type">IPutResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">put<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iputresponse.html" class="tsd-signature-type">IPutResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L37">rpc.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L45">rpc.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -213,6 +219,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.iputrequest.html" class="tsd-signature-type">IPutRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.iputresponse.html" class="tsd-signature-type">IPutResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -222,13 +231,13 @@
 					<a name="range" class="tsd-anchor"></a>
 					<h3>range</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">range<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L29">rpc.ts:29</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L37">rpc.ts:37</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -241,6 +250,9 @@
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.irangerequest.html" class="tsd-signature-type">IRangeRequest</a></h5>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.irangeresponse.html" class="tsd-signature-type">IRangeResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -250,13 +262,13 @@
 					<a name="txn" class="tsd-anchor"></a>
 					<h3>txn</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">txn<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.itxnresponse.html" class="tsd-signature-type">ITxnResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">txn<span class="tsd-signature-symbol">(</span>req<span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.CallOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.itxnresponse.html" class="tsd-signature-type">ITxnResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/rpc.ts#L54">rpc.ts:54</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/rpc.ts#L65">rpc.ts:65</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -271,6 +283,9 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>req: <a href="../interfaces/rpc_.itxnrequest.html" class="tsd-signature-type">ITxnRequest</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">grpc.CallOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/rpc_.itxnresponse.html" class="tsd-signature-type">ITxnResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -326,6 +341,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>

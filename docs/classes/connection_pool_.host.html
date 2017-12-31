@@ -69,6 +69,15 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A Host is one instance of the etcd server, which can contain multiple
+							services. It holds GRPC clients to communicate with the host, and will
+						be removed from the connection pool upon server failures.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -103,13 +112,13 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Host<span class="tsd-signature-symbol">(</span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, channelCredentials<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ChannelCredentials</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="connection_pool_.host.html" class="tsd-signature-type">Host</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Host<span class="tsd-signature-symbol">(</span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, channelCredentials<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ChannelCredentials</span>, channelOptions<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">grpc.ChannelOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="connection_pool_.host.html" class="tsd-signature-type">Host</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/connection-pool.ts#L114">connection-pool.ts:114</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/connection-pool.ts#L131">connection-pool.ts:131</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -118,7 +127,10 @@
 									<h5>host: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>channelCredentials: <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ChannelCredentials</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>channelCredentials: <span class="tsd-signature-type">ChannelCredentials</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> channelOptions: <span class="tsd-signature-type">grpc.ChannelOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="connection_pool_.host.html" class="tsd-signature-type">Host</a></h4>
@@ -138,7 +150,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/connection-pool.ts#L136">connection-pool.ts:136</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/connection-pool.ts#L163">connection-pool.ts:163</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -155,13 +167,13 @@
 					<a name="getserviceclient" class="tsd-anchor"></a>
 					<h3>get<wbr>Service<wbr>Client</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Service<wbr>Client<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Client</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Service<wbr>Client<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Client</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/connection-pool.ts#L121">connection-pool.ts:121</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/connection-pool.ts#L144">connection-pool.ts:144</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -175,7 +187,7 @@
 									<h5>name: <span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Auth"</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Client</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Client</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -230,6 +242,9 @@
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -267,7 +282,13 @@
 						<a href="../modules/connection_pool_.html#defaultbackoffstrategy" class="tsd-kind-icon">default<wbr>Backoff<wbr>Strategy</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/connection_pool_.html#secureprotocolprefix" class="tsd-kind-icon">secure<wbr>Protocol<wbr>Prefix</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/connection_pool_.html#services" class="tsd-kind-icon">services</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/connection_pool_.html#removeprotocolprefix" class="tsd-kind-icon">remove<wbr>Protocol<wbr>Prefix</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/connection_pool_.html#runservicecall" class="tsd-kind-icon">run<wbr>Service<wbr>Call</a>

@@ -117,6 +117,8 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#and" class="tsd-kind-icon">and</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#commit" class="tsd-kind-icon">commit</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#else" class="tsd-kind-icon">else</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#mapoperations" class="tsd-kind-icon">map<wbr>Operations</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#options" class="tsd-kind-icon">options</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="builder_.comparatorbuilder.html#then" class="tsd-kind-icon">then</a></li>
 							</ul>
 						</section>
@@ -135,7 +137,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L498">builder.ts:498</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L548">builder.ts:548</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -158,13 +160,13 @@
 					<a name="and" class="tsd-anchor"></a>
 					<h3>and</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">and<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, column<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span>, cmp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">and<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span>, column<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span>, cmp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L505">builder.ts:505</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L563">builder.ts:563</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -178,7 +180,7 @@
 									<h5>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span></h5>
 								</li>
 								<li>
-									<h5>column: <span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span></h5>
+									<h5>column: <span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Version"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Create"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Mod"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"Value"</span></h5>
 								</li>
 								<li>
 									<h5>cmp: <span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"!&#x3D;&#x3D;"</span></h5>
@@ -201,7 +203,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L549">builder.ts:549</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L607">builder.ts:607</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -217,13 +219,13 @@
 					<a name="else" class="tsd-anchor"></a>
 					<h3>else</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">else<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>clauses<span class="tsd-signature-symbol">: </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">else<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>clauses<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L541">builder.ts:541</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L599">builder.ts:599</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -235,7 +237,63 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>clauses: <a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>clauses: <span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="mapoperations" class="tsd-anchor"></a>
+					<h3>map<wbr>Operations</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">map<wbr>Operations<span class="tsd-signature-symbol">(</span>ops<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol">[]</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L614">builder.ts:614</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Low-level method to add</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>ops: <span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol">[]</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="options" class="tsd-anchor"></a>
+					<h3>options</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L555">builder.ts:555</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sets the GRPC call options for this request.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
@@ -246,13 +304,13 @@
 					<a name="then" class="tsd-anchor"></a>
 					<h3>then</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">then<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>clauses<span class="tsd-signature-symbol">: </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
+						<li class="tsd-signature tsd-kind-icon">then<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>clauses<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">this</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/builder.ts#L532">builder.ts:532</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/builder.ts#L590">builder.ts:590</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -264,7 +322,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>clauses: <a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>clauses: <span class="tsd-signature-symbol">(</span><a href="../interfaces/rpc_.irequestop.html" class="tsd-signature-type">IRequestOp</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/builder_.ioperation.html" class="tsd-signature-type">IOperation</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">this</span></h4>
@@ -322,6 +380,9 @@
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -347,6 +408,12 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.comparatorbuilder.html#else" class="tsd-kind-icon">else</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="builder_.comparatorbuilder.html#mapoperations" class="tsd-kind-icon">map<wbr>Operations</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="builder_.comparatorbuilder.html#options" class="tsd-kind-icon">options</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="builder_.comparatorbuilder.html#then" class="tsd-kind-icon">then</a>

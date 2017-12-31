@@ -117,22 +117,48 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Lease<wbr>Client<wbr>Wrapper<span class="tsd-signature-symbol">(</span>leaseID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol">&gt;</span>, pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lease_.leaseclientwrapper.html" class="tsd-signature-type">LeaseClientWrapper</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Lease<wbr>Client<wbr>Wrapper<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a>, lease<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="lease_.leaseclientwrapper.html" class="tsd-signature-type">LeaseClientWrapper</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lease.ts#L25">lease.ts:25</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L26">lease.ts:26</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>leaseID: <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>pool: <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></h5>
 								</li>
 								<li>
-									<h5>pool: <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></h5>
+									<h5>lease: <span class="tsd-signature-type">object</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5>leaseID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol">&gt;</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>emit<wbr>Loss<span class="tsd-signature-symbol">: </span>function</h5>
+											<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon">emit<wbr>Loss<span class="tsd-signature-symbol">(</span>err<span class="tsd-signature-symbol">: </span><a href="errors_.etcderror.html" class="tsd-signature-type">EtcdError</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<aside class="tsd-sources">
+														<ul>
+															<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L31">lease.ts:31</a></li>
+														</ul>
+													</aside>
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>err: <a href="errors_.etcderror.html" class="tsd-signature-type">EtcdError</a></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+										</ul>        </li>
+									</ul>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="lease_.leaseclientwrapper.html" class="tsd-signature-type">LeaseClientWrapper</a></h4>
@@ -152,7 +178,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lease.ts#L28">lease.ts:28</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L35">lease.ts:35</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -181,7 +207,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/mixer/etcd3/blob/v0.2.2/src/lease.ts#L35">lease.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L51">lease.ts:51</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">never</span></h4>
@@ -237,6 +263,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/shared_pool_.html">"shared-<wbr>pool"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/stm_.html">"stm"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/util_.html">"util"</a>
