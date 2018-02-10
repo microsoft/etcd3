@@ -1,4 +1,4 @@
-## 0.2.8 2017-02-09
+## 0.2.9 2017-02-09
 
  - **bug**: lock to grpc@1.9.0 due to upstream regression (see [#59](https://github.com/mixer/etcd3/issues/59))
 
