@@ -1,3 +1,7 @@
+## 0.2.8 2017-02-09
+
+ - **bug**: lock to grpc@1.9.0 due to upstream regression (see [#59](https://github.com/mixer/etcd3/issues/59))
+
 ## 0.2.7 2017-12-30
 
  - **bug**: when we detect a lease is lost by touching a key, mark the lease as revoked ([#50](https://github.com/mixer/etcd3/pull/50))
