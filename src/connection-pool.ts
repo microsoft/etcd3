@@ -246,10 +246,10 @@ export class ConnectionPool implements ICallable {
     service: keyof typeof Services,
   ): Promise<{ host: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
-      return {
+      return Promise.resolve(<any>this.mockImpl.getConnection(service)).then(connection => ({
         metadata: new grpc.Metadata(),
-        ...(<any>this.mockImpl.getConnection(service)),
-      };
+        ...connection,
+      }));
     }
 
     return Promise.all([
