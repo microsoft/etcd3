@@ -11,6 +11,7 @@
     "module": "commonjs",
     "target": "es6",
     "outDir": "lib",
+    "skipLibCheck": true,
     "lib": [
       "es5",
       "es6"
