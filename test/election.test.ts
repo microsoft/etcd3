@@ -62,6 +62,13 @@ describe('election', () => {
       expect(newValue).to.equal('new-value');
     });
 
+    it('should throw if not ready', async () => {
+      const e = new Election(client, 'not-ready');
+      const whenCatch = sinon.spy();
+      await e.campaign('foo').catch(whenCatch);
+      expect(whenCatch.calledWith(Election.notReadyError)).to.be.true;
+    })
+
   });
 
   describe('proclaim', () => {
@@ -92,9 +99,9 @@ describe('election', () => {
 
     it('should throw if no leader', async () => {
       await election.resign();
-      const whenCatch = sinon.stub();
+      const whenCatch = sinon.spy();
       await election.getLeader().catch(whenCatch);
-      expect(whenCatch.calledOnce).to.be.true;
+      expect(whenCatch.calledWith(Election.noLeaderError)).to.be.true;
     });
 
   });
