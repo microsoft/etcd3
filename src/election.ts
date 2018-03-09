@@ -19,7 +19,6 @@ import { Namespace } from './namespace';
  */
 export class Election {
   public static readonly prefix = 'election';
-  public static readonly ttl = 1;
   public static readonly notLeaderError = new Error('election: not leader');
   public static readonly noLeaderError = new Error('election: no leader');
   public static readonly notReadyError = new Error('election: no ready');
@@ -39,9 +38,10 @@ export class Election {
   public get isLeader(): boolean { return this._isLeader; }
 
   constructor(namespace: Namespace,
-              public readonly name: string) {
+              public readonly name: string,
+              public readonly ttl: number = 60) {
     this.namespace = namespace.namespace(this.getPrefix());
-    this.lease = this.namespace.lease(Election.ttl);
+    this.lease = this.namespace.lease(ttl);
   }
 
   public async ready() {
