@@ -52,7 +52,7 @@ export class Election {
     }
   }
 
-  public async campaign(value: any) {
+  public async campaign(value: string) {
     this.throwIfNotReady();
     const result = await this.namespace
       .if(this.leaseId, 'Create', '==', 0)
@@ -68,7 +68,9 @@ export class Election {
       try {
         const kv = result.responses[0].response_range.kvs[0];
         this._leaderRevision = kv.create_revision;
-        await this.proclaim(value);
+        if (kv.value.toString() !== value) {
+          await this.proclaim(value);
+        }
       } catch (error) {
         await this.resign();
         throw error;

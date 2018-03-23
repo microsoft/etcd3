@@ -67,7 +67,20 @@ describe('election', () => {
       const whenCatch = sinon.spy();
       await e.campaign('foo').catch(whenCatch);
       expect(whenCatch.calledWith(Election.notReadyError)).to.be.true;
-    })
+    });
+
+    it('only proclaim if value changed', async () => {
+      const proclaimFn = sinon
+        .stub(election, 'proclaim')
+        .callsFake(Election.prototype.proclaim.bind(election));
+
+      await election.campaign('candidate');
+      expect(proclaimFn.notCalled).to.be.true;
+      await election.campaign('candidate2');
+      expect(proclaimFn.calledOnce).to.be.true;
+
+      proclaimFn.restore();
+    });
 
   });
 
