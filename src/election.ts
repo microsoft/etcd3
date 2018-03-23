@@ -29,13 +29,13 @@ export class Election {
   private _leaseId = '';
   private _leaderKey = '';
   private _leaderRevision = '';
-  private _isLeader = false;
+  private _isCampaigning = false;
 
   public get leaseId(): string { return this._leaseId; }
   public get leaderKey(): string { return this._leaderKey; }
   public get leaderRevision(): string { return this._leaderRevision; }
   public get isReady(): boolean { return this._leaseId.length > 0; }
-  public get isLeader(): boolean { return this._isLeader; }
+  public get isCampaigning(): boolean { return this._isCampaigning; }
 
   constructor(namespace: Namespace,
               public readonly name: string,
@@ -62,7 +62,7 @@ export class Election {
 
     this._leaderKey = `${this.getPrefix()}${this.leaseId}`;
     this._leaderRevision = result.header.revision;
-    this._isLeader = true;
+    this._isCampaigning = true;
 
     if (!result.succeeded) {
       try {
@@ -80,7 +80,7 @@ export class Election {
     try {
       await this.waitForElected();
     } catch (error) {
-      this._isLeader = false;
+      this._isCampaigning = false;
       throw error;
     }
   }
@@ -88,7 +88,7 @@ export class Election {
   public async proclaim(value: any) {
     this.throwIfNotReady();
 
-    if (!this._isLeader) {
+    if (!this._isCampaigning) {
       throw Election.notLeaderError;
     }
 
@@ -106,7 +106,7 @@ export class Election {
   public async resign() {
     this.throwIfNotReady();
 
-    if (!this.isLeader) {
+    if (!this.isCampaigning) {
       return;
     }
 
@@ -117,7 +117,7 @@ export class Election {
 
     this._leaderKey = '';
     this._leaderRevision = '';
-    this._isLeader = false;
+    this._isCampaigning = false;
   }
 
   public async getLeader() {

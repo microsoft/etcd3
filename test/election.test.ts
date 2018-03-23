@@ -20,9 +20,7 @@ describe('election', () => {
   });
 
   afterEach(async () => {
-    if (election.isLeader) {
-      await election.resign();
-    }
+    await election.resign();
     await tearDownTestClient(client);
   });
 
@@ -34,12 +32,12 @@ describe('election', () => {
 
       await election2.ready();
 
-      expect(election.isLeader).to.be.true;
-      expect(election2.isLeader).to.be.false;
+      expect(election.isCampaigning).to.be.true;
+      expect(election2.isCampaigning).to.be.false;
 
       const waitElection2 = election2.campaign('election2').then(() => {
-        expect(election.isLeader).to.be.false;
-        expect(election2.isLeader).to.be.true;
+        expect(election.isCampaigning).to.be.false;
+        expect(election2.isCampaigning).to.be.true;
       });
 
       await sleep(10);
@@ -52,7 +50,7 @@ describe('election', () => {
     });
 
     it('should proclaim if campaign repeatly', async () => {
-      expect(election.isLeader).to.be.true;
+      expect(election.isCampaigning).to.be.true;
 
       const oldValue = await client.get(election.leaderKey);
       expect(oldValue).to.equal('candidate');
