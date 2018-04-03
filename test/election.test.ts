@@ -60,13 +60,6 @@ describe('election', () => {
       expect(newValue).to.equal('new-value');
     });
 
-    it('should throw if not ready', async () => {
-      const e = new Election(client, 'not-ready');
-      const whenCatch = sinon.spy();
-      await e.campaign('foo').catch(whenCatch);
-      expect(whenCatch.calledWith(Election.notReadyError)).to.be.true;
-    });
-
     it('only proclaim if value changed', async () => {
       const proclaimFn = sinon
         .stub(election, 'proclaim')

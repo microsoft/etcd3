@@ -11,9 +11,6 @@ import { Namespace } from './namespace';
  * const election = new Election(client, 'singleton_service')
  * const id = BigNumber.random().toString()
  *
- * // waiting for election ready
- * await election.ready()
- *
  * // process will hang here until elected
  * await election.campaign(id)
  */
@@ -26,15 +23,14 @@ export class Election {
   public readonly namespace: Namespace;
   public readonly lease: Lease;
 
-  private _leaseId = '';
+  private leaseId = '';
   private _leaderKey = '';
   private _leaderRevision = '';
   private _isCampaigning = false;
 
-  public get leaseId(): string { return this._leaseId; }
   public get leaderKey(): string { return this._leaderKey; }
   public get leaderRevision(): string { return this._leaderRevision; }
-  public get isReady(): boolean { return this._leaseId.length > 0; }
+  public get isReady(): boolean { return this.leaseId.length > 0; }
   public get isCampaigning(): boolean { return this._isCampaigning; }
 
   constructor(namespace: Namespace,
@@ -48,12 +44,13 @@ export class Election {
     const leaseId = await this.lease.grant();
 
     if (!this.isReady) {
-      this._leaseId = leaseId;
+      this.leaseId = leaseId;
     }
   }
 
   public async campaign(value: string) {
-    this.throwIfNotReady();
+    await this.ready();
+
     const result = await this.namespace
       .if(this.leaseId, 'Create', '==', 0)
       .then(this.namespace.put(this.leaseId).value(value).lease(this.leaseId))
@@ -86,8 +83,6 @@ export class Election {
   }
 
   public async proclaim(value: any) {
-    this.throwIfNotReady();
-
     if (!this._isCampaigning) {
       throw Election.notLeaderError;
     }
@@ -104,7 +99,9 @@ export class Election {
   }
 
   public async resign() {
-    this.throwIfNotReady();
+    if (!this.isReady) {
+      return;
+    }
 
     if (!this.isCampaigning) {
       return;
@@ -152,16 +149,8 @@ export class Election {
 
     try {
       await deleteOrError;
-    } catch (error) {
-      throw error;
     } finally {
       await watcher.cancel();
-    }
-  }
-
-  private throwIfNotReady(): void {
-    if (!this.isReady) {
-      throw Election.notReadyError;
     }
   }
 }
