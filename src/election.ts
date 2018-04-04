@@ -103,12 +103,12 @@ export class Election {
       return;
     }
 
-    try {
-      await this.namespace
-        .if(this.leaseId, 'Create', '==', this._leaderRevision)
-        .then(this.namespace.delete().key(this.leaseId))
-        .commit();
-    } catch (e) {
+    const r = await this.namespace
+      .if(this.leaseId, 'Create', '==', this._leaderRevision)
+      .then(this.namespace.delete().key(this.leaseId))
+      .commit();
+
+    if (!r.succeeded) {
       // If fail, revoke lease for performing resigning
       await this.lease.revoke();
       this.leaseId = '';
