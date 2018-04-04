@@ -180,6 +180,16 @@ export class EtcdInvalidAuthTokenError extends Error {}
 export class EtcdPermissionDeniedError extends Error {}
 
 /**
+ * Etcd leader election has no leader
+ */
+export class EtcdNoLeaderError extends Error {}
+
+/**
+ * Process in this etcd leader election is not a leader.
+ */
+export class EtcdNotLeaderError extends Error {}
+
+/**
  * An STMConflictError is thrown from the `SoftwareTransaction.transact`
  * if we continue to get conflicts and exceed the maximum number
  * of retries.

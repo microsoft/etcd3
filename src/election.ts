@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { EtcdNoLeaderError, EtcdNotLeaderError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
 
@@ -16,9 +17,8 @@ import { Namespace } from './namespace';
  */
 export class Election {
   public static readonly prefix = 'election';
-  public static readonly notLeaderError = new Error('election: not leader');
-  public static readonly noLeaderError = new Error('election: no leader');
-  public static readonly notReadyError = new Error('election: no ready');
+  // public static readonly notLeaderError = new Error('election: not leader');
+  // public static readonly noLeaderError = new Error('election: no leader');
 
   public readonly namespace: Namespace;
   public readonly lease: Lease;
@@ -84,7 +84,7 @@ export class Election {
 
   public async proclaim(value: any) {
     if (!this._isCampaigning) {
-      throw Election.notLeaderError;
+      throw new EtcdNotLeaderError();
     }
 
     const r = await this.namespace
@@ -94,15 +94,11 @@ export class Election {
 
     if (!r.succeeded) {
       this._leaderKey = '';
-      throw Election.notLeaderError;
+      throw new EtcdNotLeaderError();
     }
   }
 
   public async resign() {
-    if (!this.isReady) {
-      return;
-    }
-
     if (!this.isCampaigning) {
       return;
     }
@@ -120,7 +116,7 @@ export class Election {
   public async getLeader() {
     const result = await this.namespace.getAll().sort('Create', 'Ascend').keys();
     if (result.length === 0) {
-      throw Election.noLeaderError;
+      throw new EtcdNoLeaderError();
     }
     return `${this.getPrefix()}${result[0]}`;
   }
