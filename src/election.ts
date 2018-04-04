@@ -77,7 +77,7 @@ export class Election {
     try {
       await this.waitForElected();
     } catch (error) {
-      this._isCampaigning = false;
+      await this.resign();
       throw error;
     }
   }
