@@ -18,8 +18,6 @@ import { Namespace } from './namespace';
  */
 export class Election extends EventEmitter {
   public static readonly prefix = 'election';
-  // public static readonly notLeaderError = new Error('election: not leader');
-  // public static readonly noLeaderError = new Error('election: no leader');
 
   public readonly namespace: Namespace;
   public readonly lease: Lease;
@@ -219,7 +217,7 @@ export class Election extends EventEmitter {
   private tryObserve(): void {
     this.observe().catch(error => {
       if (this.listenerCount('error') > 0) {
-        this.emit('error', error)
+        this.emit('error', error);
       } else {
         throw error;
       }
