@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import * as EventEmitter from 'events';
 import { EtcdNoLeaderError, EtcdNotLeaderError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
@@ -15,7 +16,7 @@ import { Namespace } from './namespace';
  * // process will hang here until elected
  * await election.campaign(id)
  */
-export class Election {
+export class Election extends EventEmitter {
   public static readonly prefix = 'election';
   // public static readonly notLeaderError = new Error('election: not leader');
   // public static readonly noLeaderError = new Error('election: no leader');
@@ -27,17 +28,45 @@ export class Election {
   private _leaderKey = '';
   private _leaderRevision = '';
   private _isCampaigning = false;
+  private _isObserving = false;
 
   public get leaderKey(): string { return this._leaderKey; }
   public get leaderRevision(): string { return this._leaderRevision; }
   public get isReady(): boolean { return this.leaseId.length > 0; }
   public get isCampaigning(): boolean { return this._isCampaigning; }
+  public get isObserving(): boolean { return this._isObserving; }
 
-  constructor(namespace: Namespace,
+  constructor(public readonly parent: Namespace,
               public readonly name: string,
               public readonly ttl: number = 60) {
-    this.namespace = namespace.namespace(this.getPrefix());
+    super();
+    this.namespace = parent.namespace(this.getPrefix());
     this.lease = this.namespace.lease(ttl);
+  }
+
+  public on(event: 'leader', listener: (leaderKey: string) => void): this;
+  public on(event: 'error', listener: (error: any) => void): this;
+  public on(event: string|symbol, listener: Function): this;
+  public on(event: string|symbol, listener: Function): this {
+    super.on(event, listener);
+    if (this.shouldObserve(event)) {
+      this.tryObserve();
+    }
+    return this;
+  }
+
+  /* istanbul ignore next */
+  public addListener(event: string|symbol, listener: Function): this {
+    return this.on(event, listener);
+  }
+
+  /* istanbul ignore next */
+  public once(event: string|symbol, listener: Function): this {
+    super.once(event, listener);
+    if (this.shouldObserve(event)) {
+      this.tryObserve();
+    }
+    return this;
   }
 
   public async ready() {
@@ -142,17 +171,80 @@ export class Election {
     }
 
     const lastKey = result[0];
-    const watcher = await this.namespace.watch().key(lastKey).create();
-    const deleteOrError = new Promise(async (resolve, reject) => {
-      // waiting for deleting of that key
-      watcher.on('delete', resolve);
-      watcher.on('error', reject);
-    });
+    await waitForDelete(this.namespace, lastKey);
+  }
+
+  private async observe() {
+    if (this._isObserving) {
+      return;
+    }
 
     try {
-      await deleteOrError;
+      this._isObserving = true;
+
+      // looking for current leader
+      let leaderKey = '';
+      const result = await this.namespace.getAll().sort('Create', 'Ascend').keys();
+
+      if (result.length === 0) {
+        // if not found, wait for leader
+        const watcher = await this.parent.watch().prefix(this.getPrefix()).create();
+        try {
+          leaderKey = await new Promise<string>((resolve, reject) => {
+            watcher.on('put', kv => resolve(kv.key.toString()));
+            watcher.on('error', reject);
+          });
+        } finally {
+          await watcher.cancel();
+        }
+      } else {
+        leaderKey = `${this.getPrefix()}${result[0]}`;
+      }
+
+      // emit current leader
+      this.emit('leader', leaderKey);
+
+      // wait for delete event
+      await waitForDelete(this.parent, leaderKey);
     } finally {
-      await watcher.cancel();
+      this._isObserving = false;
     }
+
+    // only keep watch if listened
+    if (this.listenerCount('leader') > 0) {
+      this.tryObserve();
+    }
+  }
+
+  private tryObserve(): void {
+    this.observe().catch(error => {
+      if (this.listenerCount('error') > 0) {
+        this.emit('error', error)
+      } else {
+        throw error;
+      }
+    });
+  }
+
+  private shouldObserve(event: string|symbol): boolean {
+    switch (event) {
+      case 'leader': return true;
+      default: return false;
+    }
+  }
+}
+
+async function waitForDelete(namespace: Namespace, key: string) {
+  const watcher = await namespace.watch().key(key).create();
+  const deleteOrError = new Promise(async (resolve, reject) => {
+    // waiting for deleting of that key
+    watcher.on('delete', resolve);
+    watcher.on('error', reject);
+  });
+
+  try {
+    await deleteOrError;
+  } finally {
+    await watcher.cancel();
   }
 }

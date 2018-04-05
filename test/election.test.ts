@@ -20,6 +20,7 @@ describe('election', () => {
   });
 
   afterEach(async () => {
+    election.removeAllListeners();
     await election.resign();
     await tearDownTestClient(client);
   });
@@ -109,5 +110,49 @@ describe('election', () => {
       expect(whenCatch.calledOnce).to.be.true;
     });
 
+  });
+
+  describe('observe', () => {
+    it('should emit leader event', async () => {
+      const client2 = new Etcd3(getOptions());
+      const election2 = new Election(client2, 'test-election');
+
+      let currentLeaderKey = '';
+      election.on('leader', leaderKey => currentLeaderKey = leaderKey);
+
+      expect(election.isObserving).to.be.true;
+
+      // looking for current leader and emit it
+      await sleep(30);
+
+      expect(currentLeaderKey).to.equal(election.leaderKey);
+
+      const waitElection2 = election2.campaign('candidate2');
+
+      await election.resign();
+
+      await waitElection2;
+
+      // waiting for watcher
+      await sleep(30);
+
+      expect(currentLeaderKey).to.equal(election2.leaderKey);
+    });
+
+    it('should wait for leader', async () => {
+      await election.resign();
+
+      let currentLeaderKey = '';
+      election.on('leader', leaderKey => currentLeaderKey = leaderKey);
+
+      // waiting for watcher created
+      await sleep(30);
+
+      await election.campaign('candidate');
+
+      await sleep(30);
+
+      expect(currentLeaderKey).to.equal(election.leaderKey);
+    });
   });
 });
