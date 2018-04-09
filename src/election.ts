@@ -161,15 +161,19 @@ export class Election extends EventEmitter {
   private async waitForElected() {
     // find last create before this
     const lastRevision = new BigNumber(this.leaderRevision).minus(1).toString();
-    const result = await this.namespace.getAll().maxCreateRevision(lastRevision).keys();
+    const result = await this.namespace
+      .getAll()
+      .maxCreateRevision(lastRevision)
+      .sort('Create', 'Descend')
+      .keys();
 
     // no one before this, elected
     if (result.length === 0) {
       return;
     }
 
-    const lastKey = result[0];
-    await waitForDelete(this.namespace, lastKey);
+    // wait all keys created ealier are deleted
+    await waitForDeletes(this.namespace, result);
   }
 
   private async observe() {
@@ -244,5 +248,28 @@ async function waitForDelete(namespace: Namespace, key: string) {
     await deleteOrError;
   } finally {
     await watcher.cancel();
+  }
+}
+
+async function waitForDeletes(namespace: Namespace, keys: string[]) {
+  if (keys.length === 0) {
+    return;
+  } else if (keys.length === 1) {
+    return waitForDelete(namespace, keys[0]);
+  }
+
+  const tasks = keys.map(key => async () => {
+    const keyExisted = await namespace.get(key).string() !== null;
+    if (!keyExisted) {
+      return;
+    }
+    await waitForDelete(namespace, key);
+  });
+
+  let task = tasks.shift();
+
+  while (task) {
+    await task();
+    task = tasks.shift();
   }
 }

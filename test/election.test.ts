@@ -31,23 +31,49 @@ describe('election', () => {
       const client2 = new Etcd3(getOptions());
       const election2 = new Election(client2, 'test-election');
 
-      await election2.ready();
+      const client3 = new Etcd3(getOptions());
+      const election3 = new Election(client3, 'test-election');
 
-      expect(election.isCampaigning).to.be.true;
-      expect(election2.isCampaigning).to.be.false;
+      /**
+       * phase 0: client elected
+       * phase 1: client resigned, client2 elected
+       * phase 2: client2 resigned, client3 elected
+       */
+      let phase = 0;
 
-      const waitElection2 = election2.campaign('election2').then(() => {
-        expect(election.isCampaigning).to.be.false;
-        expect(election2.isCampaigning).to.be.true;
-      });
+      const waitElection2 = election2.campaign('candidate2')
+        .then(() => election.getLeader())
+        .then(currentLeaderKey => {
+          expect(phase).to.equal(1);
+          expect(currentLeaderKey).to.equal(election2.leaderKey);
+        });
 
-      await sleep(10);
+      const waitElection3 = election3.campaign('candidate3')
+        .then(() => election.getLeader())
+        .then(currentLeaderKey => {
+          expect(phase).to.equal(2);
+          expect(currentLeaderKey).to.equal(election3.leaderKey);
+        });
+
+      // ensure client2 and client3 joined campaign
+      await sleep(1000);
+
+      phase = 1;
 
       await election.resign();
 
-      await waitElection2;
+      // ensure client2 and client3 watcher triggered
+      await sleep(1000);
 
-      await tearDownTestClient(client2);
+      phase = 2;
+
+      await election2.resign();
+
+      await sleep(1000);
+
+      await election3.resign();
+
+      await Promise.all([waitElection2, waitElection3]);
     });
 
     it('should proclaim if campaign repeatly', async () => {
