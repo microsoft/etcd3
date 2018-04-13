@@ -330,7 +330,7 @@ export const operationNames = {
  *     watcher
  *       .on('disconnected', () => console.log('disconnected...'))
  *       .on('connected', () => console.log('successfully reconnected!'))
- *       .on('put', res => console.log('foo got set to:', res.value.toString());
+ *       .on('put', res => console.log('foo got set to:', res.value.toString()));
  *   });
  * ```
  */
