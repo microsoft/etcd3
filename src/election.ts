@@ -19,8 +19,8 @@ import { Namespace } from './namespace';
 export class Election extends EventEmitter {
   public static readonly prefix = 'election';
 
-  public readonly namespace: Namespace;
-  public readonly lease: Lease;
+  private readonly namespace: Namespace;
+  private readonly lease: Lease;
 
   private leaseId = '';
   private _leaderKey = '';
