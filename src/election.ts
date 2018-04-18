@@ -97,7 +97,7 @@ export class Election extends EventEmitter {
         }
       } catch (error) {
         await this.resign();
-        throw error;
+        return this.emitOrThrowError(error);
       }
     }
 
@@ -105,13 +105,13 @@ export class Election extends EventEmitter {
       await this.waitForElected();
     } catch (error) {
       await this.resign();
-      throw error;
+      return this.emitOrThrowError(error);
     }
   }
 
   public async proclaim(value: any) {
     if (!this._isCampaigning) {
-      throw new EtcdNotLeaderError();
+      return this.emitOrThrowError(new EtcdNotLeaderError());
     }
 
     const r = await this.namespace
@@ -121,7 +121,7 @@ export class Election extends EventEmitter {
 
     if (!r.succeeded) {
       this._leaderKey = '';
-      throw new EtcdNotLeaderError();
+      return this.emitOrThrowError(new EtcdNotLeaderError());
     }
   }
 
@@ -219,19 +219,21 @@ export class Election extends EventEmitter {
   }
 
   private tryObserve(): void {
-    this.observe().catch(error => {
-      if (this.listenerCount('error') > 0) {
-        this.emit('error', error);
-      } else {
-        throw error;
-      }
-    });
+    this.observe().catch(error => this.emitOrThrowError(error));
   }
 
   private shouldObserve(event: string|symbol): boolean {
     switch (event) {
       case 'leader': return true;
       default: return false;
+    }
+  }
+
+  private emitOrThrowError(error: any): void {
+    if (this.listenerCount('error') > 0) {
+      this.emit('error', error);
+    } else {
+      throw error;
     }
   }
 }
