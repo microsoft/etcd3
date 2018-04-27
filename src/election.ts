@@ -20,7 +20,7 @@ export class Election extends EventEmitter {
   public static readonly prefix = 'election';
 
   private readonly namespace: Namespace;
-  private readonly lease: Lease;
+  private lease: Lease;
 
   private leaseId = '';
   private _leaderKey = '';
@@ -68,11 +68,7 @@ export class Election extends EventEmitter {
   }
 
   public async ready() {
-    const leaseId = await this.lease.grant();
-
-    if (!this.isReady) {
-      this.leaseId = leaseId;
-    }
+    this.leaseId = await this.lease.grant();
   }
 
   public async campaign(value: string) {
@@ -138,6 +134,7 @@ export class Election extends EventEmitter {
     if (!r.succeeded) {
       // If fail, revoke lease for performing resigning
       await this.lease.revoke();
+      this.lease = this.namespace.lease(this.ttl);
       this.leaseId = '';
     }
 
