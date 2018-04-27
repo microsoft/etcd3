@@ -14,7 +14,7 @@ describe('election', () => {
 
   beforeEach(async () => {
     client = new Etcd3(getOptions());
-    election = new Election(client, 'test-election');
+    election = new Election(client, 'test-election', 1);
     await election.ready();
     await election.campaign('candidate');
   });
@@ -29,10 +29,10 @@ describe('election', () => {
 
     it('should wait for elected in campaign', async () => {
       const client2 = new Etcd3(getOptions());
-      const election2 = new Election(client2, 'test-election');
+      const election2 = new Election(client2, 'test-election', 1);
 
       const client3 = new Etcd3(getOptions());
-      const election3 = new Election(client3, 'test-election');
+      const election3 = new Election(client3, 'test-election', 1);
 
       /**
        * phase 0: client elected
@@ -48,6 +48,9 @@ describe('election', () => {
           expect(currentLeaderKey).to.equal(election2.leaderKey);
         });
 
+      // essure client2 has joined campaign before client3
+      await sleep(100);
+
       const waitElection3 = election3.campaign('candidate3')
         .then(() => election.getLeader())
         .then(currentLeaderKey => {
@@ -55,21 +58,21 @@ describe('election', () => {
           expect(currentLeaderKey).to.equal(election3.leaderKey);
         });
 
-      // ensure client2 and client3 joined campaign
-      await sleep(1000);
+      // ensure client3 joined campaign
+      await sleep(100);
 
       phase = 1;
 
       await election.resign();
 
       // ensure client2 and client3 watcher triggered
-      await sleep(1000);
+      await sleep(100);
 
       phase = 2;
 
       await election2.resign();
 
-      await sleep(1000);
+      await sleep(100);
 
       await election3.resign();
 
@@ -141,7 +144,7 @@ describe('election', () => {
   describe('observe', () => {
     it('should emit leader event', async () => {
       const client2 = new Etcd3(getOptions());
-      const election2 = new Election(client2, 'test-election');
+      const election2 = new Election(client2, 'test-election', 1);
 
       let currentLeaderKey = '';
       election.on('leader', leaderKey => currentLeaderKey = leaderKey);
