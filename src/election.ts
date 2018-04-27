@@ -40,6 +40,7 @@ export class Election extends EventEmitter {
     super();
     this.namespace = parent.namespace(this.getPrefix());
     this.lease = this.namespace.lease(ttl);
+    this.lease.on('lost', () => this.onLeaseLost());
   }
 
   public on(event: 'leader', listener: (leaderKey: string) => void): this;
@@ -135,6 +136,7 @@ export class Election extends EventEmitter {
       // If fail, revoke lease for performing resigning
       await this.lease.revoke();
       this.lease = this.namespace.lease(this.ttl);
+      this.lease.on('lost', () => this.onLeaseLost());
       this.leaseId = '';
     }
 
@@ -232,6 +234,12 @@ export class Election extends EventEmitter {
     } else {
       throw error;
     }
+  }
+
+  private onLeaseLost() {
+    this.lease = this.namespace.lease(this.ttl);
+    this.lease.on('lost', () => this.onLeaseLost());
+    this.leaseId = '';
   }
 }
 
