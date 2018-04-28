@@ -41,31 +41,15 @@ export class Election extends EventEmitter {
     this.namespace = parent.namespace(this.getPrefix());
     this.lease = this.namespace.lease(ttl);
     this.lease.on('lost', () => this.onLeaseLost());
+    this.on('newListener', (event: string) => this.onNewListener(event));
   }
 
   public on(event: 'leader', listener: (leaderKey: string) => void): this;
   public on(event: 'error', listener: (error: any) => void): this;
   public on(event: string|symbol, listener: Function): this;
-  public on(event: string|symbol, listener: Function): this {
-    super.on(event, listener);
-    if (this.shouldObserve(event)) {
-      this.tryObserve();
-    }
-    return this;
-  }
-
-  /* istanbul ignore next */
-  public addListener(event: string|symbol, listener: Function): this {
-    return this.on(event, listener);
-  }
-
-  /* istanbul ignore next */
-  public once(event: string|symbol, listener: Function): this {
-    super.once(event, listener);
-    if (this.shouldObserve(event)) {
-      this.tryObserve();
-    }
-    return this;
+  public on(event: string, handler: Function): this {
+    // tslint:disable-line
+    return super.on(event, handler);
   }
 
   public async ready() {
@@ -222,10 +206,7 @@ export class Election extends EventEmitter {
   }
 
   private shouldObserve(event: string|symbol): boolean {
-    switch (event) {
-      case 'leader': return true;
-      default: return false;
-    }
+    return event === 'leader';
   }
 
   private emitOrThrowError(error: any): void {
@@ -240,6 +221,12 @@ export class Election extends EventEmitter {
     this.lease = this.namespace.lease(this.ttl);
     this.lease.on('lost', () => this.onLeaseLost());
     this.leaseId = '';
+  }
+
+  private onNewListener(event: string) {
+    if (this.shouldObserve(event)) {
+      this.tryObserve();
+    }
   }
 }
 
