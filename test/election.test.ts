@@ -6,7 +6,7 @@ import { Election,
 import { getOptions,
          tearDownTestClient } from './util';
 
-const sleep = (t: number) =>  new Promise(resolve => setTimeout(resolve, t));
+const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t));
 
 describe('election', () => {
   let client: Etcd3;

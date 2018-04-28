@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import * as EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import { EtcdNoLeaderError, EtcdNotLeaderError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
@@ -245,10 +245,10 @@ export class Election extends EventEmitter {
 
 async function waitForDelete(namespace: Namespace, key: string) {
   const watcher = await namespace.watch().key(key).create();
-  const deleteOrError = new Promise(async (resolve, reject) => {
+  const deleteOrError = new Promise((resolve, reject) => {
     // waiting for deleting of that key
-    watcher.on('delete', resolve);
-    watcher.on('error', reject);
+    watcher.once('delete', resolve);
+    watcher.once('error', reject);
   });
 
   try {
@@ -261,7 +261,9 @@ async function waitForDelete(namespace: Namespace, key: string) {
 async function waitForDeletes(namespace: Namespace, keys: string[]) {
   if (keys.length === 0) {
     return;
-  } else if (keys.length === 1) {
+  }
+
+  if (keys.length === 1) {
     return waitForDelete(namespace, keys[0]);
   }
 
