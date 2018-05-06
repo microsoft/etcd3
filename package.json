@@ -8,7 +8,7 @@
     "test": "npm-run-all --parallel test:lint test:unit",
     "test:unit": "mocha",
     "test:cover": "nyc mocha",
-    "test:lint": "tslint --type-check --project tsconfig.json '{src,test}/**/*.ts'",
+    "test:lint": "tslint --project tsconfig.json '{src,test}/**/*.ts'",
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
     "build:doc": "rm -rf docs && typedoc --gitRevision `git describe --abbrev=0 --tags` --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc && cp -R proto lib",

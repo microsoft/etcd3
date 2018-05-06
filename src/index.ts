@@ -39,7 +39,7 @@ export class Etcd3 extends Namespace {
   public readonly cluster = new RPC.ClusterClient(this.pool);
 
   constructor(options: IOptions = { hosts: '127.0.0.1:2379' }) {
-    super(Buffer.from([]), new ConnectionPool(options));
+    super(Buffer.from([]), new ConnectionPool(options), options);
   }
 
   /**

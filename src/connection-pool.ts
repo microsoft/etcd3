@@ -252,13 +252,12 @@ export class ConnectionPool implements ICallable {
       }));
     }
 
-    return Promise.all([
-      this.pool.pull(),
-      this.authenticator.getMetadata(),
-    ]).then(([host, metadata]) => {
-      const client = host.getServiceClient(service);
-      return { client, host, metadata };
-    });
+    return Promise.all([this.pool.pull(), this.authenticator.getMetadata()]).then(
+      ([host, metadata]) => {
+        const client = host.getServiceClient(service);
+        return { client, host, metadata };
+      },
+    );
   }
 
   /**

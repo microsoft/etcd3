@@ -5,7 +5,7 @@ import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '../src';
 import { onceEvent } from '../src/util';
 import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
 
-describe('watch', () => {
+describe('watch()', () => {
   let client: Etcd3;
 
   beforeEach(async () => {

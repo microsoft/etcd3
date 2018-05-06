@@ -5,6 +5,7 @@ import { castGrpcErrorMessage, ClientRuntimeError, EtcdError } from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
+import { IBackoffStrategy } from './backoff/backoff';
 
 const enum State {
   Idle,
@@ -124,7 +125,7 @@ export class WatchManager {
    */
   private queue: null | AttachQueue;
 
-  constructor(private readonly client: RPC.WatchClient) {}
+  constructor(private readonly client: RPC.WatchClient, private backoff: IBackoffStrategy) {}
 
   /**
    * Attach registers the watcher on the connection.
@@ -258,7 +259,13 @@ export class WatchManager {
       (<{ id: null }>watcher).id = null;
     });
 
-    this.establishStream();
+    setTimeout(() => {
+      if (this.state === State.Idle) {
+        this.establishStream();
+      }
+    }, this.backoff.getDelay());
+
+    this.backoff = this.backoff.next();
   }
 
   /**
@@ -288,6 +295,8 @@ export class WatchManager {
    * Dispatches some watch response on the event stream.
    */
   private handleResponse(res: RPC.IWatchResponse) {
+    this.backoff = this.backoff.reset();
+
     if (res.created) {
       this.queue!.handleCreate(res);
       return;
