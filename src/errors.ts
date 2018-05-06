@@ -180,6 +180,18 @@ export class EtcdInvalidAuthTokenError extends Error {}
 export class EtcdPermissionDeniedError extends Error {}
 
 /**
+ * EtcdWatchStreamEnded is emitted when a watch stream closes gracefully.
+ * This is an unexpected occurrence.
+ *
+ * @see https://github.com/mixer/etcd3/issues/72#issuecomment-386851271
+ */
+export class EtcdWatchStreamEnded extends Error {
+  constructor() {
+    super('The etcd watch stream was unexpectedly ended');
+  }
+}
+
+/**
  * An STMConflictError is thrown from the `SoftwareTransaction.transact`
  * if we continue to get conflicts and exceed the maximum number
  * of retries.

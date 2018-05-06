@@ -1,11 +1,16 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
-import { castGrpcErrorMessage, ClientRuntimeError, EtcdError } from './errors';
+import { IBackoffStrategy } from './backoff/backoff';
+import {
+  castGrpcErrorMessage,
+  ClientRuntimeError,
+  EtcdError,
+  EtcdWatchStreamEnded,
+} from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
-import { IBackoffStrategy } from './backoff/backoff';
 
 const enum State {
   Idle,
@@ -216,7 +221,8 @@ export class WatchManager {
         this.queue = new AttachQueue(stream);
         this.stream = stream
           .on('data', res => this.handleResponse(res))
-          .on('error', err => this.handleError(err));
+          .on('error', err => this.handleError(err))
+          .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
 
         // possible watchers are remove while we're connecting.
         if (this.watchers.length === 0) {

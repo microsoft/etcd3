@@ -4,12 +4,12 @@ import * as Builder from './builder';
 import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';
 import { Lease } from './lease';
 import { Lock } from './lock';
+import { IOptions } from './options';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
 import { NSApplicator, toBuffer } from './util';
 import { WatchBuilder, WatchManager } from './watch';
-import { IOptions } from './options';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default
