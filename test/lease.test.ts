@@ -28,8 +28,9 @@ describe('lease()', () => {
     }
   });
 
-  it('throws if trying to use too short of a ttl', () => {
+  it('throws if trying to use too short of a ttl, or an undefined ttl', () => {
     expect(() => client.lease(0)).to.throw(/must be at least 1 second/);
+    expect(() => (<any>client.lease)()).to.throw(/must be at least 1 second/);
   });
 
   it('reports a loss and errors if the client is invalid', async () => {
@@ -149,6 +150,13 @@ describe('lease()', () => {
 
       const res = await onceEvent(lease, 'keepaliveSucceeded');
       expect(res.TTL).to.equal('60');
+    });
+
+    it('stops touching the lease if released passively', async () => {
+      const kaFired = watchEmission('keepaliveFired');
+      lease.release();
+      clock.tick(20000);
+      expect(kaFired.fired).to.be.false;
     });
 
     it('tears down if the lease gets revoked', async () => {

@@ -1,9 +1,10 @@
 import * as grpc from 'grpc';
 
 import * as Builder from './builder';
-import { ConnectionPool } from './connection-pool';
+import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';
 import { Lease } from './lease';
 import { Lock } from './lock';
+import { IOptions } from './options';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
@@ -35,9 +36,16 @@ export class Namespace {
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
   public readonly watchClient = new RPC.WatchClient(this.pool);
   private readonly nsApplicator = new NSApplicator(this.prefix);
-  private readonly watchManager = new WatchManager(this.watchClient);
+  private readonly watchManager = new WatchManager(
+    this.watchClient,
+    this.options.backoffStrategy || defaultBackoffStrategy,
+  );
 
-  constructor(protected readonly prefix: Buffer, protected readonly pool: ConnectionPool) {}
+  protected constructor(
+    protected readonly prefix: Buffer,
+    protected readonly pool: ConnectionPool,
+    protected readonly options: IOptions,
+  ) {}
 
   /**
    * `.get()` starts a query to look up a single key from etcd.
@@ -140,6 +148,6 @@ export class Namespace {
    * with `user1/`. See the Namespace class for more details.
    */
   public namespace(prefix: string | Buffer): Namespace {
-    return new Namespace(Buffer.concat([this.prefix, toBuffer(prefix)]), this.pool);
+    return new Namespace(Buffer.concat([this.prefix, toBuffer(prefix)]), this.pool, this.options);
   }
 }

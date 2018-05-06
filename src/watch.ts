@@ -1,7 +1,13 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
-import { castGrpcErrorMessage, ClientRuntimeError, EtcdError } from './errors';
+import { IBackoffStrategy } from './backoff/backoff';
+import {
+  castGrpcErrorMessage,
+  ClientRuntimeError,
+  EtcdError,
+  EtcdWatchStreamEnded,
+} from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
@@ -124,7 +130,7 @@ export class WatchManager {
    */
   private queue: null | AttachQueue;
 
-  constructor(private readonly client: RPC.WatchClient) {}
+  constructor(private readonly client: RPC.WatchClient, private backoff: IBackoffStrategy) {}
 
   /**
    * Attach registers the watcher on the connection.
@@ -215,7 +221,8 @@ export class WatchManager {
         this.queue = new AttachQueue(stream);
         this.stream = stream
           .on('data', res => this.handleResponse(res))
-          .on('error', err => this.handleError(err));
+          .on('error', err => this.handleError(err))
+          .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
 
         // possible watchers are remove while we're connecting.
         if (this.watchers.length === 0) {
@@ -238,7 +245,7 @@ export class WatchManager {
       throw new ClientRuntimeError('Cannot call destroyStream() with active watchers');
     }
 
-    this.getStream().end();
+    this.getStream().cancel();
     this.queue!.destroy();
   }
 
@@ -249,7 +256,7 @@ export class WatchManager {
   private handleError(err: Error) {
     if (this.state === State.Connected) {
       this.queue!.destroy();
-      this.getStream().end();
+      this.getStream().cancel();
     }
     this.state = State.Idle;
 
@@ -258,7 +265,13 @@ export class WatchManager {
       (<{ id: null }>watcher).id = null;
     });
 
-    this.establishStream();
+    setTimeout(() => {
+      if (this.state === State.Idle) {
+        this.establishStream();
+      }
+    }, this.backoff.getDelay());
+
+    this.backoff = this.backoff.next();
   }
 
   /**
@@ -288,6 +301,8 @@ export class WatchManager {
    * Dispatches some watch response on the event stream.
    */
   private handleResponse(res: RPC.IWatchResponse) {
+    this.backoff = this.backoff.reset();
+
     if (res.created) {
       this.queue!.handleCreate(res);
       return;

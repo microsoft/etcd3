@@ -26,6 +26,7 @@ export interface IResponseStream<T> {
 export interface IRequestStream<T> {
   write(item: T): void;
   end(): void;
+  cancel(): void;
 }
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
