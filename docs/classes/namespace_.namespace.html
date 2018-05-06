@@ -105,10 +105,10 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section ">
+						<section class="tsd-index-section tsd-is-private-protected">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="namespace_.namespace.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-protected"><a href="namespace_.namespace.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -116,6 +116,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="namespace_.namespace.html#kv" class="tsd-kind-icon">kv</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="namespace_.namespace.html#leaseclient" class="tsd-kind-icon">lease<wbr>Client</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="namespace_.namespace.html#options" class="tsd-kind-icon">options</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="namespace_.namespace.html#pool" class="tsd-kind-icon">pool</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="namespace_.namespace.html#prefix" class="tsd-kind-icon">prefix</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="namespace_.namespace.html#watchclient" class="tsd-kind-icon">watch<wbr>Client</a></li>
@@ -140,19 +141,19 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group ">
+			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-protected">
 					<a name="constructor" class="tsd-anchor"></a>
-					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Namespace<span class="tsd-signature-symbol">(</span>prefix<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="namespace_.namespace.html" class="tsd-signature-type">Namespace</a></li>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-protected">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Namespace<span class="tsd-signature-symbol">(</span>prefix<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, pool<span class="tsd-signature-symbol">: </span><a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a>, options<span class="tsd-signature-symbol">: </span><a href="../interfaces/options_.ioptions.html" class="tsd-signature-type">IOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="namespace_.namespace.html" class="tsd-signature-type">Namespace</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L38">namespace.ts:38</a></li>
+									<li>Defined in namespace.ts:42</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -162,6 +163,9 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 								</li>
 								<li>
 									<h5>pool: <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></h5>
+								</li>
+								<li>
+									<h5>options: <a href="../interfaces/options_.ioptions.html" class="tsd-signature-type">IOptions</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="namespace_.namespace.html" class="tsd-signature-type">Namespace</a></h4>
@@ -177,7 +181,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<div class="tsd-signature tsd-kind-icon">kv<span class="tsd-signature-symbol">:</span> <a href="rpc_.kvclient.html" class="tsd-signature-type">KVClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.KVClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L34">namespace.ts:34</a></li>
+							<li>Defined in namespace.ts:35</li>
 						</ul>
 					</aside>
 				</section>
@@ -187,7 +191,17 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<div class="tsd-signature tsd-kind-icon">lease<wbr>Client<span class="tsd-signature-symbol">:</span> <a href="rpc_.leaseclient.html" class="tsd-signature-type">LeaseClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.LeaseClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L35">namespace.ts:35</a></li>
+							<li>Defined in namespace.ts:36</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="options" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> options</h3>
+					<div class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">:</span> <a href="../interfaces/options_.ioptions.html" class="tsd-signature-type">IOptions</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in namespace.ts:47</li>
 						</ul>
 					</aside>
 				</section>
@@ -197,7 +211,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<div class="tsd-signature tsd-kind-icon">pool<span class="tsd-signature-symbol">:</span> <a href="connection_pool_.connectionpool.html" class="tsd-signature-type">ConnectionPool</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L40">namespace.ts:40</a></li>
+							<li>Defined in namespace.ts:46</li>
 						</ul>
 					</aside>
 				</section>
@@ -207,7 +221,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<div class="tsd-signature tsd-kind-icon">prefix<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L40">namespace.ts:40</a></li>
+							<li>Defined in namespace.ts:45</li>
 						</ul>
 					</aside>
 				</section>
@@ -217,7 +231,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<div class="tsd-signature tsd-kind-icon">watch<wbr>Client<span class="tsd-signature-symbol">:</span> <a href="rpc_.watchclient.html" class="tsd-signature-type">WatchClient</a><span class="tsd-signature-symbol"> =&nbsp;new RPC.WatchClient(this.pool)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L36">namespace.ts:36</a></li>
+							<li>Defined in namespace.ts:37</li>
 						</ul>
 					</aside>
 				</section>
@@ -234,7 +248,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L66">namespace.ts:66</a></li>
+									<li>Defined in namespace.ts:74</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -256,7 +270,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L45">namespace.ts:45</a></li>
+									<li>Defined in namespace.ts:53</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -284,7 +298,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L52">namespace.ts:52</a></li>
+									<li>Defined in namespace.ts:60</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -306,7 +320,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L110">namespace.ts:110</a></li>
+									<li>Defined in namespace.ts:118</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -345,7 +359,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L75">namespace.ts:75</a></li>
+									<li>Defined in namespace.ts:83</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -378,7 +392,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L83">namespace.ts:83</a></li>
+									<li>Defined in namespace.ts:91</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -407,7 +421,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L142">namespace.ts:142</a></li>
+									<li>Defined in namespace.ts:150</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -439,7 +453,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L59">namespace.ts:59</a></li>
+									<li>Defined in namespace.ts:67</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -467,7 +481,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L131">namespace.ts:131</a></li>
+									<li>Defined in namespace.ts:139</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -496,7 +510,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L92">namespace.ts:92</a></li>
+									<li>Defined in namespace.ts:100</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -526,7 +540,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/namespace.ts#L123">namespace.ts:123</a></li>
+									<li>Defined in namespace.ts:131</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -607,7 +621,7 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
 						<a href="namespace_.namespace.html" class="tsd-kind-icon">Namespace</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-protected">
 								<a href="namespace_.namespace.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
@@ -615,6 +629,9 @@ await ns.<span class="hljs-keyword">delete</span>().all(); <span class="hljs-com
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="namespace_.namespace.html#leaseclient" class="tsd-kind-icon">lease<wbr>Client</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="namespace_.namespace.html#options" class="tsd-kind-icon">options</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 								<a href="namespace_.namespace.html#pool" class="tsd-kind-icon">pool</a>

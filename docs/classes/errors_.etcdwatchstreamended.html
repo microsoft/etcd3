@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>GRPCOutOfRangeError | etcd3</title>
+	<title>EtcdWatchStreamEnded | etcd3</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/errors_.html">&quot;errors&quot;</a>
 				</li>
 				<li>
-					<a href="errors_.grpcoutofrangeerror.html">GRPCOutOfRangeError</a>
+					<a href="errors_.etcdwatchstreamended.html">EtcdWatchStreamEnded</a>
 				</li>
 			</ul>
-			<h1>Class GRPCOutOfRangeError</h1>
+			<h1>Class EtcdWatchStreamEnded</h1>
 		</div>
 	</div>
 </header>
@@ -72,12 +72,12 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Operation was attempted past the valid range.  E.g., seeking or reading
-						past end of file.</p>
+						<p>EtcdWatchStreamEnded is emitted when a watch stream closes gracefully.
+						This is an unexpected occurrence.</p>
 					</div>
 					<dl class="tsd-comment-tags">
 						<dt>see</dt>
-						<dd><p><a href="https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L125-L142">https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L125-L142</a></p>
+						<dd><p><a href="https://github.com/mixer/etcd3/issues/72#issuecomment-386851271">https://github.com/mixer/etcd3/issues/72#issuecomment-386851271</a></p>
 						</dd>
 					</dl>
 				</div>
@@ -86,10 +86,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="errors_.grpcgenericerror.html" class="tsd-signature-type">GRPCGenericError</a>
+						<span class="tsd-signature-type">Error</span>
 						<ul class="tsd-hierarchy">
 							<li>
-								<span class="target">GRPCOutOfRangeError</span>
+								<span class="target">EtcdWatchStreamEnded</span>
 							</li>
 						</ul>
 					</li>
@@ -99,19 +99,56 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-inherited">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="errors_.etcdwatchstreamended.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.grpcoutofrangeerror.html#message" class="tsd-kind-icon">message</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.grpcoutofrangeerror.html#name" class="tsd-kind-icon">name</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static"><a href="errors_.grpcoutofrangeerror.html#stack" class="tsd-kind-icon">stack</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="errors_.etcdwatchstreamended.html#error" class="tsd-kind-icon">Error</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.etcdwatchstreamended.html#message" class="tsd-kind-icon">message</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="errors_.etcdwatchstreamended.html#name" class="tsd-kind-icon">name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static"><a href="errors_.etcdwatchstreamended.html#stack" class="tsd-kind-icon">stack</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Etcd<wbr>Watch<wbr>Stream<wbr>Ended<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="errors_.etcdwatchstreamended.html" class="tsd-signature-type">EtcdWatchStreamEnded</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in errors.ts:188</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="errors_.etcdwatchstreamended.html" class="tsd-signature-type">EtcdWatchStreamEnded</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="error" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> Error</h3>
+					<div class="tsd-signature tsd-kind-icon">Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ErrorConstructor</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/typedoc/node_modules/typescript/lib/lib.es5.d.ts:884</li>
+						</ul>
+					</aside>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
 					<a name="message" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> message</h3>
@@ -245,9 +282,30 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.etcdusernotfounderror.html" class="tsd-kind-icon">Etcd<wbr>User<wbr>Not<wbr>Found<wbr>Error</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.etcdwatchstreamended.html" class="tsd-kind-icon">Etcd<wbr>Watch<wbr>Stream<wbr>Ended</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="errors_.etcdwatchstreamended.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="errors_.etcdwatchstreamended.html#error" class="tsd-kind-icon">Error</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdwatchstreamended.html#message" class="tsd-kind-icon">message</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdwatchstreamended.html#name" class="tsd-kind-icon">name</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
+								<a href="errors_.etcdwatchstreamended.html#stack" class="tsd-kind-icon">stack</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.grpcabortederror.html" class="tsd-kind-icon">GRPCAborted<wbr>Error</a>
 					</li>
@@ -284,24 +342,9 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.grpcnotimplementederror.html" class="tsd-kind-icon">GRPCNot<wbr>Implemented<wbr>Error</a>
 					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.grpcoutofrangeerror.html" class="tsd-kind-icon">GRPCOut<wbr>OfRange<wbr>Error</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="errors_.grpcoutofrangeerror.html#message" class="tsd-kind-icon">message</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="errors_.grpcoutofrangeerror.html#name" class="tsd-kind-icon">name</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
-								<a href="errors_.grpcoutofrangeerror.html#stack" class="tsd-kind-icon">stack</a>
-							</li>
-						</ul>
 					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="errors_.grpcprotocolerror.html" class="tsd-kind-icon">GRPCProtocol<wbr>Error</a>
 					</li>

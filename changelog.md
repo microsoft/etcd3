@@ -5,6 +5,7 @@
  - **bug**: update docs and throw if a lease TTL is not provided (see [#68](https://github.com/mixer/etcd3/issues/68))
  - **bug**: forcefully terminate watch streams on close (see [#62](https://github.com/mixer/etcd3/issues/62))
  - **bug**: reestablish watch streams if they're closed gracefully (see [#79](https://github.com/mixer/etcd3/issues/79))
+ - **bug**: fix synax error in watcher docs(see [#71](https://github.com/mixer/etcd3/pulls/71)) thanks to [@monkbroc](https://github.com/monkbroc)
 
 ## 0.2.9 2017-02-09
 

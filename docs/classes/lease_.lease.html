@@ -82,7 +82,7 @@
 <span class="hljs-keyword">const</span> hostPrefix = <span class="hljs-string">'available-hosts/'</span>;
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">grantLease</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">const</span> lease = client.lease();
+  <span class="hljs-keyword">const</span> lease = client.lease(<span class="hljs-number">10</span>); <span class="hljs-comment">// set a TTL of 10 seconds</span>
 
   lease.on(<span class="hljs-string">'lost'</span>, err =&gt; {
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'We lost our lease as a result of this error:'</span>, err);
@@ -145,6 +145,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited"><a href="lease_.lease.html#prependlistener" class="tsd-kind-icon">prepend<wbr>Listener</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited"><a href="lease_.lease.html#prependoncelistener" class="tsd-kind-icon">prepend<wbr>Once<wbr>Listener</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lease_.lease.html#put" class="tsd-kind-icon">put</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lease_.lease.html#release" class="tsd-kind-icon">release</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited"><a href="lease_.lease.html#removealllisteners" class="tsd-kind-icon">remove<wbr>All<wbr>Listeners</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited"><a href="lease_.lease.html#removelistener" class="tsd-kind-icon">remove<wbr>Listener</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="lease_.lease.html#revoke" class="tsd-kind-icon">revoke</a></li>
@@ -168,7 +169,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L95">lease.ts:95</a></li>
+									<li>Defined in lease.ts:95</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -200,7 +201,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from EventEmitter.defaultMaxListeners</p>
 						<ul>
-							<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:632</li>
+							<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:705</li>
 						</ul>
 					</aside>
 				</section>
@@ -219,7 +220,7 @@
 								<p>Inherited from EventEmitter.addListener</p>
 								<p>Overrides EventEmitter.addListener</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:634</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:707</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -247,7 +248,7 @@
 								<p>Inherited from EventEmitter.emit</p>
 								<p>Overrides EventEmitter.emit</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:644</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:717</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -275,7 +276,7 @@
 								<p>Inherited from EventEmitter.eventNames</p>
 								<p>Overrides EventEmitter.eventNames</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:645</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:718</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">(</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h4>
@@ -294,7 +295,7 @@
 								<p>Inherited from EventEmitter.getMaxListeners</p>
 								<p>Overrides EventEmitter.getMaxListeners</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:642</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:715</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -311,7 +312,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L134">lease.ts:134</a></li>
+									<li>Defined in lease.ts:134</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -337,7 +338,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L168">lease.ts:168</a></li>
+									<li>Defined in lease.ts:177</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -367,7 +368,7 @@
 								<p>Inherited from EventEmitter.listenerCount</p>
 								<p>Overrides EventEmitter.listenerCount</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:646</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:719</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -392,7 +393,7 @@
 								<p>Inherited from EventEmitter.listeners</p>
 								<p>Overrides EventEmitter.listeners</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:643</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:716</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -420,7 +421,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L206">lease.ts:206</a></li>
+									<li>Defined in lease.ts:215</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -470,7 +471,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L212">lease.ts:212</a></li>
+									<li>Defined in lease.ts:221</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -506,7 +507,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L218">lease.ts:218</a></li>
+									<li>Defined in lease.ts:227</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -548,7 +549,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L225">lease.ts:225</a></li>
+									<li>Defined in lease.ts:234</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -591,7 +592,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides EventEmitter.on</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L231">lease.ts:231</a></li>
+									<li>Defined in lease.ts:240</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -637,7 +638,7 @@
 								<p>Inherited from EventEmitter.once</p>
 								<p>Overrides EventEmitter.once</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:636</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:709</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -665,7 +666,7 @@
 								<p>Inherited from EventEmitter.prependListener</p>
 								<p>Overrides EventEmitter.prependListener</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:637</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:710</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -693,7 +694,7 @@
 								<p>Inherited from EventEmitter.prependOnceListener</p>
 								<p>Overrides EventEmitter.prependOnceListener</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:638</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:711</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -719,7 +720,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L157">lease.ts:157</a></li>
+									<li>Defined in lease.ts:166</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -737,6 +738,30 @@
 						</li>
 					</ul>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="release" class="tsd-anchor"></a>
+					<h3>release</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">release<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in lease.ts:159</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>releasePassively stops making heartbeats for the lease, and allows it
+										to expire automatically when its TTL rolls around. Use <code>revoke()</code> to
+									actively tell etcd to terminate the lease.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited">
 					<a name="removealllisteners" class="tsd-anchor"></a>
 					<h3>remove<wbr>All<wbr>Listeners</h3>
@@ -749,7 +774,7 @@
 								<p>Inherited from EventEmitter.removeAllListeners</p>
 								<p>Overrides EventEmitter.removeAllListeners</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:640</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:713</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -774,7 +799,7 @@
 								<p>Inherited from EventEmitter.removeListener</p>
 								<p>Overrides EventEmitter.removeListener</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:639</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:712</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -800,7 +825,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L142">lease.ts:142</a></li>
+									<li>Defined in lease.ts:142</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -829,7 +854,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/node-influx/etcd3/blob/v0.2.7/src/lease.ts#L192">lease.ts:192</a></li>
+									<li>Defined in lease.ts:201</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -853,7 +878,7 @@
 								<p>Inherited from EventEmitter.setMaxListeners</p>
 								<p>Overrides EventEmitter.setMaxListeners</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:641</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:714</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -877,7 +902,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from EventEmitter.listenerCount</p>
 								<ul>
-									<li>Defined in /Users/copeet/Github/etcd3/node_modules/@types/node/index.d.ts:631</li>
+									<li>Defined in C:/Users/Connor/Documents/Github/etcd3/node_modules/@types/node/index.d.ts:704</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1008,6 +1033,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="lease_.lease.html#put" class="tsd-kind-icon">put</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="lease_.lease.html#release" class="tsd-kind-icon">release</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited">
 								<a href="lease_.lease.html#removealllisteners" class="tsd-kind-icon">remove<wbr>All<wbr>Listeners</a>
