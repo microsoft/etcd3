@@ -1,3 +1,11 @@
+## 0.2.10 2017-05-05
+
+ - **feat**: update grpc with Node 10 support (see [#73](https://github.com/mixer/etcd3/pulls/73)) thanks to [@XadillaX](https://github.com/XadillaX)
+ - **feat**: add `lease.release()` to let leases expire automatically (see [#69](https://github.com/mixer/etcd3/issues/69))
+ - **bug**: update docs and throw if a lease TTL is not provided (see [#68](https://github.com/mixer/etcd3/issues/68))
+ - **bug**: forcefully terminate watch streams on close (see [#62](https://github.com/mixer/etcd3/issues/62))
+ - **bug**: reestablish watch streams if they're closed gracefully (see [#79](https://github.com/mixer/etcd3/issues/79))
+
 ## 0.2.9 2017-02-09
 
  - **bug**: lock to grpc@1.9.0 due to upstream regression (see [#59](https://github.com/mixer/etcd3/issues/59))
