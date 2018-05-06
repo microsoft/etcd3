@@ -152,6 +152,15 @@ export class Lease extends EventEmitter {
   }
 
   /**
+   * releasePassively stops making heartbeats for the lease, and allows it
+   * to expire automatically when its TTL rolls around. Use `revoke()` to
+   * actively tell etcd to terminate the lease.
+   */
+  public release() {
+    this.close();
+  }
+
+  /**
    * Put returns a put builder that operates within the current lease.
    */
   public put(key: string | Buffer): PutBuilder {
