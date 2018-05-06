@@ -70,7 +70,7 @@ const enum State {
  * const hostPrefix = 'available-hosts/';
  *
  * function grantLease() {
- *   const lease = client.lease();
+ *   const lease = client.lease(10); // set a TTL of 10 seconds
  *
  *   lease.on('lost', err => {
  *     console.log('We lost our lease as a result of this error:', err);
@@ -102,7 +102,7 @@ export class Lease extends EventEmitter {
   ) {
     super();
 
-    if (ttl < 1) {
+    if (!ttl || ttl < 1) {
       throw new Error(`The TTL in an etcd lease must be at least 1 second. Got: ${ttl}`);
     }
 

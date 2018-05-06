@@ -28,8 +28,9 @@ describe('lease()', () => {
     }
   });
 
-  it('throws if trying to use too short of a ttl', () => {
+  it('throws if trying to use too short of a ttl, or an undefined ttl', () => {
     expect(() => client.lease(0)).to.throw(/must be at least 1 second/);
+    expect(() => (<any> client.lease)()).to.throw(/must be at least 1 second/);
   });
 
   it('reports a loss and errors if the client is invalid', async () => {
