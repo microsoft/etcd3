@@ -74,7 +74,7 @@
     "sinon": "^2.1.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
-    "tslint-microsoft-contrib": "^5.0.1",
+    "tslint-microsoft-contrib": "5.0.1",
     "typedoc": "^0.7.1",
     "typescript": "^2.7.1"
   },

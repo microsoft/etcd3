@@ -239,7 +239,7 @@ export class WatchManager {
       throw new ClientRuntimeError('Cannot call destroyStream() with active watchers');
     }
 
-    this.getStream().end();
+    this.getStream().cancel();
     this.queue!.destroy();
   }
 
@@ -250,7 +250,7 @@ export class WatchManager {
   private handleError(err: Error) {
     if (this.state === State.Connected) {
       this.queue!.destroy();
-      this.getStream().end();
+      this.getStream().cancel();
     }
     this.state = State.Idle;
 
