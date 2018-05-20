@@ -3,7 +3,7 @@
 
 import * as grpc from 'grpc';
 
-export interface ICallable {
+export interface ICallable<T> {
   exec(
     service: keyof typeof Services,
     method: string,
@@ -13,7 +13,9 @@ export interface ICallable {
 
   getConnection(
     service: keyof typeof Services,
-  ): Promise<{ client: grpc.Client; metadata: grpc.Metadata }>;
+  ): Promise<{ resource: T; client: grpc.Client; metadata: grpc.Metadata }>;
+
+  markFailed(resource: T): void;
 }
 
 export interface IResponseStream<T> {
@@ -31,7 +33,7 @@ export interface IRequestStream<T> {
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
 export class KVClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * Range gets the keys in the range from the key-value store.
    */
@@ -80,7 +82,7 @@ export class KVClient {
 }
 
 export class WatchClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * Watch watches for events happening or that have happened. Both input and output
    * are streams; the input stream is for creating and canceling watchers and the output
@@ -89,14 +91,16 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(options?: grpc.CallOptions): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
-    return this.client
-      .getConnection('Watch')
-      .then(({ client, metadata }) => (<any>client).watch(metadata, options));
+    return this.client.getConnection('Watch').then(({ resource, client, metadata }) => {
+      const stream = (<any>client).watch(metadata, options);
+      stream.on('error', () => this.client.markFailed(resource));
+      return stream;
+    });
   }
 }
 
 export class LeaseClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * LeaseGrant creates a lease which expires if the server does not receive a keepAlive
    * within a given time to live period. All keys attached to the lease will be expired and
@@ -124,9 +128,11 @@ export class LeaseClient {
   public leaseKeepAlive(
     options?: grpc.CallOptions,
   ): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
-    return this.client
-      .getConnection('Lease')
-      .then(({ client, metadata }) => (<any>client).leaseKeepAlive(metadata, options));
+    return this.client.getConnection('Lease').then(({ resource, client, metadata }) => {
+      const stream = (<any>client).leaseKeepAlive(metadata, options);
+      stream.on('error', () => this.client.markFailed(resource));
+      return stream;
+    });
   }
   /**
    * LeaseTimeToLive retrieves lease information.
@@ -146,7 +152,7 @@ export class LeaseClient {
 }
 
 export class ClusterClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * MemberAdd adds a member into the cluster.
    */
@@ -183,7 +189,7 @@ export class ClusterClient {
 }
 
 export class MaintenanceClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * Alarm activates, deactivates, and queries alarms regarding cluster health.
    */
@@ -220,9 +226,11 @@ export class MaintenanceClient {
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(options?: grpc.CallOptions): Promise<IResponseStream<ISnapshotResponse>> {
-    return this.client
-      .getConnection('Maintenance')
-      .then(({ client, metadata }) => (<any>client).snapshot(metadata, options, {}));
+    return this.client.getConnection('Maintenance').then(({ resource, client, metadata }) => {
+      const stream = (<any>client).snapshot(metadata, options, {});
+      stream.on('error', () => this.client.markFailed(resource));
+      return stream;
+    });
   }
   /**
    * MoveLeader requests current leader node to transfer its leadership to transferee.
@@ -236,7 +244,7 @@ export class MaintenanceClient {
 }
 
 export class AuthClient {
-  constructor(private client: ICallable) {}
+  constructor(private client: ICallable<any>) {}
   /**
    * AuthEnable enables authentication.
    */

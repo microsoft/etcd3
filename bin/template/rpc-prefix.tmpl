@@ -3,7 +3,7 @@
 
 import * as grpc from 'grpc';
 
-export interface ICallable {
+export interface ICallable<T> {
   exec(
     service: keyof typeof Services,
     method: string,
@@ -13,7 +13,9 @@ export interface ICallable {
 
   getConnection(
     service: keyof typeof Services,
-  ): Promise<{ client: grpc.Client, metadata: grpc.Metadata }>;
+  ): Promise<{ resource: T; client: grpc.Client, metadata: grpc.Metadata }>;
+
+  markFailed(resource: T): void;
 }
 
 export interface IResponseStream<T> {
@@ -26,6 +28,7 @@ export interface IResponseStream<T> {
 export interface IRequestStream<T> {
   write(item: T): void;
   end(): void;
+  cancel(): void;
 }
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}

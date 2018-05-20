@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import * as grpc from 'grpc';
 
 import { PutBuilder } from './builder';
-import { ConnectionPool } from './connection-pool';
+import { ConnectionPool, Host } from './connection-pool';
 import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCConnectFailedError } from './errors';
 import * as RPC from './rpc';
 import { NSApplicator } from './util';
@@ -23,7 +23,7 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  * Implements RPC.ICallable. Wraps a pool and adds the `leaseID` to outgoing
  * put requests before executing them.
  */
-class LeaseClientWrapper implements RPC.ICallable {
+class LeaseClientWrapper implements RPC.ICallable<Host> {
   constructor(
     private pool: ConnectionPool,
     private readonly lease: {
@@ -46,6 +46,10 @@ class LeaseClientWrapper implements RPC.ICallable {
 
         throw err;
       });
+  }
+
+  public markFailed(host: Host): void {
+    this.pool.markFailed(host);
   }
 
   public getConnection(): never {

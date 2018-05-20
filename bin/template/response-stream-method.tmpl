@@ -2,5 +2,9 @@
   public <%= _.lowerFirst(name) %>(<%= req.empty ? '' : `req: ${requestTsType}, ` %>options?: grpc.CallOptions): Promise<IResponseStream<<%= responseTsType %>>> {
     return this.client
       .getConnection('<%= service %>')
-      .then(({ client, metadata }) => (<any> client).<%= _.lowerFirst(name) %>(metadata, options, <%= req.empty ? '{}' : 'req' %>));
+      .then(({ resource, client, metadata }) => {
+        const stream = (<any> client).<%= _.lowerFirst(name) %>(metadata, options, <%= req.empty ? '{}' : 'req' %>);
+        stream.on('error', () => this.client.markFailed(resource));
+        return stream;
+      });
   }

@@ -9,7 +9,7 @@
     "test:unit": "mocha",
     "test:cover": "nyc mocha",
     "test:lint": "tslint --project tsconfig.json \"{src,test}/**/*.ts\"",
-    "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts",
+    "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts && npm run fmt:ts",
     "build:doc": "rm -rf docs && typedoc --gitRevision `git describe --abbrev=0 --tags` --exclude \"**/test/*\" --excludePrivate --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc && cp -R proto lib",
     "fmt": "npm-run-all --parallel fmt:ts fmt:js && npm run -s test:lint -- --fix",

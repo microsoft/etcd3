@@ -170,9 +170,9 @@ export class Host {
  * Connection wraps GRPC hosts. Note that this wraps the hosts themselves; each
  * host can contain multiple discreet services.
  */
-export class ConnectionPool implements ICallable {
+export class ConnectionPool implements ICallable<Host> {
   private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
-  private mockImpl: ICallable | null;
+  private mockImpl: ICallable<Host> | null;
   private authenticator: Authenticator;
 
   constructor(private options: IOptions) {
@@ -182,7 +182,7 @@ export class ConnectionPool implements ICallable {
   /**
    * Sets a mock interface to use instead of hitting real services.
    */
-  public mock(callable: ICallable) {
+  public mock(callable: ICallable<Host>) {
     this.mockImpl = callable;
   }
 
@@ -213,10 +213,10 @@ export class ConnectionPool implements ICallable {
       return this.mockImpl.exec(serviceName, method, payload);
     }
 
-    return this.getConnection(serviceName).then(({ host, client, metadata }) => {
+    return this.getConnection(serviceName).then(({ resource, client, metadata }) => {
       return runServiceCall(client, metadata, options, method, payload)
         .then(res => {
-          this.pool.succeed(host);
+          this.pool.succeed(resource);
           return res;
         })
         .catch(err => {
@@ -226,8 +226,8 @@ export class ConnectionPool implements ICallable {
           }
 
           if (err instanceof GRPCGenericError) {
-            this.pool.fail(host);
-            host.close();
+            this.pool.fail(resource);
+            resource.close();
 
             if (this.pool.available().length && this.options.retry) {
               return this.exec(serviceName, method, payload, options);
@@ -244,7 +244,7 @@ export class ConnectionPool implements ICallable {
    */
   public getConnection(
     service: keyof typeof Services,
-  ): Promise<{ host: Host; client: grpc.Client; metadata: grpc.Metadata }> {
+  ): Promise<{ resource: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
       return Promise.resolve(<any>this.mockImpl.getConnection(service)).then(connection => ({
         metadata: new grpc.Metadata(),
@@ -255,9 +255,16 @@ export class ConnectionPool implements ICallable {
     return Promise.all([this.pool.pull(), this.authenticator.getMetadata()]).then(
       ([host, metadata]) => {
         const client = host.getServiceClient(service);
-        return { client, host, metadata };
+        return { resource: host, client, metadata };
       },
     );
+  }
+
+  /**
+   * @override
+   */
+  public markFailed(host: Host) {
+    this.pool.fail(host);
   }
 
   /**

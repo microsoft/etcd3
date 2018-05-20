@@ -2,5 +2,9 @@
   public <%= _.lowerFirst(name) %>(options?: grpc.CallOptions): Promise<IDuplexStream<<%= requestTsType %>, <%= responseTsType %>>> {
     return this.client
       .getConnection('<%= service %>')
-      .then(({ client, metadata }) => (<any> client).<%= _.lowerFirst(name) %>(metadata, options));
+      .then(({ resource, client, metadata }) => {
+        const stream = (<any> client).<%= _.lowerFirst(name) %>(metadata, options);
+        stream.on('error', () => this.client.markFailed(resource));
+        return stream;
+      });
   }
