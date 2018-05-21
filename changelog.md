@@ -1,4 +1,8 @@
-## 0.2.10 2017-05-05
+## 0.2.11 2018-05-21
+
+ - **bug**: fix backoffs not triggering on stream failures ([#76](https://github.com/mixer/etcd3/pull/76))
+
+## 0.2.10 2018-05-05
 
  - **feat**: update grpc with Node 10 support (see [#73](https://github.com/mixer/etcd3/pulls/73)) thanks to [@XadillaX](https://github.com/XadillaX)
  - **feat**: add `lease.release()` to let leases expire automatically (see [#69](https://github.com/mixer/etcd3/issues/69))
@@ -7,7 +11,7 @@
  - **bug**: reestablish watch streams if they're closed gracefully (see [#79](https://github.com/mixer/etcd3/issues/79))
  - **bug**: fix synax error in watcher docs(see [#71](https://github.com/mixer/etcd3/pulls/71)) thanks to [@monkbroc](https://github.com/monkbroc)
 
-## 0.2.9 2017-02-09
+## 0.2.9 2018-02-09
 
  - **bug**: lock to grpc@1.9.0 due to upstream regression (see [#59](https://github.com/mixer/etcd3/issues/59))
 
