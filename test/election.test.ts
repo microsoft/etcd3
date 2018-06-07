@@ -15,7 +15,6 @@ describe('election', () => {
   beforeEach(async () => {
     client = new Etcd3(getOptions());
     election = new Election(client, 'test-election', 1);
-    await election.ready();
     await election.campaign('candidate');
   });
 
