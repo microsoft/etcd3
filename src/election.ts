@@ -5,6 +5,9 @@ import { Lease } from './lease';
 import { Namespace } from './namespace';
 
 export interface Election { // tslint:disable-line interface-name
+  /**
+   * fired after leader elected
+   */
   on(event: 'leader', listener: (leaderKey: string) => void): this;
   /**
    * errors are fired when:
@@ -31,7 +34,7 @@ export class Election extends EventEmitter {
   public static readonly prefix = 'election';
 
   private readonly namespace: Namespace;
-  private lease: Lease|null = null;
+  private lease: Lease | null = null;
 
   private leaseId = '';
   private _leaderKey = '';
