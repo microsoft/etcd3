@@ -194,6 +194,7 @@ export class Lease extends EventEmitter {
           throw err;
         }
 
+        this.lastKeepAlive = Date.now();
         return res;
       });
     });
