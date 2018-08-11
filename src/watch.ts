@@ -470,7 +470,7 @@ export class Watcher extends EventEmitter {
   public on(event: 'put', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
 
   /**
-   * put is fired, in addition to `data`, when a key is deleted from etcd.
+   * delete is fired, in addition to `data`, when a key is deleted from etcd.
    */
   public on(event: 'delete', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
 
