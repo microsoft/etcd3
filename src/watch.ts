@@ -395,6 +395,14 @@ export class WatchBuilder {
   }
 
   /**
+   * Watch starting from a specific revision.
+   */
+  public startRevision(revision: string): this {
+    this.request.start_revision = revision;
+    return this;
+  }
+
+  /**
    * watcher() creates but does not connect the watcher. Use create() instead;
    * this is mostly for testing purposes.
    * @private
