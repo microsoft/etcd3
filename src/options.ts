@@ -12,7 +12,7 @@ export interface IOptions {
    * Optional client cert credentials for talking to etcd. Describe more
    * {@link https://coreos.com/etcd/docs/latest/op-guide/security.html here},
    * passed into the createSsl function in GRPC
-   * {@link http://www.grpc.io/grpc/node/module-src_credentials.html#.createSsl here}.
+   * {@link https://grpc.io/grpc/node/grpc.credentials.html#.createSsl__anchor here}.
    */
   credentials?: {
     rootCertificate: Buffer;
