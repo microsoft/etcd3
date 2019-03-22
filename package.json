@@ -15,7 +15,7 @@
     "fmt": "npm-run-all --parallel fmt:ts fmt:js && npm run -s test:lint -- --fix",
     "fmt:js": "prettier --single-quote --trailing-comma es5 --write --print-width 100 \"bin/*.js\"",
     "fmt:ts": "prettier --single-quote --trailing-comma all --parser typescript --print-width 100 --write \"{src,test}/**/*.ts\"",
-    "prepublish": "npm run -s build:ts"
+    "prepare": "npm run -s build:ts"
   },
   "repository": {
     "type": "git",
@@ -70,7 +70,7 @@
     "npm-run-all": "^4.0.2",
     "nyc": "^11.2.1",
     "prettier": "^1.4.4",
-    "protobufjs": "^6.7.3",
+    "protobufjs": "^6.8.6",
     "sinon": "^2.1.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
