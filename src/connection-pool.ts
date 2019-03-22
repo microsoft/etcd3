@@ -1,3 +1,4 @@
+import { loadSync } from '@grpc/proto-loader';
 import * as grpc from 'grpc';
 
 import { ExponentialBackoff } from './backoff/exponential';
@@ -7,7 +8,14 @@ import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
 import { forOwn } from './util';
 
-const services = grpc.load(`${__dirname}/../proto/rpc.proto`);
+const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+});
+const services = grpc.loadPackageDefinition(packageDefinition);
 
 export const defaultBackoffStrategy = new ExponentialBackoff({
   initial: 300,

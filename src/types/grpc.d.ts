@@ -1,5 +1,5 @@
 /* tslint:disable */
-
+import { PackageDefinition } from '@grpc/proto-loader';
 import { Duplex, Readable, Writable } from 'stream';
 
 export class ChannelCredentials {
@@ -151,6 +151,15 @@ export function load(
   filename: string,
   format?: 'proto' | 'json',
   options?: LoadOptions,
+): { [namespace: string]: { [service: string]: typeof Client } };
+
+/**
+ * Load a gRPC package definition as a gRPC object hierarchy
+ * @param packageDef The package definition object
+ * @return The resulting gRPC object
+ */
+export function loadPackageDefinition(
+  packageDefinition: PackageDefinition,
 ): { [namespace: string]: { [service: string]: typeof Client } };
 
 /**
