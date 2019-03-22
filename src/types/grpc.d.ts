@@ -158,7 +158,9 @@ export function load(
  * @param packageDef The package definition object
  * @return The resulting gRPC object
  */
-export function loadPackageDefinition(packageDefinition: PackageDefinition): { [namespace: string]: { [service: string]: typeof Client } };
+export function loadPackageDefinition(
+  packageDefinition: PackageDefinition,
+): { [namespace: string]: { [service: string]: typeof Client } };
 
 /**
  * Tears down a GRPC client.

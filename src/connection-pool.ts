@@ -1,5 +1,5 @@
-import * as grpc from 'grpc';
 import { loadSync } from '@grpc/proto-loader';
+import * as grpc from 'grpc';
 
 import { ExponentialBackoff } from './backoff/exponential';
 import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
@@ -9,9 +9,9 @@ import { SharedPool } from './shared-pool';
 import { forOwn } from './util';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
-      keepCase: true,
-      defaults: true,
-      oneofs: true
+  keepCase: true,
+  defaults: true,
+  oneofs: true,
 });
 const services = grpc.loadPackageDefinition(packageDefinition);
 
