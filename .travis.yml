@@ -3,6 +3,7 @@ node_js:
   - 6
   - 8
   - 10
+  - 11
 env:
   - ETCD_VER=v3.1.5
   - ETCD_VER=v3.2.4
