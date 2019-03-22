@@ -10,6 +10,8 @@ import { forOwn } from './util';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   keepCase: true,
+  longs: String,
+  enums: String,
   defaults: true,
   oneofs: true,
 });
