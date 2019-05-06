@@ -272,6 +272,9 @@ export class ConnectionPool implements ICallable<Host> {
    * @override
    */
   public markFailed(host: Host) {
+    if (this.mockImpl) {
+      return;
+    }
     this.pool.fail(host);
   }
 
