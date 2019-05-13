@@ -314,14 +314,14 @@ export class Lease extends EventEmitter {
         });
 
         this.emit('keepaliveEstablished');
-        this.fireKeepAlive(stream);
+        return this.fireKeepAlive(stream);
       })
       .catch(err => this.handleKeepaliveError(err));
   }
 
   private fireKeepAlive(stream: RPC.IRequestStream<RPC.ILeaseKeepAliveRequest>) {
     this.emit('keepaliveFired');
-    this.grant()
+    return this.grant()
       .then(id => stream.write({ ID: id }))
       .catch(() => this.close()); // will only throw if the initial grant failed
   }
