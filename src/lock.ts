@@ -92,6 +92,14 @@ export class Lock {
   }
 
   /**
+   * Returns the lease associated with this lock, if any. Returns null if
+   * the lock has not been acquired.
+   */
+  public leaseId(): Promise<string | null> {
+    return this.lease ? this.lease.grant() : Promise.resolve(null);
+  }
+
+  /**
    * Release frees the lock.
    */
   public release(): Promise<void> {

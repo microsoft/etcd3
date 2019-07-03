@@ -1,6 +1,7 @@
 ## 0.2.13 TBA
 
  - **bug**: fixed comparisons breaking in STM when using namespaces (see [#90](https://github.com/mixer/etcd3/issues/90))
+ - **feat**: allow retrieving lock lease IDs (see [#75](https://github.com/mixer/etcd3/issues/75))
 
 ## 0.2.12 2019-07-03
 

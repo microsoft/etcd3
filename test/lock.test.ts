@@ -49,4 +49,14 @@ describe('lock()', () => {
     expect(() => lock.ttl(10)).to.throw(/Cannot set a lock TTL after acquiring the lock/);
     await lock.release();
   });
+
+  it('gets the lock lease ID', async () => {
+    const lock = await client.lock('resource');
+    expect(await lock.leaseId()).to.equal(null, 'expected no lease initially');
+    await lock.acquire();
+    const leaseId = await lock.leaseId();
+    expect(leaseId).to.be.a('string');
+    expect((await client.get('resource').exec()).kvs[0].lease).to.equal(leaseId);
+    await lock.release();
+  });
 });
