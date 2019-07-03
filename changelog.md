@@ -1,3 +1,7 @@
+## 0.2.13 TBA
+
+ - **bug**: fixed comparisons breaking in STM when using namespaces (see [#90](https://github.com/mixer/etcd3/issues/90))
+
 ## 0.2.12 2019-07-03
 
  - **bug**: fix `grpc.load` deprecation error (see [#81](https://github.com/mixer/etcd3/issues/81), [#91](https://github.com/mixer/etcd3/issues/91)) thanks to [@RezoChiang](https://github.com/RezoChiang)

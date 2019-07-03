@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as tls from 'tls';
 
-import { Etcd3, IOptions } from '../src';
+import { Etcd3, IOptions, Namespace } from '../src';
 
 const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${__dirname}/certs/certs/etcd0.localhost.crt`);
@@ -173,16 +173,31 @@ export function expectReject(promise: Promise<any>, err: { new (message: string)
 }
 
 /**
+ * Creates a new test etcd client.
+ */
+export function createTestClient(): Etcd3 {
+  return new Etcd3(getOptions());
+}
+
+/**
  * Creates an etcd client with the default options and seeds some keys.
  */
-export function createTestClientAndKeys(): Promise<Etcd3> {
-  const client = new Etcd3(getOptions());
-  return Promise.all([
+export async function createTestClientAndKeys(): Promise<Etcd3> {
+  const client = createTestClient();
+  await createTestKeys(client);
+  return client;
+}
+
+/**
+ * Creates test keys in the given namespace.
+ */
+export async function createTestKeys(client: Namespace) {
+  await Promise.all([
     client.put('foo1').value('bar1'),
     client.put('foo2').value('bar2'),
     client.put('foo3').value('{"value":"bar3"}'),
     client.put('baz').value('bar5'),
-  ]).then(() => client);
+  ]);
 }
 
 /**

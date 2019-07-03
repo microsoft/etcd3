@@ -487,7 +487,7 @@ export class SoftwareTransaction {
   }
 
   private commit(): Promise<void> {
-    const cmp = new Builder.ComparatorBuilder(this.rawKV, this.namespace);
+    const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
         const earliestMod = this.tx.readSet

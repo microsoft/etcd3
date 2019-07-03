@@ -41,6 +41,11 @@ export function endRangeForPrefix(prefix: Buffer): Buffer {
  * can only be used for a single application.
  */
 export class NSApplicator {
+  /**
+   * Creates a new no-op namespace applicator.
+   */
+  public static readonly default = new NSApplicator(emptyKey);
+
   // A little caching, maybe a microoptimization :P
   private endRange: Buffer | null;
 

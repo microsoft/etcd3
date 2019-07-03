@@ -24,6 +24,7 @@
     "no-void-expression": false,
     "no-use-before-declare": false,
     "unified-signatures": false,
+    "max-func-body-length": false,
 
     // Prettier-incompatible or prettier-handled rules
     "align": false,
