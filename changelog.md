@@ -1,3 +1,9 @@
+## 0.2.12 2019-07-03
+
+ - **bug**: fix `grpc.load` deprecation error (see [#81](https://github.com/mixer/etcd3/issues/81), [#91](https://github.com/mixer/etcd3/issues/91)) thanks to [@RezoChiang](https://github.com/RezoChiang)
+ - **feat**: allow setting the starting revision when watching (see [#88](https://github.com/mixer/etcd3/issues/88)) thanks to [@nlsun](https://github.com/nlsun)
+ - **fix**: refresh the lastKeepAlive counter when calling keepAliveOnce() on leases (see [#80](https://github.com/mixer/etcd3/issues/80)) thanks to [@tannineo](https://github.com/tannineo)
+
 ## 0.2.11 2018-05-21
 
  - **bug**: fix backoffs not triggering on stream failures ([#76](https://github.com/mixer/etcd3/pull/76))
