@@ -3,6 +3,7 @@
  - **bug**: fixed comparisons breaking in STM when using namespaces (see [#90](https://github.com/mixer/etcd3/issues/90))
  - **feat**: allow retrieving lock lease IDs (see [#75](https://github.com/mixer/etcd3/issues/75))
  - **bug**: fixed using `lease.put` in transactions not applying the lease to the target key (see [#92](https://github.com/mixer/etcd3/issues/92))
+ - **bug**: call `markFailed` on the mock instance, rather than the real connection pool, whilst mocking (see [#94](https://github.com/mixer/etcd3/issues/94))
 
 ## 0.2.12 2019-07-03
 
