@@ -55,6 +55,20 @@ describe('lease()', () => {
     expect(await client.get('leased').buffer()).to.be.null;
   });
 
+  it('attaches leases through transactions', async () => {
+    lease = client.lease(100);
+    await lease.put('leased').value('foo');
+
+    const result = await client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(lease.put('leased').value('foo'))
+      .commit();
+    expect(result.succeeded).to.equal(true, 'expected to have completed transaction');
+    expect((await client.get('leased').exec()).kvs[0].lease).to.equal(await lease.grant());
+    await lease.revoke();
+    expect(await client.get('leased').buffer()).to.be.null;
+  });
+
   it('runs immediate keepalives', async () => {
     lease = client.lease(100);
     expect(await lease.keepaliveOnce()).to.containSubset({

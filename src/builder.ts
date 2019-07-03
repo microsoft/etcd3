@@ -24,7 +24,7 @@ export interface ICompareTarget {
 }
 
 export interface IOperation {
-  op(): RPC.IRequestOp;
+  op(): Promise<RPC.IRequestOp>;
 }
 
 /**
@@ -121,8 +121,8 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
   /**
    * Returns the request op for this builder, used in transactions.
    */
-  public op(): RPC.IRequestOp {
-    return { request_range: this.namespace.applyToRequest(this.request) };
+  public op(): Promise<RPC.IRequestOp> {
+    return Promise.resolve({ request_range: this.namespace.applyToRequest(this.request) });
   }
 }
 
@@ -416,10 +416,10 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   /**
    * Returns the request op for this builder, used in transactions.
    */
-  public op(): RPC.IRequestOp {
-    return {
+  public op(): Promise<RPC.IRequestOp> {
+    return Promise.resolve({
       request_delete_range: this.namespace.applyToRequest(this.request),
-    };
+    });
   }
 
   /**
@@ -435,6 +435,7 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
  */
 export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   private request: RPC.IPutRequest = {};
+  private leaseFilter?: string | number | Promise<string | number>;
   private callOptions: grpc.CallOptions | undefined;
 
   constructor(
@@ -458,8 +459,8 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * Sets the lease value to use for storing the key. You usually don't
    * need to use this directly, use `client.lease()` instead!
    */
-  public lease(lease: number | string): this {
-    this.request.lease = lease;
+  public lease(lease: number | string | Promise<string | number>): this {
+    this.leaseFilter = lease;
     return this;
   }
 
@@ -502,14 +503,16 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
   /**
    * exec runs the put request.
    */
-  public exec(): Promise<RPC.IPutResponse> {
+  public async exec(): Promise<RPC.IPutResponse> {
+    await this.applyLease();
     return this.kv.put(this.namespace.applyToRequest(this.request), this.callOptions);
   }
 
   /**
    * Returns the request op for this builder, used in transactions.
    */
-  public op(): RPC.IRequestOp {
+  public async op(): Promise<RPC.IRequestOp> {
+    await this.applyLease();
     return { request_put: this.namespace.applyToRequest(this.request) };
   }
 
@@ -518,6 +521,18 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    */
   protected createPromise(): Promise<RPC.IPutResponse> {
     return this.exec();
+  }
+
+  private async applyLease() {
+    if (!this.leaseFilter) {
+      return;
+    }
+
+    if (typeof this.leaseFilter === 'number' || typeof this.leaseFilter === 'string') {
+      this.request.lease = this.leaseFilter;
+    }
+
+    this.request.lease = await this.leaseFilter;
   }
 }
 
@@ -544,7 +559,11 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * ```
  */
 export class ComparatorBuilder {
-  private request: RPC.ITxnRequest = {};
+  private request: {
+    compare: Promise<RPC.ICompare>[];
+    success: Promise<RPC.IRequestOp>[];
+    failure: Promise<RPC.IRequestOp>[];
+  } = { compare: [], success: [], failure: [] };
   private callOptions: grpc.CallOptions | undefined;
 
   constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {}
@@ -573,13 +592,14 @@ export class ComparatorBuilder {
       value = toBuffer(<string | Buffer>value);
     }
 
-    this.request.compare = this.request.compare || [];
-    this.request.compare.push({
-      key: this.namespace.applyKey(toBuffer(key)),
-      result: comparator[cmp],
-      target: RPC.CompareTarget[column],
-      [compareTarget[column]]: value,
-    });
+    this.request.compare.push(
+      Promise.resolve({
+        key: this.namespace.applyKey(toBuffer(key)),
+        result: comparator[cmp],
+        target: RPC.CompareTarget[column],
+        [compareTarget[column]]: value,
+      }),
+    );
     return this;
   }
 
@@ -604,20 +624,27 @@ export class ComparatorBuilder {
   /**
    * Runs the generated transaction and returns its result.
    */
-  public commit(): Promise<RPC.ITxnResponse> {
-    return this.kv.txn(this.request, this.callOptions);
+  public async commit(): Promise<RPC.ITxnResponse> {
+    return this.kv.txn(
+      {
+        compare: await Promise.all(this.request.compare),
+        failure: await Promise.all(this.request.failure),
+        success: await Promise.all(this.request.success),
+      },
+      this.callOptions,
+    );
   }
 
   /**
    * Low-level method to add
    */
-  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]): RPC.IRequestOp[] {
+  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]) {
     return ops.map(op => {
       if (typeof (<IOperation>op).op === 'function') {
         return (<IOperation>op).op();
       }
 
-      return <RPC.IRequestOp>op;
+      return Promise.resolve(<RPC.IRequestOp>op);
     });
   }
 }

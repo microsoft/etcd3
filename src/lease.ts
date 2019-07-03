@@ -33,19 +33,13 @@ class LeaseClientWrapper implements RPC.ICallable<Host> {
   ) {}
 
   public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
-    return this.lease.leaseID
-      .then(throwIfError)
-      .then(lease => {
-        payload.lease = lease;
-        return this.pool.exec(service, method, payload);
-      })
-      .catch(err => {
-        if (err instanceof EtcdLeaseInvalidError) {
-          this.lease.emitLoss(err);
-        }
+    return this.pool.exec(service, method, payload).catch(err => {
+      if (err instanceof EtcdLeaseInvalidError) {
+        this.lease.emitLoss(err);
+      }
 
-        throw err;
-      });
+      throw err;
+    });
   }
 
   public markFailed(host: Host): void {
@@ -172,7 +166,7 @@ export class Lease extends EventEmitter {
       new RPC.KVClient(new LeaseClientWrapper(this.pool, <any>this)),
       this.namespace,
       key,
-    );
+    ).lease(this.grant());
   }
 
   /**
