@@ -45,7 +45,7 @@ function runServiceCall(
   payload: object,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    (<any>client)[method](payload, metadata, options, (err: Error | null, res: any) => {
+    (client as any)[method](payload, metadata, options, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -254,7 +254,7 @@ export class ConnectionPool implements ICallable<Host> {
     service: keyof typeof Services,
   ): Promise<{ resource: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
-      return Promise.resolve(<any>this.mockImpl.getConnection(service)).then(connection => ({
+      return Promise.resolve(this.mockImpl.getConnection(service) as any).then(connection => ({
         metadata: new grpc.Metadata(),
         ...connection,
       }));

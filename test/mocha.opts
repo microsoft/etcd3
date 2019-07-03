@@ -1,4 +1,8 @@
---compilers ts:ts-node/register
---timeout 20000
+--watch-extensions ts
+--require source-map-support/register
+--require ts-node/register
 --require test/_setup.ts
-test/*.test.ts
+--timeout 20000
+--recursive
+--exit
+test/**/*.test.ts

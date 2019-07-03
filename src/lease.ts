@@ -163,7 +163,7 @@ export class Lease extends EventEmitter {
    */
   public put(key: string | Buffer): PutBuilder {
     return new PutBuilder(
-      new RPC.KVClient(new LeaseClientWrapper(this.pool, <any>this)),
+      new RPC.KVClient(new LeaseClientWrapper(this.pool, this as any)),
       this.namespace,
       key,
     ).lease(this.grant());
@@ -241,7 +241,7 @@ export class Lease extends EventEmitter {
   /**
    * Implements EventEmitter.on(...).
    */
-  public on(event: string, handler: Function): this {
+  public on(event: string, handler: (...args: any[]) => void): this {
     // tslint:disable-line
     return super.on(event, handler);
   }
@@ -290,7 +290,7 @@ export class Lease extends EventEmitter {
           return stream.end();
         }
 
-        const keepaliveTimer = setInterval(() => this.fireKeepAlive(stream), 1000 * this.ttl / 3);
+        const keepaliveTimer = setInterval(() => this.fireKeepAlive(stream), (1000 * this.ttl) / 3);
 
         this.teardown = () => {
           this.teardown = () => undefined;
@@ -298,14 +298,16 @@ export class Lease extends EventEmitter {
           stream.end();
         };
 
-        stream.on('error', err => this.handleKeepaliveError(err)).on('data', res => {
-          if (leaseExpired(res)) {
-            return this.handleKeepaliveError(new EtcdLeaseInvalidError(res.ID));
-          }
+        stream
+          .on('error', err => this.handleKeepaliveError(err))
+          .on('data', res => {
+            if (leaseExpired(res)) {
+              return this.handleKeepaliveError(new EtcdLeaseInvalidError(res.ID));
+            }
 
-          this.lastKeepAlive = Date.now();
-          this.emit('keepaliveSucceeded', res);
-        });
+            this.lastKeepAlive = Date.now();
+            this.emit('keepaliveSucceeded', res);
+          });
 
         this.emit('keepaliveEstablished');
         return this.fireKeepAlive(stream);

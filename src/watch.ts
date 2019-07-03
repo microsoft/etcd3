@@ -64,7 +64,7 @@ class AttachQueue {
       throw new ClientRuntimeError('Could not find watcher corresponding to create response');
     }
 
-    (<{ id: string }>watcher).id = res.watch_id;
+    (watcher as { id: string }).id = res.watch_id;
     watcher.emit('connected', res);
     this.readQueue();
   }
@@ -262,7 +262,7 @@ export class WatchManager {
 
     this.watchers.forEach(watcher => {
       watcher.emit('disconnected', err);
-      (<{ id: null }>watcher).id = null;
+      (watcher as { id: null }).id = null;
     });
 
     setTimeout(() => {
@@ -381,7 +381,7 @@ export class WatchBuilder {
   /**
    * ignore omits certain operation kinds from the watch stream.
    */
-  public ignore(...operations: (keyof typeof operationNames)[]): this {
+  public ignore(...operations: Array<keyof typeof operationNames>): this {
     this.request.filters = operations.map(op => operationNames[op]);
     return this;
   }
@@ -506,7 +506,7 @@ export class Watcher extends EventEmitter {
   /**
    * Implements EventEmitter.on(...).
    */
-  public on(event: string, handler: Function): this {
+  public on(event: string, handler: (...args: any[]) => void): this {
     // tslint:disable-line
     return super.on(event, handler);
   }
@@ -517,7 +517,7 @@ export class Watcher extends EventEmitter {
    * connected.
    */
   public lastRevision(): number | null {
-    return <number>this.request.start_revision;
+    return this.request.start_revision as number;
   }
 
   /**

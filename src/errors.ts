@@ -202,9 +202,7 @@ export class STMConflictError extends Error {
   }
 }
 
-interface IErrorCtor {
-  new (message: string): Error;
-}
+type IErrorCtor = new (message: string) => Error;
 
 /**
  * Mapping of GRPC error messages to typed error. GRPC errors are untyped
@@ -213,6 +211,7 @@ interface IErrorCtor {
 const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Connect Failed', GRPCConnectFailedError],
   ['Channel Disconnected', GRPCConnectFailedError],
+  ['failed to connect to all addresses', GRPCConnectFailedError],
   ['Endpoint read failed', GRPCProtocolError],
   ['Got config after disconnection', GRPCProtocolError],
   ['Failed to create subchannel', GRPCProtocolError],
@@ -272,7 +271,7 @@ export function castGrpcErrorMessage(message: string): Error {
  * consume. Yes, this method is abhorrent.
  */
 export function castGrpcError(err: Error): Error {
-  if ((<any>err).constructor !== Error) {
+  if ((err as any).constructor !== Error) {
     return err; // it looks like it's already some kind of typed error
   }
 

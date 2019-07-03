@@ -17,7 +17,7 @@ const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
  */
 export class Proxy {
   public isActive = false;
-  public connections: { end(): void }[] = [];
+  public connections: Array<{ end(): void }> = [];
   private server: tls.Server;
   private host: string;
   private port: number;
@@ -159,13 +159,14 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
  * Returns a promise that throws if the promise is resolved or rejected with
  * something other than the provided constructor
  */
-export function expectReject(promise: Promise<any>, err: { new (message: string): Error }) {
+export function expectReject(promise: Promise<any>, err: new (message: string) => Error) {
   return promise
     .then(() => {
       throw new Error('expected to reject');
     })
     .catch(actualErr => {
       if (!(actualErr instanceof err)) {
+        // tslint:disable-next-line
         console.error(actualErr.stack);
         expect(actualErr).to.be.an.instanceof(err);
       }

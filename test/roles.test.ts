@@ -14,7 +14,7 @@ import {
 } from '../src';
 import { createTestClientAndKeys, expectReject, getOptions, tearDownTestClient } from './util';
 
-function wipeAll(things: Promise<{ delete(): any }[]>) {
+function wipeAll(things: Promise<Array<{ delete(): any }>>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));
 }
 
@@ -227,7 +227,7 @@ describe('roles and auth', () => {
           },
         }),
       );
-      const auth = (<any>authedClient).pool.authenticator;
+      const auth = (authedClient as any).pool.authenticator;
       const badMeta = new grpc.Metadata();
       badMeta.add('token', 'lol');
       auth.awaitingMetadata = Promise.resolve(badMeta);

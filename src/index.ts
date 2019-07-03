@@ -96,7 +96,7 @@ export class Etcd3 extends Namespace {
    * ```
    */
   public mock<T extends Partial<RPC.ICallable<any>>>(callable: T): T {
-    this.pool.mock(<any>callable);
+    this.pool.mock(callable as any);
     return callable;
   }
 

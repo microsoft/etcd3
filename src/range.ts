@@ -29,14 +29,6 @@ function rangableIsPrefix(r: Rangable): r is { prefix: string | Buffer } {
  * https://github.com/coreos/etcd/blob/c4a45c57135bf49ae701352c9151dc1be433d1dd/pkg/adt/interval_tree.go
  */
 export class Range {
-  public readonly start: Buffer;
-  public readonly end: Buffer;
-
-  constructor(start: Buffer | string, end: Buffer | string = emptyKey) {
-    this.start = toBuffer(start);
-    this.end = toBuffer(end);
-  }
-
   /**
    * Prefix returns a Range that maps to all keys
    * prefixed with the provided string.
@@ -66,6 +58,13 @@ export class Range {
     }
 
     return new Range(v.start, v.end);
+  }
+  public readonly start: Buffer;
+  public readonly end: Buffer;
+
+  constructor(start: Buffer | string, end: Buffer | string = emptyKey) {
+    this.start = toBuffer(start);
+    this.end = toBuffer(end);
   }
 
   /**

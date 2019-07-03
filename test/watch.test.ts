@@ -19,7 +19,7 @@ describe('watch()', () => {
    * Returns the list of watchers currently attached and listening.
    */
   function getWatchers(): Watcher[] {
-    return (<any>client).watchManager.watchers;
+    return (client as any).watchManager.watchers;
   }
 
   /**

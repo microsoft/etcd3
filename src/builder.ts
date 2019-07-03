@@ -149,8 +149,8 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * string, or `null` if it isn't found.
    */
   public string(encoding: string = 'utf8'): Promise<string | null> {
-    return this.exec().then(
-      res => (res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding)),
+    return this.exec().then(res =>
+      res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding),
     );
   }
 
@@ -304,8 +304,8 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
     return this.kv
       .range(this.namespace.applyToRequest(this.request), this.callOptions)
       .then(res => {
-        for (let i = 0; i < res.kvs.length; i++) {
-          res.kvs[i].key = this.namespace.unprefix(res.kvs[i].key);
+        for (const kv of res.kvs) {
+          kv.key = this.namespace.unprefix(kv.key);
         }
 
         return res;
@@ -326,8 +326,8 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   private mapValues<T>(iterator: (buf: Buffer) => T): Promise<{ [key: string]: T }> {
     return this.exec().then(res => {
       const output: { [key: string]: T } = {};
-      for (let i = 0; i < res.kvs.length; i++) {
-        output[res.kvs[i].key.toString()] = iterator(res.kvs[i].value);
+      for (const kv of res.kvs) {
+        output[kv.key.toString()] = iterator(kv.value);
       }
 
       return output;
@@ -560,9 +560,9 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  */
 export class ComparatorBuilder {
   private request: {
-    compare: Promise<RPC.ICompare>[];
-    success: Promise<RPC.IRequestOp>[];
-    failure: Promise<RPC.IRequestOp>[];
+    compare: Array<Promise<RPC.ICompare>>;
+    success: Array<Promise<RPC.IRequestOp>>;
+    failure: Array<Promise<RPC.IRequestOp>>;
   } = { compare: [], success: [], failure: [] };
   private callOptions: grpc.CallOptions | undefined;
 
@@ -589,7 +589,7 @@ export class ComparatorBuilder {
     assertWithin(comparator, cmp, 'comparator in client.and(...)');
 
     if (column === 'Value') {
-      value = toBuffer(<string | Buffer>value);
+      value = toBuffer(value as string | Buffer);
     }
 
     this.request.compare.push(
@@ -607,7 +607,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is truthy.
    */
-  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
+  public then(...clauses: Array<RPC.IRequestOp | IOperation>): this {
     this.request.success = this.mapOperations(clauses);
     return this;
   }
@@ -616,7 +616,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is falsey.
    */
-  public else(...clauses: (RPC.IRequestOp | IOperation)[]): this {
+  public else(...clauses: Array<RPC.IRequestOp | IOperation>): this {
     this.request.failure = this.mapOperations(clauses);
     return this;
   }
@@ -638,13 +638,13 @@ export class ComparatorBuilder {
   /**
    * Low-level method to add
    */
-  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]) {
+  public mapOperations(ops: Array<RPC.IRequestOp | IOperation>) {
     return ops.map(op => {
-      if (typeof (<IOperation>op).op === 'function') {
-        return (<IOperation>op).op();
+      if (typeof (op as IOperation).op === 'function') {
+        return (op as IOperation).op();
       }
 
-      return Promise.resolve(<RPC.IRequestOp>op);
+      return Promise.resolve(op as RPC.IRequestOp);
     });
   }
 }

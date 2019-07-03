@@ -155,9 +155,9 @@ export function forOwn<T>(
   obj: T,
   iterator: <K extends keyof T>(value: T[K], key: K) => void,
 ): void {
-  const keys = <(keyof T)[]>Object.keys(obj);
-  for (let i = 0; i < keys.length; i++) {
-    iterator(obj[keys[i]], keys[i]);
+  const keys = Object.keys(obj) as Array<keyof T>;
+  for (const key of keys) {
+    iterator(obj[key], key);
   }
 }
 
@@ -167,7 +167,7 @@ export function forOwn<T>(
  */
 export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
-    const teardown: (() => void)[] = [];
+    const teardown: Array<() => void> = [];
 
     const handler = (data: any, event: string) => {
       teardown.forEach(t => t());
@@ -198,7 +198,7 @@ export abstract class PromiseWrap<T> implements PromiseLike<T> {
     onFulfilled: (value: T) => R | Promise<R>,
     onRejected?: (err: any) => V | Promise<V>,
   ): Promise<R | V> {
-    return this.createPromise().then(onFulfilled, <any>onRejected);
+    return this.createPromise().then(onFulfilled, onRejected as any);
   }
 
   /**

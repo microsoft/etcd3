@@ -14,10 +14,10 @@ export type IPermissionRequest =
 
 function getRange(req: IPermissionRequest): Range {
   if (req.hasOwnProperty('key')) {
-    return new Range(toBuffer((<{ key: Buffer | string }>req).key));
+    return new Range(toBuffer((req as { key: Buffer | string }).key));
   }
 
-  return (<{ range: Range }>req).range;
+  return (req as { range: Range }).range;
 }
 
 /**

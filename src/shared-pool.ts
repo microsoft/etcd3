@@ -23,7 +23,7 @@ export class SharedPool<T> {
   // tests simpler.
   private static deterministicInsertion: false;
 
-  private resources: IResourceRecord<T>[] = [];
+  private resources: Array<IResourceRecord<T>> = [];
   private contentionCount = 0;
 
   public constructor(private strategy: IBackoffStrategy) {}

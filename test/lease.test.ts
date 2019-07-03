@@ -30,7 +30,7 @@ describe('lease()', () => {
 
   it('throws if trying to use too short of a ttl, or an undefined ttl', () => {
     expect(() => client.lease(0)).to.throw(/must be at least 1 second/);
-    expect(() => (<any>client.lease)()).to.throw(/must be at least 1 second/);
+    expect(() => (client.lease as any)()).to.throw(/must be at least 1 second/);
   });
 
   it('reports a loss and errors if the client is invalid', async () => {
@@ -101,7 +101,7 @@ describe('lease()', () => {
     lease = proxiedClient.lease(1);
     await lease.grant();
     proxy.pause();
-    (<any>lease).lastKeepAlive = Date.now() - 2000; // speed things up a little
+    (lease as any).lastKeepAlive = Date.now() - 2000; // speed things up a little
     const err = await onceEvent(lease, 'lost');
     expect(err.message).to.match(/our lease has expired/);
     proxiedClient.close();
@@ -132,7 +132,7 @@ describe('lease()', () => {
   });
 
   it('emits a loss if the touched key is lost', async () => {
-    (<any>lease).leaseID = Promise.resolve('123456789');
+    (lease as any).leaseID = Promise.resolve('123456789');
     const lost = onceEvent(lease, 'lost');
 
     try {

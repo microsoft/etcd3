@@ -71,10 +71,10 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
   key = toBuffer(key);
 
   if (!value) {
-    return <any>{ kvs: [], more: false, count: '0' };
+    return { kvs: [], more: false, count: '0' } as any;
   }
 
-  return <any>{
+  return {
     kvs: [
       {
         key: Buffer.from(key),
@@ -83,7 +83,7 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
     ],
     more: false,
     count: '1',
-  };
+  } as any;
 }
 
 /**
@@ -91,7 +91,7 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
  */
 class ReadSet {
   private readonly reads: { [key: string]: Promise<RPC.IRangeResponse> } = Object.create(null);
-  private readonly completedReads: { key: Buffer; res: RPC.IRangeResponse }[] = [];
+  private readonly completedReads: Array<{ key: Buffer; res: RPC.IRangeResponse }> = [];
   private earliestMod = new BigNumber(Infinity);
 
   /**
@@ -302,7 +302,7 @@ class BasicTransaction {
   public put(req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
     this.assertNoOption('put', req, ['lease', 'prev_kv']);
     this.writeSet.addPut(req);
-    return Promise.resolve(<any>{});
+    return Promise.resolve({} as any);
   }
 
   /**
@@ -312,7 +312,7 @@ class BasicTransaction {
     this.assertNoOption('delete', req, ['prev_kv']);
     this.writeSet.addDeletion(req);
     return Promise.resolve({
-      header: <any>undefined,
+      header: undefined as any,
       deleted: '1',
       prev_kvs: [],
     });
@@ -329,7 +329,7 @@ class BasicTransaction {
     ]);
   }
 
-  protected assertNoOption<T>(req: string, obj: T, keys: (keyof T)[]) {
+  protected assertNoOption<T>(req: string, obj: T, keys: Array<keyof T>) {
     keys.forEach(key => {
       if (obj[key] !== undefined) {
         throw new Error(`"${key}" is not supported in ${req} requests within STM transactions`);
@@ -430,7 +430,7 @@ export class SoftwareTransaction {
           case 'deleteRange':
             return (req: RPC.IDeleteRangeRequest) => this.tx.deleteRange(req);
           default:
-            throw new ClientRuntimeError(`Unexpected kv operation in STM: ${key}`);
+            throw new ClientRuntimeError(`Unexpected kv operation in STM: ${key.toString()}`);
         }
       },
     });
