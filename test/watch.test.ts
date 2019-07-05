@@ -1,9 +1,16 @@
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
+import { first, share, take, toArray } from 'rxjs/operators';
 
 import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '../src';
 import { onceEvent } from '../src/util';
-import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
+import {
+  createTestClientAndKeys,
+  eventuallyAssert,
+  getOptions,
+  proxy,
+  tearDownTestClient,
+} from './util';
 
 describe('watch()', () => {
   let client: Etcd3;
@@ -132,22 +139,41 @@ describe('watch()', () => {
       expect(getWatchers()).to.deep.equal([watcher]);
     });
 
-    it('subscribes while the connection is still being established', async () => {
-      const watcher1 = client
+    it('observes an rxjs stream', async () => {
+      const watcher = client
         .watch()
-        .key('foo1')
-        .create();
-      const watcher2 = client
-        .watch()
-        .key('bar')
-        .create();
+        .key('foo')
+        .observe()
+        .pipe(share());
 
-      const watchers = await Promise.all([
-        watcher1.then(w => expectWatching(w, 'foo1')),
-        watcher2.then(w => expectWatching(w, 'bar')),
+      const events = watcher
+        .pipe(
+          take(3),
+          toArray(),
+        )
+        .toPromise();
+
+      await watcher.pipe(first(ev => ev.event === 'connected')).toPromise();
+
+      expect(getWatchers()).to.not.be.empty;
+      await client.put('foo').value('updated!');
+      eventuallyAssert(() => expect(getWatchers()).to.be.empty);
+
+      expect(await events).to.containSubset([
+        {
+          event: 'connecting',
+        },
+        {
+          event: 'connected',
+        },
+        {
+          event: 'put',
+          newValue: {
+            key: Buffer.from('foo'),
+            value: Buffer.from('updated!'),
+          },
+        },
       ]);
-
-      expect(getWatchers()).to.deep.equal(watchers);
     });
 
     it('subscribes in series', async () => {

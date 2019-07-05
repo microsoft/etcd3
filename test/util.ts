@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as tls from 'tls';
 
 import { Etcd3, IOptions, Namespace } from '../src';
+import { delay } from '../src/util';
 
 const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${__dirname}/certs/certs/etcd0.localhost.crt`);
@@ -207,4 +208,25 @@ export async function createTestKeys(client: Namespace) {
 export async function tearDownTestClient(client: Etcd3) {
   await client.delete().all();
   client.close();
+}
+
+/**
+ * Tries multiple times to call the function, until it no longer throws.
+ */
+export async function eventuallyAssert<T>(
+  fn: () => Promise<T> | T,
+  timeout: number = 10000,
+): Promise<T> {
+  const deadline = Date.now() + timeout;
+  while (true) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (Date.now() < deadline) {
+        await delay(500);
+      } else {
+        throw e;
+      }
+    }
+  }
 }

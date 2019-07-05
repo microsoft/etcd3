@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
+import { Observable } from 'rxjs';
 import { IBackoffStrategy } from './backoff/backoff';
 import {
   castGrpcErrorMessage,
@@ -331,6 +332,30 @@ export const operationNames = {
 };
 
 /**
+ * Type of event sent from WatchBuilder.observe(). These correspond to events
+ * normally emitted from the Watcher event emitter; see documentation there
+ * for further details.
+ */
+export type ObservedEvent =
+  | { event: 'connected' }
+  | { event: 'connecting' }
+  | { event: 'disconnected' }
+  | {
+      event: 'put' | 'delete';
+      newValue: RPC.IKeyValue;
+      oldValue?: RPC.IKeyValue;
+      response: RPC.IWatchResponse;
+    };
+
+/**
+ * Interface type sent from Watch.Observe
+ */
+export interface IObservedEvent extends RPC.IEvent {
+  response: RPC.IWatchResponse;
+  watcher: Watcher;
+}
+
+/**
  * WatchBuilder is used for creating etcd watchers. The created watchers are
  * resilient against disconnections, automatically resubscribing and replaying
  * changes when reconnecting.
@@ -412,6 +437,50 @@ export class WatchBuilder {
   }
 
   /**
+   * Returns the watch stream as an Observable. The watcher will be closed
+   * when you stop listening to the observable, and emit `ObservedEvent` types.
+   *
+   * @example
+   * client
+   *   .watch()
+   *   .key('foo')
+   *   .observe()
+   *   .subscribe(data => {
+   *     switch (data.event) {
+   *       case 'put':
+   *         console.log('key updated', data.newValue, data.oldValue);
+   *         break;
+   *       case 'delete':
+   *         console.log('key deleted', data.newValue, data.oldValue);
+   *         break;
+   *       case 'disconnected':
+   *         console.log('watcher disconnected, reconnecting...');
+   *         break;
+   *       case 'connected':
+   *         console.log('watcher connected');
+   *         break;
+   *     }
+   *   });
+   */
+  public observe() {
+    return new Observable<ObservedEvent>(subscriber => {
+      const watcher = this.watcher();
+      watcher.on('put', (newValue, oldValue, response) =>
+        subscriber.next({ event: 'put', newValue, oldValue, response }),
+      );
+      watcher.on('delete', (newValue, oldValue, response) =>
+        subscriber.next({ event: 'put', newValue, oldValue, response }),
+      );
+      watcher.on('disconnected', () => subscriber.next({ event: 'disconnected' }));
+      watcher.on('connected', () => subscriber.next({ event: 'connected' }));
+      watcher.on('connecting', () => subscriber.next({ event: 'connecting' }));
+      watcher.on('error', err => subscriber.error(err));
+
+      return () => watcher.cancel().catch(() => undefined);
+    });
+  }
+
+  /**
    * Resolves the watch request into a Watcher, and fires off to etcd.
    */
   public create(): Promise<Watcher> {
@@ -445,7 +514,7 @@ export class Watcher extends EventEmitter {
           ev.prev_kv.key = this.namespace.unprefix(ev.prev_kv.key);
         }
 
-        this.emit(ev.type.toLowerCase(), ev.kv, ev.prev_kv);
+        this.emit(ev.type.toLowerCase(), ev.kv, ev.prev_kv, changes);
       });
 
       this.updateRevision(changes);
@@ -475,12 +544,26 @@ export class Watcher extends EventEmitter {
    * put is fired, in addition to `data`, when a key is created
    * or updated in etcd.
    */
-  public on(event: 'put', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
+  public on(
+    event: 'put',
+    handler: (
+      kv: RPC.IKeyValue,
+      previous: RPC.IKeyValue | undefined,
+      response: RPC.IWatchResponse,
+    ) => void,
+  ): this;
 
   /**
    * delete is fired, in addition to `data`, when a key is deleted from etcd.
    */
-  public on(event: 'delete', handler: (kv: RPC.IKeyValue, previous?: RPC.IKeyValue) => void): this;
+  public on(
+    event: 'delete',
+    handler: (
+      kv: RPC.IKeyValue,
+      previous: RPC.IKeyValue | undefined,
+      response: RPC.IWatchResponse,
+    ) => void,
+  ): this;
 
   /**
    * end is fired after the watcher is closed normally. Like Node.js streams,
@@ -516,8 +599,8 @@ export class Watcher extends EventEmitter {
    * watcher observed. This will be `null` if the watcher has not yet
    * connected.
    */
-  public lastRevision(): number | null {
-    return this.request.start_revision as number;
+  public lastRevision(): string {
+    return this.request.start_revision as string;
   }
 
   /**

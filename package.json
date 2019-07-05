@@ -78,7 +78,8 @@
   "dependencies": {
     "@grpc/proto-loader": "^0.5.1",
     "bignumber.js": "^5.0.0",
-    "grpc": "^1.21.1"
+    "grpc": "^1.21.1",
+    "rxjs": "^6.5.2"
   },
   "prettier": {
     "singleQuote": true,
