@@ -14,6 +14,7 @@ export * from './options';
 export * from './range';
 export * from './rpc';
 export * from './stm';
+export * from './election';
 export { WatchBuilder, Watcher } from './watch';
 
 /**

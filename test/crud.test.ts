@@ -93,8 +93,8 @@ describe('crud', () => {
           .getPrevious(),
       ).to.containSubset([
         {
-          key: new Buffer('foo1'),
-          value: new Buffer('bar1'),
+          key: Buffer.from('foo1'),
+          value: Buffer.from('bar1'),
         },
       ]);
     });
@@ -119,8 +119,8 @@ describe('crud', () => {
             .value('updated')
             .getPrevious(),
         ).to.containSubset({
-          key: new Buffer('foo1'),
-          value: new Buffer('bar1'),
+          key: Buffer.from('foo1'),
+          value: Buffer.from('bar1'),
         });
       });
     });

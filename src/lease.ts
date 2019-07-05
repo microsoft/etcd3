@@ -242,7 +242,6 @@ export class Lease extends EventEmitter {
    * Implements EventEmitter.on(...).
    */
   public on(event: string, handler: (...args: any[]) => void): this {
-    // tslint:disable-line
     return super.on(event, handler);
   }
 
