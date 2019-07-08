@@ -8,6 +8,11 @@ export class ClientRuntimeError extends Error {
 }
 
 /**
+ * Thrown if an object is in an inappropriate state to perform an operation.
+ */
+export class InvalidOperationError extends Error {}
+
+/**
  * A GRPCGenericError is rejected via the connection when some error occurs
  * that we can't be more specific about.
  */
@@ -200,6 +205,11 @@ export class EtcdNoLeaderError extends Error {}
  * Process in this etcd leader election is not a leader.
  */
 export class EtcdNotLeaderError extends Error {}
+
+/**
+ * Error thrown in `campaignUntilLeader()` if we reach the timeout.
+ */
+export class EtcdElectionTimeoutError extends Error {}
 
 /**
  * An STMConflictError is thrown from the `SoftwareTransaction.transact`

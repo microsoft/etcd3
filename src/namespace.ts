@@ -2,6 +2,7 @@ import * as grpc from 'grpc';
 
 import * as Builder from './builder';
 import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';
+import { Election } from './election';
 import { Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
@@ -138,6 +139,14 @@ export class Namespace {
    */
   public range(r: Rangable): Range {
     return Range.from(r);
+  }
+
+  /**
+   * Creates a new leader/follower election with the given name and
+   * TTL. See the Election class for more information.
+   */
+  public election(name: string, ttl: number): Election {
+    return new Election(this, name, ttl);
   }
 
   /**

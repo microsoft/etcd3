@@ -1,6 +1,7 @@
 ## 0.2.14 TBA
 
- - **feat**: add an Observable interface to watchers
+ - **feat**: add new election() API for leader/follower systems.
+ - **feat**: add an Observable interface to watchers.
  - **feat**: include the original watch response as the third argument in watch put/delete events.
  - **fix**: fixed wrong data type annotation in `watcher.lastRevision()`.
 

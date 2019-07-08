@@ -331,6 +331,19 @@ export const operationNames = {
   delete: RPC.FilterType.Noput,
 };
 
+export interface IObservedPut {
+  event: 'put';
+  newValue: RPC.IKeyValue;
+  oldValue?: RPC.IKeyValue;
+  response: RPC.IWatchResponse;
+}
+
+export interface IObservedDelete {
+  event: 'delete';
+  value: RPC.IKeyValue;
+  response: RPC.IWatchResponse;
+}
+
 /**
  * Type of event sent from WatchBuilder.observe(). These correspond to events
  * normally emitted from the Watcher event emitter; see documentation there
@@ -340,12 +353,11 @@ export type ObservedEvent =
   | { event: 'connected' }
   | { event: 'connecting' }
   | { event: 'disconnected' }
-  | {
-      event: 'put' | 'delete';
-      newValue: RPC.IKeyValue;
-      oldValue?: RPC.IKeyValue;
-      response: RPC.IWatchResponse;
-    };
+  | IObservedPut
+  | IObservedDelete;
+
+export const isPut = (ev: ObservedEvent): ev is IObservedPut => ev.event === 'put';
+export const isDelete = (ev: ObservedEvent): ev is IObservedDelete => ev.event === 'delete';
 
 /**
  * Interface type sent from Watch.Observe
@@ -468,8 +480,8 @@ export class WatchBuilder {
       watcher.on('put', (newValue, oldValue, response) =>
         subscriber.next({ event: 'put', newValue, oldValue, response }),
       );
-      watcher.on('delete', (newValue, oldValue, response) =>
-        subscriber.next({ event: 'put', newValue, oldValue, response }),
+      watcher.on('delete', (value, _, response) =>
+        subscriber.next({ event: 'delete', value, response }),
       );
       watcher.on('disconnected', () => subscriber.next({ event: 'disconnected' }));
       watcher.on('connected', () => subscriber.next({ event: 'connected' }));
