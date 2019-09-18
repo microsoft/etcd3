@@ -2,6 +2,7 @@
 // tslint:disable
 
 import * as grpc from 'grpc';
+import { StatusMessage } from './grpcTypes';
 
 export interface ICallable<T> {
   exec(
@@ -21,7 +22,7 @@ export interface ICallable<T> {
 export interface IResponseStream<T> {
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
-  on(event: 'status', fn: (status: grpc.StatusMessage) => void): this;
+  on(event: 'status', fn: (status: StatusMessage) => void): this;
   on(event: 'error', fn: (err: Error) => void): this;
 }
 

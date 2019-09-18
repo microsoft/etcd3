@@ -1,4 +1,4 @@
-import { ChannelOptions } from 'grpc';
+import { ChannelOptions } from './grpcTypes';
 
 import { IBackoffStrategy } from './backoff/backoff';
 
