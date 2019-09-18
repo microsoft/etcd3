@@ -30,6 +30,15 @@ Our [TypeDoc docs are available here](https://mixer.github.io/etcd3/classes/inde
 
 Our [test cases](https://github.com/mixer/etcd3/blob/master/test/) are also quite readable.
 
+### Running tests
+
+```sh
+$ npm install
+$ docker-compose up
+$ npm test
+$ docker-compose down
+```
+
 ### Contributing
 
 Running tests for this module requires running an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the `ETCD_ADDR` environment variable, like `export ETCD_ADDR=localhost:12345`.# Contributing
