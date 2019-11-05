@@ -356,7 +356,7 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   }
 
   /**
-   * key sets a single key to be deleted.
+   * sets a prefix keys to be deleted.
    */
   public prefix(value: string | Buffer): this {
     return this.range(Range.prefix(value));
