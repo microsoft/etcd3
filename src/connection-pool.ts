@@ -3,6 +3,7 @@ import * as grpc from 'grpc';
 
 import { ExponentialBackoff } from './backoff/exponential';
 import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
+import { ChannelOptions } from './grpcTypes';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
@@ -16,6 +17,7 @@ const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   oneofs: true,
 });
 const services = grpc.loadPackageDefinition(packageDefinition);
+const etcdserverpb = services.etcdserverpb as { [service: string]: typeof grpc.Client };
 
 export const defaultBackoffStrategy = new ExponentialBackoff({
   initial: 300,
@@ -120,7 +122,7 @@ class Authenticator {
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
     return runServiceCall(
-      new services.etcdserverpb.Auth(address, credentials),
+      new etcdserverpb.Auth(address, credentials),
       new grpc.Metadata(),
       undefined,
       'authenticate',
@@ -141,7 +143,7 @@ export class Host {
   constructor(
     host: string,
     private readonly channelCredentials: grpc.ChannelCredentials,
-    private readonly channelOptions?: grpc.ChannelOptions,
+    private readonly channelOptions?: ChannelOptions,
   ) {
     this.host = removeProtocolPrefix(host);
   }
@@ -155,7 +157,7 @@ export class Host {
       return service;
     }
 
-    const newService = new services.etcdserverpb[name](
+    const newService = new etcdserverpb[name](
       this.host,
       this.channelCredentials,
       this.channelOptions,
