@@ -21,7 +21,8 @@ export class SharedPool<T> {
   // Whether, when inserting resources, they should be inserted such that
   // they get chosen in a consistent order. This is mainly used to make
   // tests simpler.
-  private static deterministicInsertion: false;
+  // TODO - Document this boolean
+  private static deterministicInsertion: boolean = true;
 
   private resources: Array<IResourceRecord<T>> = [];
   private contentionCount = 0;

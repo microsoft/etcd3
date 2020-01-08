@@ -531,6 +531,6 @@ export class Watcher extends EventEmitter {
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = new BigNumber(req.header.revision).add(1).toString();
+    this.request.start_revision = new BigNumber(req.header.revision).plus(1).toString();
   }
 }

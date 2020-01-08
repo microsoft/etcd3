@@ -46,10 +46,13 @@ describe('connection pool', () => {
   });
 
   it('rejects hitting invalid hosts', () => {
-    pool = new ConnectionPool(getOptionsWithBadHost());
+	const options = getOptionsWithBadHost();
+    pool = new ConnectionPool(options);
     const kv = new KVClient(pool);
     return kv
       .range({ key })
+	  // TODO - This and other pool tests need the following bool in shared-pool.ts to be set to true
+	  // private static deterministicInsertion: boolean = true;
       .then(() => {
         throw new Error('expected to reject');
       })

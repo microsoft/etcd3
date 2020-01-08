@@ -35,7 +35,7 @@ describe('shared pool', () => {
   }
 
   it('should get available clients', async () => {
-    expect(await getAll()).to.deep.equal([0, 1, 2]);
+	expect(await getAll()).to.deep.equal([0, 1, 2]);
   });
 
   it('should exclude clients after failing', async () => {

@@ -1,3 +1,4 @@
+import { AddressInfo } from 'net';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as tls from 'tls';
@@ -34,9 +35,9 @@ export class Proxy {
 
       this.server.listen(0, '127.0.0.1');
       this.server.on('listening', () => {
-        const addr = this.server.address();
-        this.host = addr.address;
-        this.port = addr.port;
+        const addr = this.server.address() as AddressInfo;
+		this.host = addr.address;
+		this.port = addr.port;
         this.isActive = true;
         resolve();
       });
@@ -82,7 +83,7 @@ export class Proxy {
     let serverConnected = false;
     const serverBuffer: Buffer[] = [];
     const serverCnx = tls.connect(
-      etcdSourcePort,
+      +etcdSourcePort,
       etcdSourceHost,
       {
         secureContext: tls.createSecureContext({ ca: rootCertificate }),
@@ -150,7 +151,7 @@ export function getHost(): string {
 export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
   return {
     hosts: getHost(),
-    credentials: { rootCertificate },
+	credentials: { rootCertificate },
     ...defaults,
   };
 }

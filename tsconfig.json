@@ -15,9 +15,6 @@
       "es5",
       "es6"
     ],
-    "typeRoots": [
-      "node_modules/@types"
-    ],
     "types": [
       "chai-as-promised",
       "chai-subset",

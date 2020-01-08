@@ -87,7 +87,7 @@ describe('watch()', () => {
         client.put('foo1').value('update 1'),
         onceEvent(watcher, 'data').then((res: IWatchResponse) => {
           expect(watcher.request.start_revision).to.equal(
-            new BigNumber(res.header.revision).add(1).toString(),
+            new BigNumber(res.header.revision).plus(1).toString(),
           );
         }),
       ]);

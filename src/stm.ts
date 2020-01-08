@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import { BigNumber } from 'bignumber.js';
 import * as grpc from 'grpc';
 
 import * as Builder from './builder';
@@ -492,7 +492,7 @@ export class SoftwareTransaction {
       case Isolation.SerializableSnapshot:
         const earliestMod = this.tx.readSet
           .earliestModRevision()
-          .add(1)
+          .plus(1)
           .toString();
         this.tx.writeSet.addNotChangedChecks(cmp, earliestMod);
         this.tx.readSet.addCurrentChecks(cmp);
