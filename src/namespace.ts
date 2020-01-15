@@ -6,6 +6,7 @@ import { Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
 import { Rangable, Range } from './range';
+import { Election } from './election';
 import * as RPC from './rpc';
 import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
 import { NSApplicator, toBuffer } from './util';
@@ -138,6 +139,13 @@ export class Namespace {
    */
   public range(r: Rangable): Range {
     return Range.from(r);
+  }
+
+  /**
+   * Returns an election object used for determining leader/follower
+   */
+  public election(name: string, timeout?: number): Election {
+    return new Election(this, name, timeout);
   }
 
   /**
