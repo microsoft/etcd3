@@ -1,36 +1,60 @@
 
+import { expect } from 'chai';
+
 import { Etcd3 } from '../src';
+import { Election } from '../src/election';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
+import { delay } from '../src/util';
 
 describe('Election', () => {
   let client: Etcd3;
 
-  before(async () => {
+  beforeEach(async () => {
     client = await createTestClientAndKeys();
   });
-  after(async () => {
-    await tearDownTestClient(client);
-  });
+  afterEach(() => tearDownTestClient(client));
 
-  it('Elects first client campaigning as leader', () => {
-    let election = client.election('test');
+  it('Elects first client campaigning as leader', async () => {
+    let election0 = client.election('test', 1);
+    let election1 = client.election('test', 1);
 
-    //election
-      //.on('following', () => done(new Error('this client should be leading')))
-      //.on('leading', () => done());
+    election0.campaign('0')
+    // Give election0 some time to become leader
+    await delay(25);
+    election1.campaign('1')
 
-    console.log('host-0001');
-    return election.campaign('host-0001');
+    expect(election0.leader()).to.eventually.equal('0')
+    expect(election1.leader()).to.eventually.equal('0')
   })
 
-  it('Waits until previous leader resigns', () => {
-    let election = client.election('test');
+  it('Takes over leadership on leader resignation', async () => {
+    let election0 = client.election('test', 1);
+    let election1 = client.election('test', 1);
 
-    //election
-      //.on('following', () => done())
-      //.on('leading', () => done(new Error('this client should be following')));
-  
-    console.log('host-0002');
-    return election.campaign('host-0002');
+    election0.campaign('0');
+    // Give election0 some time to become leader
+    await delay(25);
+    election1.campaign('1');
+    await delay(25);
+    election0.resign();
+    await delay(25);
+
+    expect(election0.leader()).to.eventually.equal('1')
+    expect(election1.leader()).to.eventually.equal('1')
   })
+    /*
+
+  it('Takes over leadership when leader fails', async () => {
+    let election0 = client.election('test', 1);
+    let election1 = client.election('test', 1);
+
+    election0.campaign('0');
+    // Give election0 some time to become leader
+    await delay(25);
+    election1.campaign('1');
+    await delay(25);
+
+    expect(election1.leader()).to.eventually.equal('1')
+  })
+     */
 })

@@ -4,14 +4,7 @@ import { EventEmitter } from 'events';
 
 import { Namespace } from './namespace';
 import { EtcdElectionNoLeaderError, EtcdElectionNotLeaderError, EtcdElectionCampaignCancelledError } from './errors';
-import { IResponseHeader } from './rpc';
-
-export enum CampaignState {
-  Pending = 0,
-  Campaigning = 1,
-  Leading = 2,
-  Cancelled = 3,
-}
+import { IResponseHeader, IKeyValue } from './rpc';
 
 /**
  * Etcd3 based election
@@ -50,7 +43,6 @@ export class Election extends EventEmitter {
    * Wait for the deletion of a key
    */
   private waitDelete(key: string, revision: string) {
-    console.log(`Waiting for deletion of ${key} at revision ${revision}`);
     return this.session.watch()
       .key(key)
       .startRevision(revision)
@@ -58,14 +50,9 @@ export class Election extends EventEmitter {
 
       .then(watcher => {
         // TODO - Reject after a timeout?
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           watcher.on('delete', data => {
-            console.log('deleted', data);
             return resolve(data);
-          });
-
-          this.on('cancelled', () => {
-            return reject(new EtcdElectionCampaignCancelledError());
           });
         })
       })
@@ -79,7 +66,7 @@ export class Election extends EventEmitter {
       .getAll()
       .prefix(this.getPrefix())
       .maxCreateRevision(maxCreateRevision.toString())
-      .sort("Create", "Descend")
+      .sort("Create", "Ascend")
       .exec()
 
       .then(res => {
@@ -114,6 +101,7 @@ export class Election extends EventEmitter {
           .commit()
 
           .then(res => {
+            console.log(`${key} leading with value ${value}`);
             this.leaderKey = key;
             this.leaderRevision = new BigNumber(res.header.revision);
             this.leaderLeaseId = leaseId;
@@ -124,13 +112,18 @@ export class Election extends EventEmitter {
               console.log(res.responses[0])
             }
 
+            console.log(`${key} with value ${value} waiting for deletion`);
             return this.waitDeletes(this.leaderRevision.minus(1))
               .then(() => {
-                this.header = res.header;
-                this.emit('elected');
+                if(this.leaderKey != "") {
+                  console.log(`${key} elected`);
+                  this.emit('elected');
+                }
               })
           })
       })
+
+    return this;
   }
 
   /**
@@ -148,8 +141,6 @@ export class Election extends EventEmitter {
           this.leaderKey = "";
           throw new EtcdElectionNotLeaderError();
         }
-
-        this.header = res.header;
       })
   }
 
@@ -158,7 +149,7 @@ export class Election extends EventEmitter {
    */
   public resign() {
     // Seems we're not leading anyway
-    if(this.leaderLeaseId === null)
+    if( ! this.leaderLeaseId)
       return
 
     return this.session.if(this.leaderKey, 'Create', '==', this.leaderRevision.toString())
@@ -166,9 +157,28 @@ export class Election extends EventEmitter {
       .commit()
 
       .then(res => {
-        this.header = res.header;
+        console.log(`${this.leaderKey} resigned`);
+        this.emit('resigned');
         this.leaderKey = "";
         this.leaderLeaseId = null;
+      })
+  }
+
+  /**
+   * Get the current leader
+   */
+  public leader(): Promise<string> {
+    return this.session
+      .getAll()
+      .prefix(this.getPrefix())
+      .sort("Create", "Descend")
+      .exec()
+
+      .then(res => {
+        if(res.kvs.length == 0)
+          throw EtcdElectionNoLeaderError;
+
+        return res.kvs[0].value.toString();
       })
   }
 }
