@@ -5,4 +5,4 @@
 --timeout 20000
 --recursive
 --exit
-test/election.test.ts src/**/*.ts
+test/**/*.test.ts

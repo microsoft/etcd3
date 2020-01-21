@@ -133,11 +133,6 @@ export class EtcdElectionNotLeaderError extends Error {}
 export class EtcdElectionNoLeaderError extends Error {}
 
 /**
- * EtcdElectionNoLeader is thrown when the current election campaign was cancelled
- */
-export class EtcdElectionCampaignCancelledError extends Error {}
-
-/**
  * EtcdRoleExistsError is thrown when trying to create a role that already exists.
  */
 export class EtcdRoleExistsError extends Error {}
