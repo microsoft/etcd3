@@ -31,8 +31,6 @@ export class Election {
    * Campaign in current election to be leader
    */
   public campaign(value: string) {
-    // TODO - Does losing lease have repercussions?
-
     // Get the leaseID specifically to append it to key
     return this.lease.grant()
       .then(leaseId => {
@@ -49,8 +47,6 @@ export class Election {
             this.leaderRevision = new BigNumber(res.header.revision);
 
             if( ! res.succeeded) {
-              // TODO - When does this happen?
-              // TODO - How do i test this?
               const kv = res.responses[0].response_range.kvs[0];
               this.leaderRevision = new BigNumber(kv.create_revision);
 
