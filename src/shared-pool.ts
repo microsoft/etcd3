@@ -22,7 +22,7 @@ export class SharedPool<T> {
   // they get chosen in a consistent order. This is mainly used to make
   // tests simpler.
   // TODO - Document this boolean
-  private static deterministicInsertion: boolean = true;
+  private static deterministicInsertion: boolean = false;
 
   private resources: Array<IResourceRecord<T>> = [];
   private contentionCount = 0;
