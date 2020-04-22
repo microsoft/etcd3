@@ -14,7 +14,6 @@ export * from './options';
 export * from './range';
 export * from './rpc';
 export * from './stm';
-export * from './grpcTypes';
 export { WatchBuilder, Watcher } from './watch';
 
 /**
@@ -47,8 +46,8 @@ export class Etcd3 extends Namespace {
    * Resolves to an array of roles available in etcd.
    */
   public getRoles(): Promise<Role[]> {
-    return this.auth.roleList().then(result => {
-      return result.roles.map(role => new Role(this.auth, role));
+    return this.auth.roleList().then((result) => {
+      return result.roles.map((role) => new Role(this.auth, role));
     });
   }
 
@@ -63,8 +62,8 @@ export class Etcd3 extends Namespace {
    * Resolves to an array of users available in etcd.
    */
   public getUsers(): Promise<User[]> {
-    return this.auth.userList().then(result => {
-      return result.users.map(user => new User(this.auth, user));
+    return this.auth.userList().then((result) => {
+      return result.users.map((user) => new User(this.auth, user));
     });
   }
 

@@ -1,13 +1,13 @@
 import { loadSync } from '@grpc/proto-loader';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { ExponentialBackoff } from './backoff/exponential';
 import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
-import { ChannelOptions } from './grpcTypes';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
 import { forOwn } from './util';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   keepCase: true,
@@ -16,6 +16,7 @@ const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   defaults: true,
   oneofs: true,
 });
+
 const services = grpc.loadPackageDefinition(packageDefinition);
 const etcdserverpb = services.etcdserverpb as { [service: string]: typeof grpc.Client };
 
@@ -47,7 +48,7 @@ function runServiceCall(
   payload: object,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    (client as any)[method](payload, metadata, options, (err: Error | null, res: any) => {
+    (client as any)[method](payload, metadata, options || {}, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {
@@ -102,11 +103,11 @@ class Authenticator {
       const meta = new grpc.Metadata();
       const host = removeProtocolPrefix(hosts[index]);
       return this.getCredentialsFromHost(host, auth.username, auth.password, this.credentials)
-        .then(token => {
+        .then((token) => {
           meta.set('token', token);
           return meta;
         })
-        .catch(err => attempt(index + 1, err));
+        .catch((err) => attempt(index + 1, err));
     };
 
     return (this.awaitingMetadata = attempt(0));
@@ -127,7 +128,7 @@ class Authenticator {
       undefined,
       'authenticate',
       { name, password },
-    ).then(res => res.token);
+    ).then((res) => res.token);
   }
 }
 
@@ -207,7 +208,7 @@ export class ConnectionPool implements ICallable<Host> {
    * Tears down all ongoing connections and resoruces.
    */
   public close() {
-    this.pool.all().forEach(host => host.close());
+    this.pool.all().forEach((host) => host.close());
   }
 
   /**
@@ -225,11 +226,11 @@ export class ConnectionPool implements ICallable<Host> {
 
     return this.getConnection(serviceName).then(({ resource, client, metadata }) => {
       return runServiceCall(client, metadata, options, method, payload)
-        .then(res => {
+        .then((res) => {
           this.pool.succeed(resource);
           return res;
         })
-        .catch(err => {
+        .catch((err) => {
           if (err instanceof EtcdInvalidAuthTokenError) {
             this.authenticator.invalidateMetadata();
             return this.exec(serviceName, method, payload, options);
@@ -256,7 +257,7 @@ export class ConnectionPool implements ICallable<Host> {
     service: keyof typeof Services,
   ): Promise<{ resource: Host; client: grpc.Client; metadata: grpc.Metadata }> {
     if (this.mockImpl) {
-      return Promise.resolve(this.mockImpl.getConnection(service) as any).then(connection => ({
+      return Promise.resolve(this.mockImpl.getConnection(service) as any).then((connection) => ({
         metadata: new grpc.Metadata(),
         ...connection,
       }));
@@ -297,7 +298,7 @@ export class ConnectionPool implements ICallable<Host> {
       throw new Error('Cannot construct an etcd client with no hosts specified');
     }
 
-    hosts.forEach(host => this.pool.add(new Host(host, credentials, grpcOptions)));
+    hosts.forEach((host) => this.pool.add(new Host(host, credentials, grpcOptions)));
   }
 
   /**
@@ -330,7 +331,7 @@ export class ConnectionPool implements ICallable<Host> {
       return hosts.startsWith(secureProtocolPrefix);
     }
 
-    const countSecure = hosts.filter(host => host.startsWith(secureProtocolPrefix)).length;
+    const countSecure = hosts.filter((host) => host.startsWith(secureProtocolPrefix)).length;
     if (countSecure === 0) {
       return false;
     }

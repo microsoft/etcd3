@@ -1,7 +1,7 @@
 {
   "extends": "../tslint.json",
   "rules": {
-    "await-promise": false, // incompatible with chai-as-promised
+    "await-promise": false,
     "no-unused-expression": false,
     "mocha-no-side-effect-code": false
   }

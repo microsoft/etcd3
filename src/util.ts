@@ -145,7 +145,7 @@ export function sample<T>(items: T[]): T {
  * Returns a promise that resolves after a certain amount of time.
  */
 export function delay(duration: number): Promise<void> {
-  return new Promise<void>(resolve => setTimeout(resolve, duration));
+  return new Promise<void>((resolve) => setTimeout(resolve, duration));
 }
 
 /**
@@ -155,7 +155,7 @@ export function forOwn<T>(
   obj: T,
   iterator: <K extends keyof T>(value: T[K], key: K) => void,
 ): void {
-  const keys = Object.keys(obj) as Array<keyof T>;
+  const keys = Object.keys(obj) as (keyof T)[];
   for (const key of keys) {
     iterator(obj[key], key);
   }
@@ -167,10 +167,10 @@ export function forOwn<T>(
  */
 export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
-    const teardown: Array<() => void> = [];
+    const teardown: (() => void)[] = [];
 
     const handler = (data: any, event: string) => {
-      teardown.forEach(t => t());
+      teardown.forEach((t) => t());
       if (event === 'error') {
         reject(data);
       } else {
@@ -178,7 +178,7 @@ export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<a
       }
     };
 
-    events.forEach(event => {
+    events.forEach((event) => {
       const fn = (data: any) => handler(data, event);
       teardown.push(() => emitter.removeListener(event, fn));
       emitter.once(event, fn);

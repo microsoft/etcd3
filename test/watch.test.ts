@@ -44,7 +44,7 @@ describe('watch()', () => {
     watcher.on('put', listener);
     await client.put(key).value('updated!');
 
-    return new Promise<Watcher>(resolve => {
+    return new Promise<Watcher>((resolve) => {
       setTimeout(() => {
         expect(watching).to.equal(false, `expected not to be watching ${key}`);
         resolve(watcher);
@@ -57,10 +57,7 @@ describe('watch()', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await proxiedClient.watch().key('foo1').create();
 
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
@@ -78,16 +75,13 @@ describe('watch()', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await proxiedClient.watch().key('foo1').create();
 
       await Promise.all([
         client.put('foo1').value('update 1'),
         onceEvent(watcher, 'data').then((res: IWatchResponse) => {
           expect(watcher.request.start_revision).to.equal(
-            new BigNumber(res.header.revision).add(1).toString(),
+            new BigNumber(res.header.revision).plus(1).toString(),
           );
         }),
       ]);
@@ -108,10 +102,7 @@ describe('watch()', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await proxiedClient.watch().key('foo1').create();
       proxy.pause();
       await onceEvent(watcher, 'disconnected');
       const actualRevision = Number(watcher.request.start_revision);
@@ -124,41 +115,26 @@ describe('watch()', () => {
 
   describe('subscription', () => {
     it('subscribes before the connection is established', async () => {
-      const watcher = await client
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await client.watch().key('foo1').create();
       await expectWatching(watcher, 'foo1');
       expect(getWatchers()).to.deep.equal([watcher]);
     });
 
     it('subscribes while the connection is still being established', async () => {
-      const watcher1 = client
-        .watch()
-        .key('foo1')
-        .create();
-      const watcher2 = client
-        .watch()
-        .key('bar')
-        .create();
+      const watcher1 = client.watch().key('foo1').create();
+      const watcher2 = client.watch().key('bar').create();
 
       const watchers = await Promise.all([
-        watcher1.then(w => expectWatching(w, 'foo1')),
-        watcher2.then(w => expectWatching(w, 'bar')),
+        watcher1.then((w) => expectWatching(w, 'foo1')),
+        watcher2.then((w) => expectWatching(w, 'bar')),
       ]);
 
       expect(getWatchers()).to.deep.equal(watchers);
     });
 
     it('subscribes in series', async () => {
-      const watcher1 = client
-        .watch()
-        .key('foo1')
-        .watcher();
-      const watcher2 = client
-        .watch()
-        .key('bar')
-        .watcher();
+      const watcher1 = client.watch().key('foo1').watcher();
+      const watcher2 = client.watch().key('bar').watcher();
       const events: string[] = [];
 
       watcher1.on('connecting', () => events.push('connecting1'));
@@ -172,31 +148,19 @@ describe('watch()', () => {
     });
 
     it('subscribes after the connection is fully established', async () => {
-      const watcher1 = await client
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher1 = await client.watch().key('foo1').create();
       await expectWatching(watcher1, 'foo1');
-      const watcher2 = await client
-        .watch()
-        .key('bar')
-        .create();
+      const watcher2 = await client.watch().key('bar').create();
       await expectWatching(watcher2, 'bar');
       expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
     });
 
     it('allows successive resubscription (issue #51)', async () => {
-      const watcher1 = await client
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher1 = await client.watch().key('foo1').create();
       await expectWatching(watcher1, 'foo1');
       await watcher1.cancel();
 
-      const watcher2 = await client
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher2 = await client.watch().key('foo1').create();
       await expectWatching(watcher2, 'foo1');
       await watcher2.cancel();
     });
@@ -204,10 +168,7 @@ describe('watch()', () => {
 
   describe('unsubscribing', () => {
     it('unsubscribes while the connection is established', async () => {
-      const watcher = await client
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await client.watch().key('foo1').create();
       await watcher.cancel();
       await expectNotWatching(watcher, 'foo1');
       expect(getWatchers()).to.deep.equal([]);
@@ -217,10 +178,7 @@ describe('watch()', () => {
       await proxy.activate();
       const proxiedClient = await createTestClientAndKeys();
 
-      const watcher = await proxiedClient
-        .watch()
-        .key('foo1')
-        .create();
+      const watcher = await proxiedClient.watch().key('foo1').create();
       proxy.pause();
       await watcher.cancel();
 

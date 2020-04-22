@@ -1,4 +1,4 @@
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
@@ -149,7 +149,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * string, or `null` if it isn't found.
    */
   public string(encoding: string = 'utf8'): Promise<string | null> {
-    return this.exec().then(res =>
+    return this.exec().then((res) =>
       res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding),
     );
   }
@@ -159,7 +159,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * as NaN if the value can't be parsed as a number.
    */
   public number(): Promise<number | null> {
-    return this.string().then(value => (value === null ? null : Number(value)));
+    return this.string().then((value) => (value === null ? null : Number(value)));
   }
 
   /**
@@ -167,7 +167,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * buffer, or `null` if it isn't found.
    */
   public buffer(): Promise<Buffer | null> {
-    return this.exec().then(res => (res.kvs.length === 0 ? null : res.kvs[0].value));
+    return this.exec().then((res) => (res.kvs.length === 0 ? null : res.kvs[0].value));
   }
 
   /**
@@ -243,7 +243,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public count(): Promise<number> {
     this.request.count_only = true;
-    return this.exec().then(res => Number(res.count));
+    return this.exec().then((res) => Number(res.count));
   }
 
   /**
@@ -251,8 +251,8 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public keys(encoding: string = 'utf8'): Promise<string[]> {
     this.request.keys_only = true;
-    return this.exec().then(res => {
-      return res.kvs.map(kv => kv.key.toString(encoding));
+    return this.exec().then((res) => {
+      return res.kvs.map((kv) => kv.key.toString(encoding));
     });
   }
 
@@ -261,8 +261,8 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    */
   public keyBuffers(): Promise<Buffer[]> {
     this.request.keys_only = true;
-    return this.exec().then(res => {
-      return res.kvs.map(kv => kv.key);
+    return this.exec().then((res) => {
+      return res.kvs.map((kv) => kv.key);
     });
   }
 
@@ -270,7 +270,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and parses the returned keys as JSON.
    */
   public json(): Promise<{ [key: string]: object }> {
-    return this.mapValues(buf => JSON.parse(buf.toString()));
+    return this.mapValues((buf) => JSON.parse(buf.toString()));
   }
 
   /**
@@ -278,7 +278,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * string, or `null` if it isn't found.
    */
   public strings(encoding: string = 'utf8'): Promise<{ [key: string]: string }> {
-    return this.mapValues(buf => buf.toString(encoding));
+    return this.mapValues((buf) => buf.toString(encoding));
   }
 
   /**
@@ -286,7 +286,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * resolve to NaN if the keys do not contain numbers.
    */
   public numbers(): Promise<{ [key: string]: number }> {
-    return this.mapValues(buf => Number(buf.toString()));
+    return this.mapValues((buf) => Number(buf.toString()));
   }
 
   /**
@@ -294,7 +294,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * buffers.
    */
   public buffers(): Promise<{ [key: string]: Buffer }> {
-    return this.mapValues(b => b);
+    return this.mapValues((b) => b);
   }
 
   /**
@@ -303,7 +303,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   public exec(): Promise<RPC.IRangeResponse> {
     return this.kv
       .range(this.namespace.applyToRequest(this.request), this.callOptions)
-      .then(res => {
+      .then((res) => {
         for (const kv of res.kvs) {
           kv.key = this.namespace.unprefix(kv.key);
         }
@@ -324,7 +324,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * iterator over the values returned.
    */
   private mapValues<T>(iterator: (buf: Buffer) => T): Promise<{ [key: string]: T }> {
-    return this.exec().then(res => {
+    return this.exec().then((res) => {
       const output: { [key: string]: T } = {};
       for (const kv of res.kvs) {
         output[kv.key.toString()] = iterator(kv.value);
@@ -395,7 +395,7 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    */
   public getPrevious(): Promise<RPC.IKeyValue[]> {
     this.request.prev_kv = true;
-    return this.exec().then(res => res.prev_kvs);
+    return this.exec().then((res) => res.prev_kvs);
   }
 
   /**
@@ -487,7 +487,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    */
   public getPrevious(): Promise<RPC.IKeyValue & { header: RPC.IResponseHeader }> {
     this.request.prev_kv = true;
-    return this.exec().then(res => ({ ...res.prev_kv, header: res.header }));
+    return this.exec().then((res) => ({ ...res.prev_kv, header: res.header }));
   }
 
   /**
@@ -560,9 +560,9 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  */
 export class ComparatorBuilder {
   private request: {
-    compare: Array<Promise<RPC.ICompare>>;
-    success: Array<Promise<RPC.IRequestOp>>;
-    failure: Array<Promise<RPC.IRequestOp>>;
+    compare: Promise<RPC.ICompare>[];
+    success: Promise<RPC.IRequestOp>[];
+    failure: Promise<RPC.IRequestOp>[];
   } = { compare: [], success: [], failure: [] };
   private callOptions: grpc.CallOptions | undefined;
 
@@ -607,7 +607,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is truthy.
    */
-  public then(...clauses: Array<RPC.IRequestOp | IOperation>): this {
+  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
     this.request.success = this.mapOperations(clauses);
     return this;
   }
@@ -616,7 +616,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is falsey.
    */
-  public else(...clauses: Array<RPC.IRequestOp | IOperation>): this {
+  public else(...clauses: (RPC.IRequestOp | IOperation)[]): this {
     this.request.failure = this.mapOperations(clauses);
     return this;
   }
@@ -638,13 +638,14 @@ export class ComparatorBuilder {
   /**
    * Low-level method to add
    */
-  public mapOperations(ops: Array<RPC.IRequestOp | IOperation>) {
+
+  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]) {
     return ops.map(op => {
       if (typeof (op as IOperation).op === 'function') {
         return (op as IOperation).op();
       }
-
       return Promise.resolve(op as RPC.IRequestOp);
     });
   }
+  
 }

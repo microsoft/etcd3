@@ -14,7 +14,7 @@ describe('stm()', () => {
       namespace: true,
       name: 'with namespace',
     },
-  ].forEach(testcase =>
+  ].forEach((testcase) =>
     describe(testcase.name, () => {
       let client: Etcd3;
       let ns: Namespace;
@@ -37,13 +37,13 @@ describe('stm()', () => {
         retries: number = 2,
       ) => {
         let tries = 0;
-        await ns.stm({ isolation }).transact(async tx => fn(tx, ++tries));
+        await ns.stm({ isolation }).transact(async (tx) => fn(tx, ++tries));
         expect(tries).to.equal(retries);
       };
 
       const expectRunsCleanTransaction = (isolation: Isolation) => {
         it('runs transactions when all is good', async () => {
-          await ns.stm({ isolation }).transact(async tx => {
+          await ns.stm({ isolation }).transact(async (tx) => {
             const value = await tx.get('foo1');
             await tx.put('foo1').value(value!.repeat(3));
             expect(await ns.get('foo1')).to.equal('bar1'); // should not have changed yet
@@ -81,7 +81,7 @@ describe('stm()', () => {
         return ns
           .stm({ retries: 0, isolation })
           .transact(fn)
-          .catch(err => {
+          .catch((err) => {
             if (!(err instanceof STMConflictError)) {
               throw err;
             }
@@ -90,7 +90,7 @@ describe('stm()', () => {
 
       const expectWriteCaching = (isolation: Isolation) => {
         it('caches writes in memory (#1)', () => {
-          return ignoreConflicts(isolation, async tx => {
+          return ignoreConflicts(isolation, async (tx) => {
             // putting and value and getting it should returned the value to be written
             await tx.put('foo').value('some value');
             expect(await tx.get('foo').string()).to.equal('some value');
@@ -98,7 +98,7 @@ describe('stm()', () => {
         });
 
         it('caches writes in memory (#2)', async () => {
-          return ignoreConflicts(isolation, async tx => {
+          return ignoreConflicts(isolation, async (tx) => {
             // getting a value, then overwriting it, should return the overwritten value
             expect(await tx.get('foo1').string()).to.equal('bar1');
             await tx.put('foo1').value('lol');
@@ -107,7 +107,7 @@ describe('stm()', () => {
         });
 
         it('caches writes in memory (#3)', async () => {
-          return ignoreConflicts(isolation, async tx => {
+          return ignoreConflicts(isolation, async (tx) => {
             // deleting a value should null it
             await tx.delete().key('foo1');
             expect(await tx.get('foo1').string()).to.be.null;
@@ -119,7 +119,7 @@ describe('stm()', () => {
         });
 
         it('caches writes in memory (#4)', async () => {
-          return ignoreConflicts(isolation, async tx => {
+          return ignoreConflicts(isolation, async (tx) => {
             // deleting a range should null all keys in that range
             await tx.delete().prefix('foo');
             expect(await tx.get('foo2').string()).to.be.null;
@@ -131,7 +131,7 @@ describe('stm()', () => {
         it('caches reads in memory', async () => {
           return ns
             .stm({ retries: 0, isolation })
-            .transact(async tx => {
+            .transact(async (tx) => {
               expect(await tx.get('foo1').string()).to.equal('bar1');
               await ns.put('foo1').value('changed!');
               expect(await tx.get('foo1').string()).to.equal('bar1');
@@ -166,7 +166,7 @@ describe('stm()', () => {
 
         it('should deny writing ranges if keys are read', () => {
           return expect(
-            ignoreConflicts(Isolation.SerializableSnapshot, async tx => {
+            ignoreConflicts(Isolation.SerializableSnapshot, async (tx) => {
               await tx.get('foo1').string();
               await tx.delete().prefix('foo');
             }),
@@ -208,7 +208,7 @@ describe('stm()', () => {
           await expect(
             ns
               .stm({ isolation: Isolation.SerializableSnapshot })
-              .transact(async tx => {
+              .transact(async (tx) => {
                 const value = await tx.get('foo1');
                 await ns.put('foo1').value('lol');
                 await tx.put('foo1').value(value!.repeat(3));

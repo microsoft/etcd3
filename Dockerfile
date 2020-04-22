@@ -1,4 +1,4 @@
-from quay.io/coreos/etcd:v3.2.13
+from quay.io/coreos/etcd:v3.3.20
 
 COPY test/certs/certs/etcd0.localhost.crt test/certs/private/etcd0.localhost.key /root/
 

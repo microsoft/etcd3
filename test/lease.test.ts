@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '../src';
+import { Etcd3, EtcdLeaseInvalidError, GRPCGenericError, Lease } from '../src';
 import { onceEvent } from '../src/util';
 import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
 
@@ -37,13 +37,13 @@ describe('lease()', () => {
     const badClient = new Etcd3(getOptions({ hosts: '127.0.0.1:1' }));
     lease = badClient.lease(1);
     const err = await onceEvent(lease, 'lost');
-    expect(err).to.be.an.instanceof(GRPCConnectFailedError);
+    expect(err).to.be.an.instanceof(GRPCGenericError);
     await lease
       .grant()
       .then(() => {
         throw new Error('expected to reject');
       })
-      .catch(err2 => expect(err2).to.equal(err));
+      .catch((err2) => expect(err2).to.equal(err));
     badClient.close();
   });
 
@@ -111,7 +111,7 @@ describe('lease()', () => {
   it('emits a lost event if the lease is invalidated', async () => {
     lease = client.lease(100);
     let err: Error;
-    lease.on('lost', e => {
+    lease.on('lost', (e) => {
       expect(lease.revoked()).to.be.true;
       err = e;
     });
@@ -124,7 +124,7 @@ describe('lease()', () => {
       .then(() => {
         throw new Error('expected to reject');
       })
-      .catch(err2 => {
+      .catch((err2) => {
         expect(err2).to.equal(err);
         expect(err2).to.be.an.instanceof(EtcdLeaseInvalidError);
         expect(lease.revoked()).to.be.true;
@@ -147,10 +147,14 @@ describe('lease()', () => {
   describe('crons', () => {
     let clock: sinon.SinonFakeTimers;
 
-    beforeEach(async () => {
-      clock = sinon.useFakeTimers();
+    beforeEach((done) => {
+      clock = sinon.useFakeTimers({
+        shouldAdvanceTime: true
+      });
       lease = client.lease(60);
-      await onceEvent(lease, 'keepaliveEstablished');
+      onceEvent(lease, 'keepaliveEstablished').then(()=>{
+        done()
+      });
     });
 
     afterEach(() => clock.restore());
@@ -161,7 +165,6 @@ describe('lease()', () => {
       expect(kaFired.fired).to.be.false;
       clock.tick(1);
       expect(kaFired.fired).to.be.true;
-
       const res = await onceEvent(lease, 'keepaliveSucceeded');
       expect(res.TTL).to.equal('60');
     });

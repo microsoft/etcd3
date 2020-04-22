@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { GRPCConnectFailedError, IOptions, KVClient } from '../src';
+import { IOptions, KVClient, GRPCGenericError } from '../src';
 import { ConnectionPool } from '../src/connection-pool';
 import { getHost, getOptions } from './util';
 
@@ -53,7 +53,9 @@ describe('connection pool', () => {
       .then(() => {
         throw new Error('expected to reject');
       })
-      .catch(err => expect(err).to.be.an.instanceof(GRPCConnectFailedError));
+      .catch((err) => {
+        expect(err).to.be.an.instanceof(GRPCGenericError);
+      })
   });
 
   it('retries when requested', async () => {

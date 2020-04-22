@@ -3,12 +3,14 @@ import * as fs from 'fs';
 import * as tls from 'tls';
 
 import { Etcd3, IOptions, Namespace } from '../src';
+import { AddressInfo } from 'net';
 
 const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${__dirname}/certs/certs/etcd0.localhost.crt`);
 const tlsKey = fs.readFileSync(`${__dirname}/certs/private/etcd0.localhost.key`);
 const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
-const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
+const [etcdSourceHost, _etcdSourcePort] = etcdSourceAddress.split(':');
+const etcdSourcePort = Number(_etcdSourcePort);
 
 /**
  * Proxy is a TCP proxy for etcd, used so that we can simulate network failures
@@ -17,7 +19,7 @@ const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
  */
 export class Proxy {
   public isActive = false;
-  public connections: Array<{ end(): void }> = [];
+  public connections: { end(): void }[] = [];
   private server: tls.Server;
   private host: string;
   private port: number;
@@ -29,12 +31,12 @@ export class Proxy {
     return new Promise<void>((resolve, reject) => {
       this.server = tls.createServer(
         { cert: tlsCert, key: tlsKey, ALPNProtocols: ['h2'] },
-        clientCnx => this.handleIncoming(clientCnx),
+        (clientCnx) => this.handleIncoming(clientCnx),
       );
 
       this.server.listen(0, '127.0.0.1');
       this.server.on('listening', () => {
-        const addr = this.server.address();
+        const addr: AddressInfo = this.server.address() as AddressInfo;
         this.host = addr.address;
         this.port = addr.port;
         this.isActive = true;
@@ -52,7 +54,7 @@ export class Proxy {
    */
   public pause() {
     this.server.close();
-    this.connections.forEach(cnx => cnx.end());
+    this.connections.forEach((cnx) => cnx.end());
     this.connections = [];
   }
 
@@ -106,7 +108,7 @@ export class Proxy {
       ended = true;
       clientCnx.end();
       serverCnx.end();
-      this.connections = this.connections.filter(c => c.end !== end);
+      this.connections = this.connections.filter((c) => c.end !== end);
     };
 
     serverCnx.on('data', (data: Buffer) => {
@@ -164,7 +166,7 @@ export function expectReject(promise: Promise<any>, err: new (message: string) =
     .then(() => {
       throw new Error('expected to reject');
     })
-    .catch(actualErr => {
+    .catch((actualErr) => {
       if (!(actualErr instanceof err)) {
         // tslint:disable-next-line
         console.error(actualErr.stack);
@@ -205,6 +207,8 @@ export async function createTestKeys(client: Namespace) {
  * Destroys the etcd client and wipes all keys.
  */
 export async function tearDownTestClient(client: Etcd3) {
-  await client.delete().all();
-  client.close();
+  if (client) {
+    await client.delete().all();
+    client.close();
+  }
 }

@@ -1,4 +1,4 @@
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { ComparatorBuilder, PutBuilder } from './builder';
 import { ConnectionPool } from './connection-pool';
@@ -71,13 +71,13 @@ export class Lock {
     const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
     const kv = new RPC.KVClient(this.pool);
 
-    return lease.grant().then(leaseID => {
+    return lease.grant().then((leaseID) => {
       return new ComparatorBuilder(kv, this.namespace)
         .and(this.key, 'Create', '==', 0)
         .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
         .options(this.callOptions)
         .commit()
-        .then<this>(res => {
+        .then<this>((res) => {
           if (res.succeeded) {
             return this;
           }
@@ -118,8 +118,8 @@ export class Lock {
   public do<T>(fn: () => T | Promise<T>): Promise<T> {
     return this.acquire()
       .then(fn)
-      .then(value => this.release().then(() => value))
-      .catch(err =>
+      .then((value) => this.release().then(() => value))
+      .catch((err) =>
         this.release().then(() => {
           throw err;
         }),

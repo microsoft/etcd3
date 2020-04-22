@@ -51,7 +51,7 @@ class AttachQueue {
    * Remove the watcher from any pending attach queue.
    */
   public dequeue(watcher: Watcher) {
-    this.queue = this.queue.filter(w => w !== watcher);
+    this.queue = this.queue.filter((w) => w !== watcher);
   }
 
   /**
@@ -158,7 +158,7 @@ export class WatchManager {
   public detach(watcher: Watcher): Promise<void> {
     // If we aren't connected, just remove the watcher, easy.
     if (this.state !== State.Connected) {
-      this.watchers = this.watchers.filter(w => w !== watcher);
+      this.watchers = this.watchers.filter((w) => w !== watcher);
       return Promise.resolve();
     }
 
@@ -206,8 +206,8 @@ export class WatchManager {
     }
 
     // clear anyone who is in the process of closing, we won't re-add them
-    this.expectedClosers.forEach(watcher => {
-      this.watchers = this.watchers.filter(w => w !== watcher);
+    this.expectedClosers.forEach((watcher) => {
+      this.watchers = this.watchers.filter((w) => w !== watcher);
       watcher.emit('end');
     });
     this.expectedClosers.clear();
@@ -216,12 +216,12 @@ export class WatchManager {
 
     this.client
       .watch()
-      .then(stream => {
+      .then((stream) => {
         this.state = State.Connected;
         this.queue = new AttachQueue(stream);
         this.stream = stream
-          .on('data', res => this.handleResponse(res))
-          .on('error', err => this.handleError(err))
+          .on('data', (res) => this.handleResponse(res))
+          .on('error', (err) => this.handleError(err))
           .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
 
         // possible watchers are remove while we're connecting.
@@ -231,7 +231,7 @@ export class WatchManager {
 
         this.queue!.attach(this.watchers);
       })
-      .catch(err => this.handleError(err));
+      .catch((err) => this.handleError(err));
   }
 
   /**
@@ -260,7 +260,7 @@ export class WatchManager {
     }
     this.state = State.Idle;
 
-    this.watchers.forEach(watcher => {
+    this.watchers.forEach((watcher) => {
       watcher.emit('disconnected', err);
       (watcher as { id: null }).id = null;
     });
@@ -279,7 +279,7 @@ export class WatchManager {
    * or emitting an error if it's not.
    */
   private handleCancelResponse(watcher: Watcher, res: RPC.IWatchResponse) {
-    this.watchers = this.watchers.filter(w => w !== watcher);
+    this.watchers = this.watchers.filter((w) => w !== watcher);
 
     if (this.expectedClosers.has(watcher)) {
       this.expectedClosers.delete(watcher);
@@ -308,7 +308,7 @@ export class WatchManager {
       return;
     }
 
-    const watcher = this.watchers.find(w => w.id === res.watch_id);
+    const watcher = this.watchers.find((w) => w.id === res.watch_id);
     if (!watcher) {
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');
     }
@@ -381,8 +381,8 @@ export class WatchBuilder {
   /**
    * ignore omits certain operation kinds from the watch stream.
    */
-  public ignore(...operations: Array<keyof typeof operationNames>): this {
-    this.request.filters = operations.map(op => operationNames[op]);
+  public ignore(...operations: (keyof typeof operationNames)[]): this {
+    this.request.filters = operations.map((op) => operationNames[op]);
     return this;
   }
 
@@ -438,8 +438,8 @@ export class Watcher extends EventEmitter {
     super();
     this.manager.attach(this);
 
-    this.on('data', changes => {
-      changes.events.forEach(ev => {
+    this.on('data', (changes) => {
+      changes.events.forEach((ev) => {
         ev.kv.key = this.namespace.unprefix(ev.kv.key);
         if (ev.prev_kv) {
           ev.prev_kv.key = this.namespace.unprefix(ev.prev_kv.key);
@@ -451,7 +451,7 @@ export class Watcher extends EventEmitter {
       this.updateRevision(changes);
     });
 
-    this.on('connected', changes => this.updateRevision(changes));
+    this.on('connected', (changes) => this.updateRevision(changes));
   }
 
   /**
@@ -531,6 +531,6 @@ export class Watcher extends EventEmitter {
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = new BigNumber(req.header.revision).add(1).toString();
+    this.request.start_revision = new BigNumber(req.header.revision).plus(1).toString();
   }
 }

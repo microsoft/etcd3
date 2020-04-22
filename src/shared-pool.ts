@@ -23,7 +23,7 @@ export class SharedPool<T> {
   // tests simpler.
   private static deterministicInsertion: false;
 
-  private resources: Array<IResourceRecord<T>> = [];
+  private resources: IResourceRecord<T>[] = [];
   private contentionCount = 0;
 
   public constructor(private strategy: IBackoffStrategy) {}
@@ -50,14 +50,14 @@ export class SharedPool<T> {
     }
 
     const now = Date.now();
-    const available = this.resources.filter(r => r.availableAfter <= now);
+    const available = this.resources.filter((r) => r.availableAfter <= now);
     if (available.length > 0) {
-      const lastChosen = sample(minBy(available, r => r.lastChosenAt));
+      const lastChosen = sample(minBy(available, (r) => r.lastChosenAt));
       lastChosen.lastChosenAt = now;
       return Promise.resolve(lastChosen.resource);
     }
 
-    const nextAvailable = minBy(this.resources, r => r.availableAfter);
+    const nextAvailable = minBy(this.resources, (r) => r.availableAfter);
     this.contentionCount++;
 
     return delay(nextAvailable[0].availableAfter - now).then(() => {
@@ -106,25 +106,25 @@ export class SharedPool<T> {
    * Returns the resources currently available.
    */
   public available(now: number = Date.now()): T[] {
-    return this.resources.filter(r => r.availableAfter <= now).map(r => r.resource);
+    return this.resources.filter((r) => r.availableAfter <= now).map((r) => r.resource);
   }
 
   /**
    * Returns the resources currently unavailable in backoff.
    */
   public unavailable(now: number = Date.now()): T[] {
-    return this.resources.filter(r => r.availableAfter <= now).map(r => r.resource);
+    return this.resources.filter((r) => r.availableAfter <= now).map((r) => r.resource);
   }
 
   /**
    * Returns all resources in the pool.
    */
   public all(): T[] {
-    return this.resources.map(r => r.resource);
+    return this.resources.map((r) => r.resource);
   }
 
   private recordFor(resource: T): IResourceRecord<T> {
-    const record = this.resources.find(r => r.resource === resource);
+    const record = this.resources.find((r) => r.resource === resource);
     if (!record) {
       throw new Error('expected resource to be in the pool');
     }

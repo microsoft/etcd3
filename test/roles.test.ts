@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import {
   Etcd3,
@@ -14,8 +14,8 @@ import {
 } from '../src';
 import { createTestClientAndKeys, expectReject, getOptions, tearDownTestClient } from './util';
 
-function wipeAll(things: Promise<Array<{ delete(): any }>>) {
-  return things.then(items => Promise.all(items.map(item => item.delete())));
+function wipeAll(things: Promise<{ delete(): any }[]>) {
+  return things.then((items) => Promise.all(items.map((item) => item.delete())));
 }
 
 describe('roles and auth', () => {
@@ -29,7 +29,7 @@ describe('roles and auth', () => {
 
     const expectRoles = async (expected: string[]) => {
       const list = await client.getRoles();
-      expect(list.map(r => r.name)).to.deep.equal(expected);
+      expect(list.map((r) => r.name)).to.deep.equal(expected);
     };
 
     it('create and deletes', async () => {
@@ -186,13 +186,7 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expectReject(
-        authedClient
-          .put('wut')
-          .value('bar')
-          .exec(),
-        EtcdPermissionDeniedError,
-      );
+      await expectReject(authedClient.put('wut').value('bar').exec(), EtcdPermissionDeniedError);
 
       authedClient.close();
     });
@@ -208,10 +202,7 @@ describe('roles and auth', () => {
       );
 
       await expectReject(
-        authedClient
-          .put('foo')
-          .value('bar')
-          .exec(),
+        authedClient.put('foo').value('bar').exec(),
         EtcdAuthenticationFailedError,
       );
 

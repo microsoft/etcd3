@@ -1,6 +1,5 @@
-import { ChannelOptions } from './grpcTypes';
-
 import { IBackoffStrategy } from './backoff/backoff';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 
 /**
  * IOptions are passed into the client constructor to configure how the client

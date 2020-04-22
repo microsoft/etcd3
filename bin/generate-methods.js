@@ -201,10 +201,6 @@ function generateMethodCalls(node, name) {
 
 function generateInterface(node, name) {
   const message = messages.find(name);
-  if (message.empty) {
-    return;
-  }
-
   template('interface', { name, node, message });
 }
 

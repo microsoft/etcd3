@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import * as Builder from './builder';
 import { ClientRuntimeError, STMConflictError } from './errors';
@@ -86,12 +86,17 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
   } as any;
 }
 
+interface CompletedReads { 
+  key: Buffer; 
+  res: RPC.IRangeResponse; 
+}
+
 /**
  * ReadSet records a set of reads in a SoftwareTransaction.
  */
 class ReadSet {
   private readonly reads: { [key: string]: Promise<RPC.IRangeResponse> } = Object.create(null);
-  private readonly completedReads: Array<{ key: Buffer; res: RPC.IRangeResponse }> = [];
+  private readonly completedReads: CompletedReads[] = [];
   private earliestMod = new BigNumber(Infinity);
 
   /**
@@ -124,7 +129,7 @@ class ReadSet {
       return this.reads[key];
     }
 
-    const promise = kv.range(req).then(res => {
+    const promise = kv.range(req).then((res) => {
       this.completedReads.push({ key: req.key!, res });
 
       if (res.kvs.length > 0) {
@@ -165,7 +170,7 @@ class WriteSet {
       return; // no reads were made
     }
 
-    this.ops.forEach(op => {
+    this.ops.forEach((op) => {
       switch (op.op) {
         case WriteKind.Write:
           cmp.and(op.req.key!, 'Mod', '<', sinceBeforeMod);
@@ -187,7 +192,7 @@ class WriteSet {
    */
   public addChanges(cmp: Builder.ComparatorBuilder) {
     const clauses: RPC.IRequestOp[] = [];
-    this.ops.forEach(op => {
+    this.ops.forEach((op) => {
       switch (op.op) {
         case WriteKind.Write:
           clauses.push({ request_put: op.req });
@@ -329,8 +334,8 @@ class BasicTransaction {
     ]);
   }
 
-  protected assertNoOption<T>(req: string, obj: T, keys: Array<keyof T>) {
-    keys.forEach(key => {
+  protected assertNoOption<T>(req: string, obj: T, keys: (keyof T)[]) {
+    keys.forEach((key) => {
       if (obj[key] !== undefined) {
         throw new Error(`"${key}" is not supported in ${req} requests within STM transactions`);
       }
@@ -348,7 +353,7 @@ class SerializableTransaction extends BasicTransaction {
 
   constructor(options: ISTMOptions, kv: RPC.KVClient) {
     super(options);
-    options.prefetch.forEach(key => {
+    options.prefetch.forEach((key) => {
       this.range(kv, { key: toBuffer(key) }).catch(() => undefined);
     });
   }
@@ -368,7 +373,7 @@ class SerializableTransaction extends BasicTransaction {
       return (this.firstRead = this.readSet.runRequest(kv, req));
     }
 
-    return this.firstRead.then(res => {
+    return this.firstRead.then((res) => {
       req.serializable = true;
       req.revision = res.header.revision;
       return this.readSet.runRequest(kv, req);
@@ -473,10 +478,10 @@ export class SoftwareTransaction {
         ? new SerializableTransaction(this.options, this.rawKV)
         : new BasicTransaction(this.options);
 
-    return Promise.resolve(fn(this)).then(value => {
+    return Promise.resolve(fn(this)).then((value) => {
       return this.commit()
         .then(() => value)
-        .catch(err => {
+        .catch((err) => {
           if (retries === 0 || !(err instanceof STMConflictError)) {
             throw err;
           }
@@ -490,10 +495,7 @@ export class SoftwareTransaction {
     const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
-        const earliestMod = this.tx.readSet
-          .earliestModRevision()
-          .add(1)
-          .toString();
+        const earliestMod = this.tx.readSet.earliestModRevision().plus(1).toString();
         this.tx.writeSet.addNotChangedChecks(cmp, earliestMod);
         this.tx.readSet.addCurrentChecks(cmp);
         break;
@@ -514,7 +516,7 @@ export class SoftwareTransaction {
     return cmp
       .options(this.options.callOptions)
       .commit()
-      .then(result => {
+      .then((result) => {
         if (!result.succeeded) {
           throw new STMConflictError();
         }

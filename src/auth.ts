@@ -1,4 +1,4 @@
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { Range } from './range';
 import { AuthClient, Permission } from './rpc';
@@ -59,15 +59,15 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
+      return Promise.all(req.map((r) => this.grant(r, options))).then(() => this);
     }
 
     const range = getRange(req);
     return this.client
       .roleRevokePermission({
         role: this.name,
-        key: range.start.toString(),
-        range_end: range.end.toString(),
+        key: range.start,
+        range_end: range.end,
       })
       .then(() => this);
   }
@@ -80,7 +80,7 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r))).then(() => this);
+      return Promise.all(req.map((r) => this.grant(r))).then(() => this);
     }
 
     const range = getRange(req);
@@ -103,8 +103,8 @@ export class Role {
    * Returns a list of permissions the role has.
    */
   public permissions(options?: grpc.CallOptions): Promise<IPermissionResult[]> {
-    return this.client.roleGet({ role: this.name }, options).then(response => {
-      return response.perm.map(perm => ({
+    return this.client.roleGet({ role: this.name }, options).then((response) => {
+      return response.perm.map((perm) => ({
         permission: perm.permType,
         range: new Range(perm.key, perm.range_end),
       }));
@@ -166,8 +166,8 @@ export class User {
    * Returns a list of roles this user has.
    */
   public roles(options?: grpc.CallOptions): Promise<Role[]> {
-    return this.client.userGet({ name: this.name }, options).then(res => {
-      return res.roles.map(role => new Role(this.client, role));
+    return this.client.userGet({ name: this.name }, options).then((res) => {
+      return res.roles.map((role) => new Role(this.client, role));
     });
   }
 

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { PutBuilder } from './builder';
 import { ConnectionPool, Host } from './connection-pool';
@@ -33,7 +33,7 @@ class LeaseClientWrapper implements RPC.ICallable<Host> {
   ) {}
 
   public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
-    return this.pool.exec(service, method, payload).catch(err => {
+    return this.pool.exec(service, method, payload).catch((err) => {
       if (err instanceof EtcdLeaseInvalidError) {
         this.lease.emitLoss(err);
       }
@@ -106,13 +106,13 @@ export class Lease extends EventEmitter {
 
     this.leaseID = this.client
       .leaseGrant({ TTL: ttl }, this.options)
-      .then(res => {
+      .then((res) => {
         this.state = State.Alive;
         this.lastKeepAlive = Date.now();
         this.keepalive();
         return res.ID;
       })
-      .catch(err => {
+      .catch((err) => {
         this.emitLoss(err);
         // return, don't throw, from here so that if no one is listening to
         // grant() we don't crash the process.
@@ -139,7 +139,7 @@ export class Lease extends EventEmitter {
    */
   public revoke(options: grpc.CallOptions | undefined = this.options): Promise<void> {
     this.close();
-    return this.leaseID.then(id => {
+    return this.leaseID.then((id) => {
       if (!(id instanceof Error)) {
         // if an error, we didn't grant in the first place
         return this.client.leaseRevoke({ ID: id }, options).then(() => undefined);
@@ -178,9 +178,9 @@ export class Lease extends EventEmitter {
     return Promise.all([this.client.leaseKeepAlive(options), this.grant()]).then(([stream, id]) => {
       return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
         stream.on('data', resolve);
-        stream.on('error', err => reject(castGrpcError(err)));
+        stream.on('error', (err) => reject(castGrpcError(err)));
         stream.write({ ID: id });
-      }).then(res => {
+      }).then((res) => {
         stream.end();
         if (leaseExpired(res)) {
           const err = new EtcdLeaseInvalidError(res.ID);
@@ -285,7 +285,7 @@ export class Lease extends EventEmitter {
 
     this.client
       .leaseKeepAlive()
-      .then(stream => {
+      .then((stream) => {
         if (this.state !== State.Alive) {
           return stream.end();
         }
@@ -299,8 +299,8 @@ export class Lease extends EventEmitter {
         };
 
         stream
-          .on('error', err => this.handleKeepaliveError(err))
-          .on('data', res => {
+          .on('error', (err) => this.handleKeepaliveError(err))
+          .on('data', (res) => {
             if (leaseExpired(res)) {
               return this.handleKeepaliveError(new EtcdLeaseInvalidError(res.ID));
             }
@@ -312,13 +312,13 @@ export class Lease extends EventEmitter {
         this.emit('keepaliveEstablished');
         return this.fireKeepAlive(stream);
       })
-      .catch(err => this.handleKeepaliveError(err));
+      .catch((err) => this.handleKeepaliveError(err));
   }
 
   private fireKeepAlive(stream: RPC.IRequestStream<RPC.ILeaseKeepAliveRequest>) {
     this.emit('keepaliveFired');
     return this.grant()
-      .then(id => stream.write({ ID: id }))
+      .then((id) => stream.write({ ID: id }))
       .catch(() => this.close()); // will only throw if the initial grant failed
   }
 
