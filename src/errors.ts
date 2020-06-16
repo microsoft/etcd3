@@ -4,7 +4,7 @@
 
 export class ClientRuntimeError extends Error {
   constructor(message: string) {
-    super(`${message} Please report this error at https://github.com/mixer/etcd3`);
+    super(`${message} Please report this error at https://github.com/microsoft/etcd3`);
   }
 }
 
@@ -184,7 +184,7 @@ export class EtcdPermissionDeniedError extends Error {}
  * EtcdWatchStreamEnded is emitted when a watch stream closes gracefully.
  * This is an unexpected occurrence.
  *
- * @see https://github.com/mixer/etcd3/issues/72#issuecomment-386851271
+ * @see https://github.com/microsoft/etcd3/issues/72#issuecomment-386851271
  */
 export class EtcdWatchStreamEnded extends Error {
   constructor() {

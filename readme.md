@@ -1,6 +1,6 @@
-# etcd3 [![Build Status](https://travis-ci.org/mixer/etcd3.svg?branch=master)](https://travis-ci.org/mixer/etcd3)
+# etcd3 [![Run Tests](https://github.com/microsoft/etcd3/workflows/Run%20Tests/badge.svg)](https://github.com/microsoft/etcd3/actions?query=workflow%3A%22Run+Tests%22)
 
-etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://mixer.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://mixer.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://mixer.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://mixer.github.io/etcd3/classes/index_.etcd3.html#stm), [high-level query builders](https://mixer.github.io/etcd3/classes/index_.etcd3.html#delete) and [lease management](https://mixer.github.io/etcd3/classes/lease_.lease.html), [watchers](https://mixer.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://mixer.github.io/etcd3/classes/index_.etcd3.html#mock), and is type-safe for TypeScript consumers.
+etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://microsoft.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#stm), [high-level query builders](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#delete) and [lease management](https://microsoft.github.io/etcd3/classes/lease_.lease.html), [watchers](https://microsoft.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#mock), and is type-safe for TypeScript consumers.
 
 ### Quickstart
 
@@ -16,7 +16,9 @@ Start CRUD-ing!
 const { Etcd3 } = require('etcd3');
 const client = new Etcd3();
 
-client.put('foo').value('bar')
+client
+  .put('foo')
+  .value('bar')
   .then(() => client.get('foo').string())
   .then(value => console.log('foo was:', value))
   .then(() => client.getAll().prefix('f').strings())
@@ -26,9 +28,9 @@ client.put('foo').value('bar')
 
 ### API Documentation
 
-Our [TypeDoc docs are available here](https://mixer.github.io/etcd3/classes/index_.etcd3.html).
+Our [TypeDoc docs are available here](https://microsoft.github.io/etcd3/classes/index_.etcd3.html).
 
-Our [test cases](https://github.com/mixer/etcd3/blob/master/test/) are also quite readable.
+Our [test cases](https://github.com/microsoft/etcd3/blob/master/test/) are also quite readable.
 
 ### Running tests
 
