@@ -6,5 +6,8 @@
     "**/lib": true,
     "**/.nyc_output": true,
     "**/docs": true,
+  },
+  "files.exclude": {
+    "**/.nyc_output": true,
   }
 }

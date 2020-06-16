@@ -5,8 +5,8 @@
   "main": "lib/src/index.js",
   "typings": "lib/src/index.d.ts",
   "scripts": {
-    "test": "npm-run-all --parallel test:lint test:unit",
-    "test:unit": "mocha --require source-map-support/register --require ./lib/test/_setup.js \"lib/test/**/*.test.js\" --timeout 10000 --exit",
+    "test": "concurrently npm:test:lint npm:test:unit",
+    "test:unit": "mocha",
     "test:cover": "nyc mocha",
     "test:lint": "eslint \"src/**/*.ts\"",
     "watch": "tsc --watch",
@@ -21,15 +21,6 @@
     "url": "git+https://github.com/microsoft/etcd3.git"
   },
   "nyc": {
-    "include": [
-      "src/**/*.ts"
-    ],
-    "extension": [
-      ".ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
     "reporter": [
       "text-summary",
       "html"
@@ -64,13 +55,13 @@
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
     "change-case": "^4.1.1",
+    "concurrently": "^5.2.0",
     "eslint": "^7.2.0",
     "eslint-plugin-header": "^3.0.0",
     "lodash": "^4.17.15",
     "mocha": "^8.0.1",
     "ncp": "^2.0.0",
     "node-fetch": "^2.6.0",
-    "npm-run-all": "^4.1.5",
     "nyc": "^15.1.0",
     "prettier": "^2.0.5",
     "protobufjs": "^6.9.0",
