@@ -69,7 +69,7 @@ describe('watch()', () => {
       await expectWatching(watcher, 'foo1');
 
       proxiedClient.close();
-      proxy.deactivate();
+      await proxy.deactivate();
     });
 
     // todo(connor4312): this is disabled pending resolution on:
@@ -98,7 +98,7 @@ describe('watch()', () => {
       });
 
       proxiedClient.close();
-      proxy.deactivate();
+      await proxy.deactivate();
     });
 
     it('caps watchers revisions', async () => {
@@ -189,7 +189,7 @@ describe('watch()', () => {
       expect(getWatchers()).to.deep.equal([]);
 
       proxiedClient.close();
-      proxy.deactivate();
+      await proxy.deactivate();
     });
   });
 });

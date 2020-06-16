@@ -72,9 +72,9 @@ export class Proxy {
   /**
    * Destroys a previously-active proxy server.
    */
-  public deactivate() {
-    this.server.close();
+  public async deactivate() {
     this.isActive = false;
+    await new Promise(r => this.server.close(r));
   }
 
   /**
@@ -95,7 +95,7 @@ export class Proxy {
         ALPNProtocols: ['h2'],
       },
       () => {
-        if (serverBuffer.length > 0) {
+        if (serverBuffer.length > 0 && !ended) {
           serverCnx.write(Buffer.concat(serverBuffer));
         }
 
@@ -105,11 +105,11 @@ export class Proxy {
 
     let ended = false;
     const end = (err?: Error) => {
+      ended = true;
       if (err instanceof Error) {
         throw err;
       }
 
-      ended = true;
       clientCnx.end();
       serverCnx.end();
       this.connections = this.connections.filter(c => c.end !== end);
@@ -120,17 +120,17 @@ export class Proxy {
         clientCnx.write(data);
       }
     });
-    serverCnx.on('close', end);
+    serverCnx.on('end', end);
     serverCnx.on('error', end);
 
     clientCnx.on('data', (data: Buffer) => {
       if (serverConnected && !ended) {
         serverCnx.write(data);
-      } else {
+      } else if (!ended) {
         serverBuffer.push(data);
       }
     });
-    clientCnx.on('close', end);
+    clientCnx.on('end', end);
     clientCnx.on('error', end);
 
     this.connections.push({ end });

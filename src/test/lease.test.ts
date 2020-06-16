@@ -94,7 +94,7 @@ describe('lease()', () => {
     await lease.revoke();
 
     proxiedClient.close();
-    proxy.deactivate();
+    await proxy.deactivate();
   });
 
   it('marks leases as failed if the server is not contacted for a while', async () => {
@@ -108,7 +108,7 @@ describe('lease()', () => {
     const err = await onceEvent(lease, 'lost');
     expect(err.message).to.match(/our lease has expired/);
     proxiedClient.close();
-    proxy.deactivate();
+    await proxy.deactivate();
   });
 
   it('emits a lost event if the lease is invalidated', async () => {
