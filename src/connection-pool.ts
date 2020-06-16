@@ -2,15 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { loadSync } from '@grpc/proto-loader';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { ExponentialBackoff } from './backoff/exponential';
 import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
-import { ChannelOptions } from './grpcTypes';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
 import { SharedPool } from './shared-pool';
 import { forOwn } from './util';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   keepCase: true,
@@ -50,7 +50,7 @@ function runServiceCall(
   payload: unknown,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    (client as any)[method](payload, metadata, options, (err: Error | null, res: any) => {
+    (client as any)[method](payload, metadata, options || {}, (err: Error | null, res: any) => {
       if (err) {
         reject(castGrpcError(err));
       } else {

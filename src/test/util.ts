@@ -211,6 +211,6 @@ export async function createTestKeys(client: Namespace) {
  * Destroys the etcd client and wipes all keys.
  */
 export async function tearDownTestClient(client: Etcd3) {
-  await client.delete().all();
+  await client?.delete().all();
   client.close();
 }

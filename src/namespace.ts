@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import * as Builder from './builder';
 import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';

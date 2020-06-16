@@ -151,7 +151,9 @@ describe('lease()', () => {
     let clock: sinon.SinonFakeTimers;
 
     beforeEach(async () => {
-      clock = sinon.useFakeTimers();
+      clock = sinon.useFakeTimers({
+        shouldAdvanceTime: true,
+      });
       lease = client.lease(60);
       await onceEvent(lease, 'keepaliveEstablished');
     });

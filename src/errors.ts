@@ -212,6 +212,7 @@ type IErrorCtor = new (message: string) => Error;
 const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Connect Failed', GRPCConnectFailedError],
   ['Channel Disconnected', GRPCConnectFailedError],
+  ['No connection established', GRPCConnectFailedError],
   ['failed to connect to all addresses', GRPCConnectFailedError],
   ['Endpoint read failed', GRPCProtocolError],
   ['Got config after disconnection', GRPCProtocolError],

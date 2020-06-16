@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { Range } from './range';
 import { AuthClient, Permission } from './rpc';
@@ -69,8 +69,8 @@ export class Role {
     return this.client
       .roleRevokePermission({
         role: this.name,
-        key: range.start.toString(),
-        range_end: range.end.toString(),
+        key: range.start,
+        range_end: range.end,
       })
       .then(() => this);
   }

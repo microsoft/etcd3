@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import BigNumber from 'bignumber.js';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import * as Builder from './builder';
 import { ClientRuntimeError, STMConflictError } from './errors';
@@ -89,12 +89,17 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
   } as any;
 }
 
+interface CompletedReads {
+  key: Buffer;
+  res: RPC.IRangeResponse;
+}
+
 /**
  * ReadSet records a set of reads in a SoftwareTransaction.
  */
 class ReadSet {
   private readonly reads: { [key: string]: Promise<RPC.IRangeResponse> } = Object.create(null);
-  private readonly completedReads: { key: Buffer; res: RPC.IRangeResponse }[] = [];
+  private readonly completedReads: CompletedReads[] = [];
   private earliestMod = new BigNumber(Infinity);
 
   /**

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { ChannelOptions } from './grpcTypes';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 
 import { IBackoffStrategy } from './backoff/backoff';
 

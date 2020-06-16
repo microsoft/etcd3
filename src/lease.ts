@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { EventEmitter } from 'events';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import { PutBuilder } from './builder';
 import { ConnectionPool, Host } from './connection-pool';

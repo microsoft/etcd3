@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { expect } from 'chai';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 import {
   Etcd3,

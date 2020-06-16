@@ -17,7 +17,6 @@ export * from './options';
 export * from './range';
 export * from './rpc';
 export * from './stm';
-export * from './grpcTypes';
 export { WatchBuilder, Watcher } from './watch';
 
 /**

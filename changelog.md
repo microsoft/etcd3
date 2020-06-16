@@ -1,8 +1,11 @@
 ## 1.0.0 TBA
 
- - **breaking**: Node < 10 is no longer supported
- - **breaking**: `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
- - **breaking**: TypeScript is updated to 3.9, and the types of some function signatures have been narrowed
+ - **breaking**: **chore:**: Node < 10 is no longer supported
+ - **breaking**: **chore:**: `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
+ - **breaking**: **chore:**: TypeScript is updated to 3.9, and the types of some function signatures have been narrowed
+ - **breaking**: **chore:** grpc has been updated from `grpc@1.24` to `@grpc/grpc-js@1.0.05`. This affects the optional `grpcOptions` that the client can be configured with. The previous package was a couple years old, so you may additionally see different behavior of grpc on your network.
+
+    Thank you to [@pauliusuza](https://github.com/pauliusuza) for his help updating everything
 
 ## 0.2.13 2019-07-03
 
