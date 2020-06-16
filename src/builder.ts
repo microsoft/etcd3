@@ -174,6 +174,14 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
   }
 
   /**
+   * Returns whether the key exists.
+   */
+  public exists(): Promise<boolean> {
+    this.request.keys_only = true;
+    return this.exec().then(r => r.count !== '0');
+  }
+
+  /**
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {

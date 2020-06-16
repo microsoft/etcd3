@@ -2,8 +2,8 @@
   "name": "etcd3",
   "version": "0.2.13",
   "description": "Node client for etcd3",
-  "main": "lib/src/index.js",
-  "typings": "lib/src/index.d.ts",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
   "scripts": {
     "test": "concurrently npm:test:lint npm:test:unit",
     "test:unit": "mocha",

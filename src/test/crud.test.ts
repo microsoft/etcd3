@@ -29,6 +29,11 @@ describe('crud', () => {
       expect(await client.get('wut').string()).to.be.null;
     });
 
+    it('gets whether keys exist', async () => {
+      expect(await client.get('foo1').exists()).to.be.true;
+      expect(await client.get('wut').exists()).to.be.false;
+    });
+
     it('queries prefixes', async () => {
       expect(await client.getAll().prefix('fo').strings()).to.deep.equal({
         foo1: 'bar1',

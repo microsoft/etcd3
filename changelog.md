@@ -7,6 +7,8 @@
 
   Thank you to [@pauliusuza](https://github.com/pauliusuza) for his help updating everything
 
+- **feat**: add `SingleRangeBuilder.exists()` that returns if the given key exists
+
 ## 0.2.13 2019-07-03
 
 - **bug**: fixed comparisons breaking in STM when using namespaces (see [#90](https://github.com/microsoft/etcd3/issues/90))
