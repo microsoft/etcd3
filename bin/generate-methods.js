@@ -6,7 +6,7 @@
  *
  * Usage:
  *
- *  > node bin/generate-methods proto/rpc.proto > src/methods.ts
+ *  > node bin/generate-methods proto/rpc.proto > src/rpc.ts
  *
  * protobufjs does have a TypeScript generator but its output isn't very useful
  * for grpc, much less this client. Rather than reprocessing it, let's just

@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { loadSync } from '@grpc/proto-loader';
 import * as grpc from 'grpc';
 
@@ -44,7 +47,7 @@ function runServiceCall(
   metadata: grpc.Metadata,
   options: grpc.CallOptions | undefined,
   method: string,
-  payload: object,
+  payload: unknown,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     (client as any)[method](payload, metadata, options, (err: Error | null, res: any) => {
@@ -213,12 +216,12 @@ export class ConnectionPool implements ICallable<Host> {
   /**
    * @override
    */
-  public exec(
+  public exec<T>(
     serviceName: keyof typeof Services,
     method: string,
-    payload: object,
+    payload: unknown,
     options?: grpc.CallOptions,
-  ): Promise<any> {
+  ): Promise<T> {
     if (this.mockImpl) {
       return this.mockImpl.exec(serviceName, method, payload);
     }

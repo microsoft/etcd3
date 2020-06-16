@@ -1,12 +1,18 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as tls from 'tls';
 
-import { Etcd3, IOptions, Namespace } from '../src';
+import { Etcd3, IOptions, Namespace } from '..';
+import { AddressInfo } from 'net';
+import { resolve } from 'path';
 
-const rootCertificate = fs.readFileSync(`${__dirname}/certs/certs/ca.crt`);
-const tlsCert = fs.readFileSync(`${__dirname}/certs/certs/etcd0.localhost.crt`);
-const tlsKey = fs.readFileSync(`${__dirname}/certs/private/etcd0.localhost.key`);
+const rootPath = resolve(__dirname, '..', '..');
+const rootCertificate = fs.readFileSync(`${rootPath}/src/test/certs/certs/ca.crt`);
+const tlsCert = fs.readFileSync(`${rootPath}/src/test/certs/certs/etcd0.localhost.crt`);
+const tlsKey = fs.readFileSync(`${rootPath}/src/test/certs/private/etcd0.localhost.key`);
 const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
 const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
 
@@ -34,7 +40,7 @@ export class Proxy {
 
       this.server.listen(0, '127.0.0.1');
       this.server.on('listening', () => {
-        const addr = this.server.address();
+        const addr = this.server.address() as AddressInfo;
         this.host = addr.address;
         this.port = addr.port;
         this.isActive = true;
@@ -82,7 +88,7 @@ export class Proxy {
     let serverConnected = false;
     const serverBuffer: Buffer[] = [];
     const serverCnx = tls.connect(
-      etcdSourcePort,
+      Number(etcdSourcePort),
       etcdSourceHost,
       {
         secureContext: tls.createSecureContext({ ca: rootCertificate }),

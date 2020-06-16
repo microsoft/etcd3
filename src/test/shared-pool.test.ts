@@ -1,8 +1,11 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import { ExponentialBackoff } from '../src/backoff/exponential';
-import { SharedPool } from '../src/shared-pool';
+import { ExponentialBackoff } from '../backoff/exponential';
+import { SharedPool } from '../shared-pool';
 
 describe('shared pool', () => {
   let pool: SharedPool<number>;
@@ -24,7 +27,7 @@ describe('shared pool', () => {
 
   afterEach(() => clock.restore());
 
-  async function getAll(count: number = 3): Promise<number[]> {
+  async function getAll(count = 3): Promise<number[]> {
     const output: number[] = [];
     for (let i = 0; i < count; i += 1) {
       clock.tick(1);

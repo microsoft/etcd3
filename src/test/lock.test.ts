@@ -1,6 +1,9 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { Etcd3, EtcdLockFailedError } from '../src';
+import { Etcd3, EtcdLockFailedError } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
 
 describe('lock()', () => {
@@ -37,10 +40,7 @@ describe('lock()', () => {
   });
 
   it('allows setting lock TTL before acquiring', async () => {
-    const lock = await client
-      .lock('resource')
-      .ttl(10)
-      .acquire();
+    const lock = await client.lock('resource').ttl(10).acquire();
     await lock.release();
   });
 

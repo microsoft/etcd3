@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { EventEmitter } from 'events';
 
 import { ClientRuntimeError } from './errors';
@@ -155,7 +158,7 @@ export function forOwn<T>(
   obj: T,
   iterator: <K extends keyof T>(value: T[K], key: K) => void,
 ): void {
-  const keys = Object.keys(obj) as Array<keyof T>;
+  const keys = Object.keys(obj) as (keyof T)[];
   for (const key of keys) {
     iterator(obj[key], key);
   }
@@ -167,7 +170,7 @@ export function forOwn<T>(
  */
 export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
-    const teardown: Array<() => void> = [];
+    const teardown: (() => void)[] = [];
 
     const handler = (data: any, event: string) => {
       teardown.forEach(t => t());

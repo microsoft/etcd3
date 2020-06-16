@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { Role, User } from './auth';
 import { ConnectionPool } from './connection-pool';
 import { Namespace } from './namespace';

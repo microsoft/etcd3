@@ -1,6 +1,9 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { Etcd3 } from '../src';
+import { Etcd3 } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
 
 describe('crud', () => {
@@ -27,12 +30,7 @@ describe('crud', () => {
     });
 
     it('queries prefixes', async () => {
-      expect(
-        await client
-          .getAll()
-          .prefix('fo')
-          .strings(),
-      ).to.deep.equal({
+      expect(await client.getAll().prefix('fo').strings()).to.deep.equal({
         foo1: 'bar1',
         foo2: 'bar2',
         foo3: '{"value":"bar3"}',
@@ -55,21 +53,11 @@ describe('crud', () => {
 
     it('sorts', async () => {
       expect(
-        await client
-          .getAll()
-          .prefix('foo')
-          .sort('Key', 'Ascend')
-          .limit(2)
-          .keys(),
+        await client.getAll().prefix('foo').sort('Key', 'Ascend').limit(2).keys(),
       ).to.deep.equal(['foo1', 'foo2']);
 
       expect(
-        await client
-          .getAll()
-          .prefix('foo')
-          .sort('Key', 'Descend')
-          .limit(2)
-          .keys(),
+        await client.getAll().prefix('foo').sort('Key', 'Descend').limit(2).keys(),
       ).to.deep.equal(['foo3', 'foo2']);
     });
   });
@@ -86,12 +74,7 @@ describe('crud', () => {
     });
 
     it('gets previous', async () => {
-      expect(
-        await client
-          .delete()
-          .key('foo1')
-          .getPrevious(),
-      ).to.containSubset([
+      expect(await client.delete().key('foo1').getPrevious()).to.containSubset([
         {
           key: new Buffer('foo1'),
           value: new Buffer('bar1'),
@@ -113,12 +96,7 @@ describe('crud', () => {
       });
 
       it('includes previous values', async () => {
-        expect(
-          await client
-            .put('foo1')
-            .value('updated')
-            .getPrevious(),
-        ).to.containSubset({
+        expect(await client.put('foo1').value('updated').getPrevious()).to.containSubset({
           key: new Buffer('foo1'),
           value: new Buffer('bar1'),
         });

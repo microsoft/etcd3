@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { IBackoffStrategy } from './backoff/backoff';
 import { delay, minBy, sample } from './util';
 
@@ -23,7 +26,7 @@ export class SharedPool<T> {
   // tests simpler.
   private static deterministicInsertion: false;
 
-  private resources: Array<IResourceRecord<T>> = [];
+  private resources: IResourceRecord<T>[] = [];
   private contentionCount = 0;
 
   public constructor(private strategy: IBackoffStrategy) {}

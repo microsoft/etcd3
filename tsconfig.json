@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "sourceMap": true,
     "declaration": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -9,15 +10,9 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "module": "commonjs",
-    "target": "es6",
+    "target": "ES2018",
     "outDir": "lib",
-    "lib": [
-      "es5",
-      "es6"
-    ],
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "lib": ["ES2018"],
     "types": [
       "chai-as-promised",
       "chai-subset",
@@ -25,14 +20,6 @@
       "node"
     ],
     "baseUrl": ".",
-    "paths": {
-      "*": [
-        "src/types/*"
-      ]
-    }
   },
-  "exclude": [
-    "node_modules",
-    "lib"
-  ]
+  "include": ["src"],
 }

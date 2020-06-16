@@ -1,8 +1,0 @@
---watch-extensions ts
---require source-map-support/register
---require ts-node/register
---require test/_setup.ts
---timeout 20000
---recursive
---exit
-test/**/*.test.ts

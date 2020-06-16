@@ -1,5 +1,8 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
-import { Range } from '../src/range';
+import { Range } from '../range';
 
 describe('Range', () => {
   describe('prefix', () => {

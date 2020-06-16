@@ -1,3 +1,9 @@
+## 1.0.0 TBA
+
+ - **breaking**: Node < 10 is no longer supported
+ - **breaking**: `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
+ - **breaking**: TypeScript is updated to 3.9, and the types of some function signatures have been narrowed
+
 ## 0.2.13 2019-07-03
 
  - **bug**: fixed comparisons breaking in STM when using namespaces (see [#90](https://github.com/mixer/etcd3/issues/90))

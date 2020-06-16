@@ -1,7 +1,10 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import { Etcd3 } from '../src';
+import { Etcd3 } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
 
 describe('client', () => {
@@ -12,7 +15,7 @@ describe('client', () => {
 
   it('allows mocking', async () => {
     const mock = client.mock({
-      exec: sinon.stub(),
+      exec: sinon.stub() as any,
       getConnection: sinon.stub(),
     });
 

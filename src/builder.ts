@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import * as grpc from 'grpc';
 
 import { Rangable, Range } from './range';
@@ -140,7 +143,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * Runs the built request and parses the returned key as JSON,
    * or returns `null` if it isn't found.
    */
-  public json(): Promise<object> {
+  public json(): Promise<unknown> {
     return this.string().then(JSON.parse);
   }
 
@@ -148,7 +151,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public string(encoding: string = 'utf8'): Promise<string | null> {
+  public string(encoding: BufferEncoding = 'utf8'): Promise<string | null> {
     return this.exec().then(res =>
       res.kvs.length === 0 ? null : res.kvs[0].value.toString(encoding),
     );
@@ -249,7 +252,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   /**
    * Keys returns an array of keys matching the query.
    */
-  public keys(encoding: string = 'utf8'): Promise<string[]> {
+  public keys(encoding: BufferEncoding = 'utf8'): Promise<string[]> {
     this.request.keys_only = true;
     return this.exec().then(res => {
       return res.kvs.map(kv => kv.key.toString(encoding));
@@ -269,7 +272,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   /**
    * Runs the built request and parses the returned keys as JSON.
    */
-  public json(): Promise<{ [key: string]: object }> {
+  public json(): Promise<{ [key: string]: unknown }> {
     return this.mapValues(buf => JSON.parse(buf.toString()));
   }
 
@@ -277,7 +280,7 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
    * Runs the built request and returns the value of the returned key as a
    * string, or `null` if it isn't found.
    */
-  public strings(encoding: string = 'utf8'): Promise<{ [key: string]: string }> {
+  public strings(encoding: BufferEncoding = 'utf8'): Promise<{ [key: string]: string }> {
     return this.mapValues(buf => buf.toString(encoding));
   }
 
@@ -560,9 +563,9 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  */
 export class ComparatorBuilder {
   private request: {
-    compare: Array<Promise<RPC.ICompare>>;
-    success: Array<Promise<RPC.IRequestOp>>;
-    failure: Array<Promise<RPC.IRequestOp>>;
+    compare: Promise<RPC.ICompare>[];
+    success: Promise<RPC.IRequestOp>[];
+    failure: Promise<RPC.IRequestOp>[];
   } = { compare: [], success: [], failure: [] };
   private callOptions: grpc.CallOptions | undefined;
 
@@ -607,7 +610,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is truthy.
    */
-  public then(...clauses: Array<RPC.IRequestOp | IOperation>): this {
+  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
     this.request.success = this.mapOperations(clauses);
     return this;
   }
@@ -616,7 +619,7 @@ export class ComparatorBuilder {
    * Adds one or more consequent clauses to be executed if the comparison
    * is falsey.
    */
-  public else(...clauses: Array<RPC.IRequestOp | IOperation>): this {
+  public else(...clauses: (RPC.IRequestOp | IOperation)[]): this {
     this.request.failure = this.mapOperations(clauses);
     return this;
   }
@@ -638,7 +641,7 @@ export class ComparatorBuilder {
   /**
    * Low-level method to add
    */
-  public mapOperations(ops: Array<RPC.IRequestOp | IOperation>) {
+  public mapOperations(ops: (RPC.IRequestOp | IOperation)[]): Promise<RPC.IRequestOp>[] {
     return ops.map(op => {
       if (typeof (op as IOperation).op === 'function') {
         return (op as IOperation).op();

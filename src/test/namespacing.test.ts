@@ -1,6 +1,9 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { Etcd3, Namespace } from '../src';
+import { Etcd3, Namespace } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
 
 describe('namespacing', () => {
@@ -54,10 +57,7 @@ describe('namespacing', () => {
 
   it('runs a simple if', async () => {
     await ns.put('foo1').value('potatoes');
-    await ns
-      .if('foo1', 'Value', '==', 'potatoes')
-      .then(ns.put('foo1').value('tomatoes'))
-      .commit();
+    await ns.if('foo1', 'Value', '==', 'potatoes').then(ns.put('foo1').value('tomatoes')).commit();
 
     await assertEqualInNamespace('foo1', 'tomatoes');
   });

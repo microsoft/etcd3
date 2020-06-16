@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 import * as grpc from 'grpc';
 
@@ -11,7 +14,7 @@ import {
   EtcdUserExistsError,
   EtcdUserNotFoundError,
   Role,
-} from '../src';
+} from '..';
 import { createTestClientAndKeys, expectReject, getOptions, tearDownTestClient } from './util';
 
 function wipeAll(things: Promise<Array<{ delete(): any }>>) {
@@ -186,13 +189,7 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expectReject(
-        authedClient
-          .put('wut')
-          .value('bar')
-          .exec(),
-        EtcdPermissionDeniedError,
-      );
+      await expectReject(authedClient.put('wut').value('bar').exec(), EtcdPermissionDeniedError);
 
       authedClient.close();
     });
@@ -208,10 +205,7 @@ describe('roles and auth', () => {
       );
 
       await expectReject(
-        authedClient
-          .put('foo')
-          .value('bar')
-          .exec(),
+        authedClient.put('foo').value('bar').exec(),
         EtcdAuthenticationFailedError,
       );
 

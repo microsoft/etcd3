@@ -1,7 +1,10 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
-import { Isolation, SoftwareTransaction } from '../src/stm';
+import { Isolation, SoftwareTransaction } from '../stm';
 
-import { Etcd3, Namespace, STMConflictError } from '../src';
+import { Etcd3, Namespace, STMConflictError } from '..';
 import { createTestClient, createTestKeys, tearDownTestClient } from './util';
 
 describe('stm()', () => {
@@ -34,7 +37,7 @@ describe('stm()', () => {
       const expectRetry = async (
         isolation: Isolation,
         fn: (tx: SoftwareTransaction, tries: number) => Promise<any>,
-        retries: number = 2,
+        retries = 2,
       ) => {
         let tries = 0;
         await ns.stm({ isolation }).transact(async tx => fn(tx, ++tries));

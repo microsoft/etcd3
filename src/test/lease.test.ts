@@ -1,8 +1,11 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '../src';
-import { onceEvent } from '../src/util';
+import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '..';
+import { onceEvent } from '../util';
 import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
 
 describe('lease()', () => {

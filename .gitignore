@@ -36,4 +36,3 @@ npm-debug.log
 /lib
 /.nyc_output
 /*.etcd/
-/.vscode

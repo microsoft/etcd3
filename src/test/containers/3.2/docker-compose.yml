@@ -1,0 +1,9 @@
+version: '3.6'
+services:
+  etcd3_2:
+    build:
+      context: ../../../
+      dockerfile: test/containers/3.2/Dockerfile
+    ports:
+      - 2379:2379
+      - 2380:2380

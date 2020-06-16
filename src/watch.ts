@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
@@ -381,7 +384,7 @@ export class WatchBuilder {
   /**
    * ignore omits certain operation kinds from the watch stream.
    */
-  public ignore(...operations: Array<keyof typeof operationNames>): this {
+  public ignore(...operations: (keyof typeof operationNames)[]): this {
     this.request.filters = operations.map(op => operationNames[op]);
     return this;
   }
@@ -531,6 +534,6 @@ export class Watcher extends EventEmitter {
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = new BigNumber(req.header.revision).add(1).toString();
+    this.request.start_revision = new BigNumber(req.header.revision).plus(1).toString();
   }
 }

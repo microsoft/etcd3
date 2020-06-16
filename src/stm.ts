@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import BigNumber from 'bignumber.js';
 import * as grpc from 'grpc';
 
@@ -91,7 +94,7 @@ function keyValueToResponse(key: string | Buffer, value?: Buffer): RPC.IRangeRes
  */
 class ReadSet {
   private readonly reads: { [key: string]: Promise<RPC.IRangeResponse> } = Object.create(null);
-  private readonly completedReads: Array<{ key: Buffer; res: RPC.IRangeResponse }> = [];
+  private readonly completedReads: { key: Buffer; res: RPC.IRangeResponse }[] = [];
   private earliestMod = new BigNumber(Infinity);
 
   /**
@@ -329,7 +332,7 @@ class BasicTransaction {
     ]);
   }
 
-  protected assertNoOption<T>(req: string, obj: T, keys: Array<keyof T>) {
+  protected assertNoOption<T>(req: string, obj: T, keys: (keyof T)[]) {
     keys.forEach(key => {
       if (obj[key] !== undefined) {
         throw new Error(`"${key}" is not supported in ${req} requests within STM transactions`);
@@ -490,10 +493,7 @@ export class SoftwareTransaction {
     const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
-        const earliestMod = this.tx.readSet
-          .earliestModRevision()
-          .add(1)
-          .toString();
+        const earliestMod = this.tx.readSet.earliestModRevision().plus(1).toString();
         this.tx.writeSet.addNotChangedChecks(cmp, earliestMod);
         this.tx.readSet.addCurrentChecks(cmp);
         break;

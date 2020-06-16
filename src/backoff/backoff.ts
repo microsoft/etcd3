@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 export interface IBackoffStrategy {
   /**
    * getDelay returns the amount of delay of the current backoff.

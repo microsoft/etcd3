@@ -1,7 +1,10 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { IBackoffStrategy } from '../src/backoff/backoff';
-import { ExponentialBackoff } from '../src/backoff/exponential';
+import { IBackoffStrategy } from '../backoff/backoff';
+import { ExponentialBackoff } from '../backoff/exponential';
 
 describe('backoff strategies', () => {
   describe('exponential strategy', () => {

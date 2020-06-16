@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util';
 
 function compare(a: Buffer, b: Buffer) {

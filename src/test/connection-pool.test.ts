@@ -1,7 +1,10 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { GRPCConnectFailedError, IOptions, KVClient } from '../src';
-import { ConnectionPool } from '../src/connection-pool';
+import { GRPCConnectFailedError, IOptions, KVClient } from '..';
+import { ConnectionPool } from '../connection-pool';
 import { getHost, getOptions } from './util';
 
 function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {

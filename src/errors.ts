@@ -1,6 +1,7 @@
-/**
- * Thrown when an internal assertion fails.
- */
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
+
 export class ClientRuntimeError extends Error {
   constructor(message: string) {
     super(`${message} Please report this error at https://github.com/mixer/etcd3`);
