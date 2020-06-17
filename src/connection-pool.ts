@@ -104,7 +104,13 @@ class Authenticator {
 
       const meta = new grpc.Metadata();
       const host = removeProtocolPrefix(hosts[index]);
-      return this.getCredentialsFromHost(host, auth.username, auth.password, this.credentials)
+      return this.getCredentialsFromHost(
+        host,
+        auth.username,
+        auth.password,
+        auth.callOptions,
+        this.credentials,
+      )
         .then(token => {
           meta.set('token', token);
           return meta;
@@ -122,12 +128,13 @@ class Authenticator {
     address: string,
     name: string,
     password: string,
+    callOptions: grpc.CallOptions | undefined,
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
     return runServiceCall(
       new etcdserverpb.Auth(address, credentials),
       new grpc.Metadata(),
-      undefined,
+      callOptions,
       'authenticate',
       { name, password },
     ).then(res => res.token);

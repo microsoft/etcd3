@@ -214,6 +214,7 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['Channel Disconnected', GRPCConnectFailedError],
   ['No connection established', GRPCConnectFailedError],
   ['failed to connect to all addresses', GRPCConnectFailedError],
+  ['DEADLINE_EXCEEDED', GRPCDeadlineExceededError],
   ['Endpoint read failed', GRPCProtocolError],
   ['Got config after disconnection', GRPCProtocolError],
   ['Failed to create subchannel', GRPCProtocolError],

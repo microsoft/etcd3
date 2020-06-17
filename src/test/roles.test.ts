@@ -23,6 +23,7 @@ import {
   setupAuth,
   removeAuth,
 } from './util';
+import { GRPCDeadlineExceededError } from '../errors';
 
 function wipeAll(things: Promise<Array<{ delete(): any }>>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));
@@ -154,6 +155,23 @@ describe('roles and auth', () => {
       );
 
       await authedClient.put('foo').value('bar');
+      authedClient.close();
+    });
+
+    it('applies call options', async () => {
+      const authedClient = new Etcd3(
+        getOptions({
+          auth: {
+            username: 'connor',
+            password: 'password',
+            callOptions: { deadline: new Date(0) },
+          },
+        }),
+      );
+
+      await expect(authedClient.put('foo').value('bar')).to.be.rejectedWith(
+        GRPCDeadlineExceededError,
+      );
       authedClient.close();
     });
 

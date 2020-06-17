@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
+import { CallOptions } from '@grpc/grpc-js';
 
 import { IBackoffStrategy } from './backoff/backoff';
 
@@ -45,6 +46,11 @@ export interface IOptions {
   auth?: {
     username: string;
     password: string;
+
+    /**
+     * Call options to use for the password-to-token exchange.
+     */
+    callOptions?: CallOptions;
   };
 
   /**
