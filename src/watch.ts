@@ -223,7 +223,9 @@ export class WatchManager {
         this.state = State.Connected;
         this.queue = new AttachQueue(stream);
         this.stream = stream
-          .on('data', res => this.handleResponse(res))
+          .on('data', res =>
+            res.created ? this.handleCreatedResponse(res) : this.handleResponse(res),
+          )
           .on('error', err => this.handleError(err))
           .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
 
@@ -301,16 +303,32 @@ export class WatchManager {
   }
 
   /**
-   * Dispatches some watch response on the event stream.
+   * Handles the creation of a new watcher from etcd.
    */
-  private handleResponse(res: RPC.IWatchResponse) {
+  private handleCreatedResponse(res: RPC.IWatchResponse) {
     this.backoff = this.backoff.reset();
-
-    if (res.created) {
+    if (!res.canceled) {
       this.queue!.handleCreate(res);
       return;
     }
 
+    // etcd can return both "canceled" and "created" in some cases, see #114.
+    // In this case watch_id won't have been assigned yet, so pull the first
+    // watcher that doesn't currently have an ID and assume it's the one
+    // that caused this error.
+    const watcher = this.watchers.find(w => w.id === null);
+    if (!watcher) {
+      throw new ClientRuntimeError('Got a watch creation error, but found no pending watchers');
+    }
+
+    this.handleCancelResponse(watcher, res);
+  }
+
+  /**
+   * Dispatches some a watch response on the event stream.
+   */
+  private handleResponse(res: RPC.IWatchResponse) {
+    this.backoff = this.backoff.reset();
     const watcher = this.watchers.find(w => w.id === res.watch_id);
     if (!watcher) {
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');
@@ -419,7 +437,10 @@ export class WatchBuilder {
    */
   public create(): Promise<Watcher> {
     const watcher = this.watcher();
-    return onceEvent(watcher, 'connected').then(() => watcher);
+    return Promise.race([
+      onceEvent(watcher, 'connected').then(() => watcher),
+      onceEvent(watcher, 'error').then(err => Promise.reject(err)),
+    ]);
   }
 }
 

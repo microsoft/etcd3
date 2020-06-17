@@ -214,3 +214,50 @@ export async function tearDownTestClient(client: Etcd3) {
   await client?.delete().all();
   client.close();
 }
+
+function wipeAll(things: Promise<Array<{ delete(): any }>>) {
+  return things.then(items => Promise.all(items.map(item => item.delete())));
+}
+
+/**
+ * Sets up authentication for the server.
+ */
+export async function setupAuth(client: Etcd3) {
+  await wipeAll(client.getUsers());
+  await wipeAll(client.getRoles());
+
+  // We need to set up a root user and root role first, otherwise etcd
+  // will yell at us.
+  const rootUser = await client.user('root').create('password');
+  await rootUser.addRole('root');
+
+  await client.user('connor').create('password');
+
+  const normalRole = await client.role('rw_prefix_f').create();
+  await normalRole.grant({
+    permission: 'Readwrite',
+    range: client.range({ prefix: 'f' }),
+  });
+  await normalRole.addUser('connor');
+  await client.auth.authEnable();
+}
+
+/**
+ * Removes authentication previously added with `setupAuth`
+ */
+export async function removeAuth(client: Etcd3) {
+  const rootClient = new Etcd3(
+    getOptions({
+      auth: {
+        username: 'root',
+        password: 'password',
+      },
+    }),
+  );
+
+  await rootClient.auth.authDisable();
+  rootClient.close();
+
+  await wipeAll(client.getUsers());
+  await wipeAll(client.getRoles());
+}

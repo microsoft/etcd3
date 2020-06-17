@@ -15,7 +15,14 @@ import {
   EtcdUserNotFoundError,
   Role,
 } from '..';
-import { createTestClientAndKeys, expectReject, getOptions, tearDownTestClient } from './util';
+import {
+  createTestClientAndKeys,
+  expectReject,
+  getOptions,
+  tearDownTestClient,
+  setupAuth,
+  removeAuth,
+} from './util';
 
 function wipeAll(things: Promise<Array<{ delete(): any }>>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));
@@ -129,40 +136,11 @@ describe('roles and auth', () => {
 
   describe('password auth', () => {
     beforeEach(async () => {
-      await wipeAll(client.getUsers());
-      await wipeAll(client.getRoles());
-
-      // We need to set up a root user and root role first, otherwise etcd
-      // will yell at us.
-      const rootUser = await client.user('root').create('password');
-      await rootUser.addRole('root');
-
-      await client.user('connor').create('password');
-
-      const normalRole = await client.role('rw_prefix_f').create();
-      await normalRole.grant({
-        permission: 'Readwrite',
-        range: client.range({ prefix: 'f' }),
-      });
-      await normalRole.addUser('connor');
-      await client.auth.authEnable();
+      await setupAuth(client);
     });
 
     afterEach(async () => {
-      const rootClient = new Etcd3(
-        getOptions({
-          auth: {
-            username: 'root',
-            password: 'password',
-          },
-        }),
-      );
-
-      await rootClient.auth.authDisable();
-      rootClient.close();
-
-      await wipeAll(client.getUsers());
-      await wipeAll(client.getRoles());
+      await removeAuth(client);
     });
 
     it('allows authentication using the correct credentials', async () => {

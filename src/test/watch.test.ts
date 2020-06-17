@@ -6,7 +6,15 @@ import { expect } from 'chai';
 
 import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '..';
 import { onceEvent } from '../util';
-import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
+import {
+  createTestClientAndKeys,
+  getOptions,
+  proxy,
+  tearDownTestClient,
+  setupAuth,
+  removeAuth,
+} from './util';
+import { EtcdPermissionDeniedError } from '../errors';
 
 describe('watch()', () => {
   let client: Etcd3;
@@ -113,6 +121,26 @@ describe('watch()', () => {
       proxy.resume();
       await onceEvent(watcher, 'connected');
       expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+    });
+
+    describe('emits an error if a watcher is cancelled upon creation (#114)', () => {
+      beforeEach(() => setupAuth(client));
+      afterEach(() => removeAuth(client));
+
+      it('is fixed', async () => {
+        const authedClient = new Etcd3(
+          getOptions({
+            auth: {
+              username: 'connor',
+              password: 'password',
+            },
+          }),
+        );
+
+        await expect(authedClient.watch().key('outside of range').create()).to.be.rejectedWith(
+          EtcdPermissionDeniedError,
+        );
+      });
     });
   });
 
