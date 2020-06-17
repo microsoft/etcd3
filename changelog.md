@@ -8,6 +8,7 @@
   Thank you to [@pauliusuza](https://github.com/pauliusuza) for his help updating everything
 
 - **feat**: add `SingleRangeBuilder.exists()` that returns if the given key exists
+- **fix**: errors when creating watchers not being handled correctly (see [114](https://github.com/microsoft/etcd3/issues/114))
 
 ## 0.2.13 2019-07-03
 

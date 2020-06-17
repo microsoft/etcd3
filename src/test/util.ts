@@ -16,6 +16,8 @@ const tlsKey = fs.readFileSync(`${rootPath}/src/test/certs/private/etcd0.localho
 const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
 const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
 
+export const etcdVersion = process.env.ETCD_VERSION || '3.3.9';
+
 /**
  * Proxy is a TCP proxy for etcd, used so that we can simulate network failures
  * and disruptions in a cross-platform manner (i.e no reliance on tcpkill
@@ -261,3 +263,12 @@ export async function removeAuth(client: Etcd3) {
   await wipeAll(client.getUsers());
   await wipeAll(client.getRoles());
 }
+
+const compareVersion = (version: string) => {
+  const aParts = etcdVersion.split('.').map(Number);
+  const bParts = version.split('.').map(Number);
+  return aParts.map((a, i) => a - bParts[i]).find(cmp => cmp !== 0) ?? 0;
+};
+
+export const isAtLeastVersion = (version: string) => compareVersion(version) >= 0;
+export const atAtMostVersion = (version: string) => compareVersion(version) <= 0;

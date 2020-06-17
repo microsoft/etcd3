@@ -21,3 +21,5 @@ jobs:
     - run: npm ci
     - run: npm run build:ts
     - run: npm test
+      env:
+        ETCD_VERSION: ${{ matrix.etcd-version }}

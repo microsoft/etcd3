@@ -13,6 +13,7 @@ import {
   tearDownTestClient,
   setupAuth,
   removeAuth,
+  isAtLeastVersion,
 } from './util';
 import { EtcdPermissionDeniedError } from '../errors';
 
@@ -127,20 +128,22 @@ describe('watch()', () => {
       beforeEach(() => setupAuth(client));
       afterEach(() => removeAuth(client));
 
-      it('is fixed', async () => {
-        const authedClient = new Etcd3(
-          getOptions({
-            auth: {
-              username: 'connor',
-              password: 'password',
-            },
-          }),
-        );
+      if (isAtLeastVersion('3.2.0')) {
+        it('is fixed', async () => {
+          const authedClient = new Etcd3(
+            getOptions({
+              auth: {
+                username: 'connor',
+                password: 'password',
+              },
+            }),
+          );
 
-        await expect(authedClient.watch().key('outside of range').create()).to.be.rejectedWith(
-          EtcdPermissionDeniedError,
-        );
-      });
+          await expect(authedClient.watch().key('outside of range').create()).to.be.rejectedWith(
+            EtcdPermissionDeniedError,
+          );
+        });
+      }
     });
   });
 
