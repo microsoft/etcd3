@@ -8,7 +8,7 @@ import { PutBuilder } from './builder';
 import { ConnectionPool, Host } from './connection-pool';
 import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCConnectFailedError } from './errors';
 import * as RPC from './rpc';
-import { NSApplicator } from './util';
+import { NSApplicator, debounce } from './util';
 
 function throwIfError<T>(value: T | Error): T {
   if (value instanceof Error) {
@@ -293,13 +293,21 @@ export class Lease extends EventEmitter {
           return stream.end();
         }
 
-        const keepaliveTimer = setInterval(() => this.fireKeepAlive(stream), (1000 * this.ttl) / 3);
+        // this is what the official Go client uses, good enough:
+        const keepAliveInterval = (1000 * this.ttl) / 3;
+        const keepaliveTimer = setInterval(() => this.fireKeepAlive(stream), keepAliveInterval);
+        const keepAliveTimeout = debounce(1000 * this.ttl, () =>
+          this.handleKeepaliveError(new GRPCConnectFailedError('GRPC watch stream has timed out.')),
+        );
 
         this.teardown = () => {
           this.teardown = () => undefined;
+          keepAliveTimeout.cancel();
           clearInterval(keepaliveTimer);
           stream.end();
         };
+
+        keepAliveTimeout(); // start the debounce
 
         stream
           .on('error', err => this.handleKeepaliveError(err))
@@ -309,6 +317,7 @@ export class Lease extends EventEmitter {
             }
 
             this.lastKeepAlive = Date.now();
+            keepAliveTimeout();
             this.emit('keepaliveSucceeded', res);
           });
 
@@ -326,6 +335,10 @@ export class Lease extends EventEmitter {
   }
 
   private handleKeepaliveError(err: Error) {
+    if (this.state === State.Revoked) {
+      return; // often write-after-end, or something along those lines
+    }
+
     this.emit('keepaliveFailed', castGrpcError(err));
     this.teardown();
 

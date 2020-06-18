@@ -8,8 +8,9 @@
   Thank you to [@pauliusuza](https://github.com/pauliusuza) for his help updating everything
 
 - **feat**: add `SingleRangeBuilder.exists()` that returns if the given key exists
-- **fix**: errors when creating watchers not being handled correctly (see [#114](https://github.com/microsoft/etcd3/issues/114))
 - **feat**: allow apply call options to authentication token exchange (see [#111](https://github.com/microsoft/etcd3/issues/111))
+- **fix**: errors when creating watchers not being handled correctly (see [#114](https://github.com/microsoft/etcd3/issues/114))
+- **fix**: mark leases as lost if the watch connection is alive but etcd is unresponsive (see [#110](https://github.com/microsoft/etcd3/issues/110))
 
 ## 0.2.13 2019-07-03
 

@@ -5,8 +5,14 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '..';
-import { onceEvent } from '../util';
-import { createTestClientAndKeys, getOptions, proxy, tearDownTestClient } from './util';
+import { onceEvent, delay } from '../util';
+import {
+  createTestClientAndKeys,
+  getOptions,
+  proxy,
+  tearDownTestClient,
+  TrafficDirection,
+} from './util';
 
 describe('lease()', () => {
   let client: Etcd3;
@@ -87,9 +93,9 @@ describe('lease()', () => {
 
     lease = proxiedClient.lease(100);
     await lease.grant();
-    proxy.pause();
+    proxy.suspend();
     await onceEvent(lease, 'keepaliveFailed');
-    proxy.resume();
+    proxy.unsuspend();
     await onceEvent(lease, 'keepaliveSucceeded');
     await lease.revoke();
 
@@ -103,7 +109,7 @@ describe('lease()', () => {
 
     lease = proxiedClient.lease(1);
     await lease.grant();
-    proxy.pause();
+    proxy.suspend();
     (lease as any).lastKeepAlive = Date.now() - 2000; // speed things up a little
     const err = await onceEvent(lease, 'lost');
     expect(err.message).to.match(/our lease has expired/);
@@ -176,6 +182,29 @@ describe('lease()', () => {
       lease.release();
       clock.tick(20000);
       expect(kaFired.fired).to.be.false;
+    });
+
+    it('marks leases as failed if etcd does not respond to keepalives in time (#110)', async () => {
+      await lease.revoke();
+
+      await proxy.activate();
+      const proxiedClient = new Etcd3(getOptions());
+      lease = proxiedClient.lease(1);
+      await lease.grant();
+      proxy.pause(TrafficDirection.FromEtcd);
+
+      const failedEvent = watchEmission('keepaliveFailed');
+      clock.tick(50000);
+      await Promise.resolve(); // drain task queues
+
+      expect(failedEvent.fired).to.be.false;
+      clock.tick(10000);
+      await Promise.resolve(); // drain task queues
+
+      expect(failedEvent.fired).to.be.true;
+      lease.release();
+      proxiedClient.close();
+      await proxy.deactivate();
     });
 
     it('tears down if the lease gets revoked', async () => {

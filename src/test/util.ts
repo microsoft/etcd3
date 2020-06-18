@@ -16,6 +16,11 @@ const tlsKey = fs.readFileSync(`${rootPath}/src/test/certs/private/etcd0.localho
 const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
 const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
 
+export const enum TrafficDirection {
+  ToEtcd,
+  FromEtcd,
+}
+
 export const etcdVersion = process.env.ETCD_VERSION || '3.3.9';
 
 /**
@@ -29,6 +34,7 @@ export class Proxy {
   private server: tls.Server;
   private host: string;
   private port: number;
+  private enabledDataFlows = new Set([TrafficDirection.FromEtcd, TrafficDirection.ToEtcd]);
 
   /**
    * activate creates the proxy server.
@@ -54,11 +60,11 @@ export class Proxy {
   }
 
   /**
-   * pause temporarily shuts down the server, but does not 'deactivate' the
+   * suspend temporarily shuts down the server, but does not 'deactivate' the
    * proxy; new connections will still try to hit it. Can be restored with
    * resume().
    */
-  public pause() {
+  public suspend() {
     this.server.close();
     this.connections.forEach(cnx => cnx.end());
     this.connections = [];
@@ -67,8 +73,22 @@ export class Proxy {
   /**
    * Starts up a previously stopped server.
    */
-  public resume() {
+  public unsuspend() {
     this.server.listen(this.port, this.host);
+  }
+
+  /**
+   * Disables data flowing in one direction on the connection.
+   */
+  public pause(direction: TrafficDirection) {
+    this.enabledDataFlows.delete(direction);
+  }
+
+  /**
+   * Reenables data flow on the connection.
+   */
+  public resume(direction: TrafficDirection) {
+    this.enabledDataFlows.add(direction);
   }
 
   /**
@@ -118,17 +138,23 @@ export class Proxy {
     };
 
     serverCnx.on('data', (data: Buffer) => {
-      if (!ended) {
-        clientCnx.write(data);
+      if (ended || !this.enabledDataFlows.has(TrafficDirection.FromEtcd)) {
+        return;
       }
+
+      clientCnx.write(data);
     });
     serverCnx.on('end', end);
     serverCnx.on('error', end);
 
     clientCnx.on('data', (data: Buffer) => {
-      if (serverConnected && !ended) {
+      if (ended || !this.enabledDataFlows.has(TrafficDirection.ToEtcd)) {
+        return;
+      }
+
+      if (serverConnected) {
         serverCnx.write(data);
-      } else if (!ended) {
+      } else {
         serverBuffer.push(data);
       }
     });

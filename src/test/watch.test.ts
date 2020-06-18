@@ -71,9 +71,9 @@ describe('watch()', () => {
 
       const watcher = await proxiedClient.watch().key('foo1').create();
 
-      proxy.pause();
+      proxy.suspend();
       await onceEvent(watcher, 'disconnected');
-      proxy.resume();
+      proxy.unsuspend();
       await onceEvent(watcher, 'connected');
       await expectWatching(watcher, 'foo1');
 
@@ -98,9 +98,9 @@ describe('watch()', () => {
         }),
       ]);
 
-      proxy.pause();
+      proxy.suspend();
       await onceEvent(watcher, 'disconnected');
-      proxy.resume();
+      proxy.unsuspend();
       await onceEvent(watcher, 'put').then((res: IKeyValue) => {
         expect(res.key.toString()).to.equal('foo1');
         expect(res.value.toString()).to.equal('update 2');
@@ -115,11 +115,11 @@ describe('watch()', () => {
       const proxiedClient = await createTestClientAndKeys();
 
       const watcher = await proxiedClient.watch().key('foo1').create();
-      proxy.pause();
+      proxy.suspend();
       await onceEvent(watcher, 'disconnected');
       const actualRevision = Number(watcher.request.start_revision);
       watcher.request.start_revision = 999999;
-      proxy.resume();
+      proxy.unsuspend();
       await onceEvent(watcher, 'connected');
       expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
     });
@@ -213,10 +213,10 @@ describe('watch()', () => {
       const proxiedClient = await createTestClientAndKeys();
 
       const watcher = await proxiedClient.watch().key('foo1').create();
-      proxy.pause();
+      proxy.suspend();
       await watcher.cancel();
 
-      proxy.resume();
+      proxy.unsuspend();
       expect(getWatchers()).to.deep.equal([]);
 
       proxiedClient.close();

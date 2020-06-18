@@ -190,6 +190,27 @@ export function onceEvent(emitter: EventEmitter, ...events: string[]): Promise<a
 }
 
 /**
+ * A trailing-edge debounce function.
+ */
+export function debounce(duration: number, fn: () => void) {
+  let timeout: NodeJS.Timeout | undefined;
+
+  const wrapper = () => {
+    wrapper.cancel();
+    timeout = setTimeout(fn, duration);
+  };
+
+  wrapper.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = undefined;
+    }
+  };
+
+  return wrapper;
+}
+
+/**
  * PromiseWrap provides promise-like functions that auto-invoke an exec
  * method when called.
  */
