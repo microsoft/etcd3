@@ -40,6 +40,9 @@ export class Proxy {
    * activate creates the proxy server.
    */
   public activate(): Promise<void> {
+    this.enabledDataFlows.add(TrafficDirection.FromEtcd);
+    this.enabledDataFlows.add(TrafficDirection.ToEtcd);
+
     return new Promise<void>((resolve, reject) => {
       this.server = tls.createServer(
         { cert: tlsCert, key: tlsKey, ALPNProtocols: ['h2'] },
