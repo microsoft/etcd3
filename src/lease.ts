@@ -60,6 +60,17 @@ const enum State {
 }
 
 /**
+ * Options provided to the lease. Allows specifying call options in addition
+ * to a flag to configure whether to keep the lease alive automatically.
+ */
+export interface ILeaseOptions extends grpc.CallOptions {
+  /**
+   * Configures whether the lease is kept alive automatically. Defaults to `true`.
+   */
+  autoKeepAlive?: boolean;
+}
+
+/**
  * Lease is a high-level manager for etcd leases.
  * Leases are great for things like service discovery:
  *
@@ -99,7 +110,7 @@ export class Lease extends EventEmitter {
     private readonly pool: ConnectionPool,
     private readonly namespace: NSApplicator,
     private ttl: number,
-    private readonly options?: grpc.CallOptions,
+    private readonly options?: ILeaseOptions,
   ) {
     super();
 
@@ -112,7 +123,10 @@ export class Lease extends EventEmitter {
       .then(res => {
         this.state = State.Alive;
         this.lastKeepAlive = Date.now();
-        this.keepalive();
+        if (options?.autoKeepAlive !== false) {
+          this.keepalive();
+        }
+
         return res.ID;
       })
       .catch(err => {

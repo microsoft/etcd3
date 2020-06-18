@@ -9,6 +9,7 @@
 
 - **feat**: add `SingleRangeBuilder.exists()` that returns if the given key exists
 - **feat**: allow apply call options to authentication token exchange (see [#111](https://github.com/microsoft/etcd3/issues/111))
+- **feat**: allow disabling automatic lease keep-alives (see [#110](https://github.com/microsoft/etcd3/issues/110))
 - **fix**: errors when creating watchers not being handled correctly (see [#114](https://github.com/microsoft/etcd3/issues/114))
 - **fix**: mark leases as lost if the watch connection is alive but etcd is unresponsive (see [#110](https://github.com/microsoft/etcd3/issues/110))
 

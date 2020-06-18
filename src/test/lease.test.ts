@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '..';
-import { onceEvent, delay } from '../util';
+import { onceEvent } from '../util';
 import {
   createTestClientAndKeys,
   getOptions,
@@ -17,9 +17,17 @@ import {
 describe('lease()', () => {
   let client: Etcd3;
   let lease: Lease;
+  let clock: sinon.SinonFakeTimers;
 
   beforeEach(async () => (client = await createTestClientAndKeys()));
-  afterEach(async () => await tearDownTestClient(client));
+  afterEach(async () => {
+    await tearDownTestClient(client);
+
+    if (clock) {
+      clock.restore();
+      clock = undefined as any;
+    }
+  });
 
   const watchEmission = (event: string): { data: any; fired: boolean } => {
     const output = { data: null, fired: false };
@@ -153,9 +161,19 @@ describe('lease()', () => {
     }
   });
 
-  describe('crons', () => {
-    let clock: sinon.SinonFakeTimers;
+  it('allows disabling auto keep alives', async () => {
+    clock = sinon.useFakeTimers({
+      shouldAdvanceTime: true,
+    });
 
+    lease = client.lease(60, { autoKeepAlive: false });
+
+    const kaFired = watchEmission('keepaliveFired');
+    clock.tick(20000);
+    expect(kaFired.fired).to.be.false;
+  });
+
+  describe('crons', () => {
     beforeEach(async () => {
       clock = sinon.useFakeTimers({
         shouldAdvanceTime: true,
@@ -163,8 +181,6 @@ describe('lease()', () => {
       lease = client.lease(60);
       await onceEvent(lease, 'keepaliveEstablished');
     });
-
-    afterEach(() => clock.restore());
 
     it('touches the lease ttl at the correct interval', async () => {
       const kaFired = watchEmission('keepaliveFired');

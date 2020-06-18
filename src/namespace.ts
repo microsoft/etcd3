@@ -1,11 +1,9 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import * as grpc from '@grpc/grpc-js';
-
 import * as Builder from './builder';
 import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';
-import { Lease } from './lease';
+import { Lease, ILeaseOptions } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
 import { Rangable, Range } from './range';
@@ -83,7 +81,7 @@ export class Namespace {
    * automatically kept alive for you until it is revoked. See the
    * documentation on the Lease class for some examples.
    */
-  public lease(ttl: number, options?: grpc.CallOptions): Lease {
+  public lease(ttl: number, options?: ILeaseOptions): Lease {
     return new Lease(this.pool, this.nsApplicator, ttl, options);
   }
 
