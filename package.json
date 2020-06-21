@@ -72,9 +72,10 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@grpc/proto-loader": "^0.5.4",
     "@grpc/grpc-js": "^1.0.5",
-    "bignumber.js": "^9.0.0"
+    "@grpc/proto-loader": "^0.5.4",
+    "bignumber.js": "^9.0.0",
+    "cockatiel": "^1.0.0"
   },
   "prettier": {
     "singleQuote": true,

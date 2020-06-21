@@ -4,7 +4,6 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 
-import { IBackoffStrategy } from './backoff/backoff';
 import {
   castGrpcErrorMessage,
   ClientRuntimeError,
@@ -14,6 +13,7 @@ import {
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
+import { IBackoff } from 'cockatiel';
 
 const enum State {
   Idle,
@@ -133,7 +133,14 @@ export class WatchManager {
    */
   private queue: null | AttachQueue;
 
-  constructor(private readonly client: RPC.WatchClient, private backoff: IBackoffStrategy) {}
+  /**
+   * Initial backoff policy, used to reset the backoffs.
+   */
+  private readonly initialBackoff: IBackoff<void>;
+
+  constructor(private readonly client: RPC.WatchClient, private backoff: IBackoff<void>) {
+    this.initialBackoff = backoff;
+  }
 
   /**
    * Attach registers the watcher on the connection.
@@ -274,9 +281,9 @@ export class WatchManager {
       if (this.state === State.Idle) {
         this.establishStream();
       }
-    }, this.backoff.getDelay());
+    }, this.backoff.duration());
 
-    this.backoff = this.backoff.next();
+    this.backoff = this.backoff.next() ?? this.backoff;
   }
 
   /**
@@ -306,7 +313,7 @@ export class WatchManager {
    * Handles the creation of a new watcher from etcd.
    */
   private handleCreatedResponse(res: RPC.IWatchResponse) {
-    this.backoff = this.backoff.reset();
+    this.backoff = this.initialBackoff;
     if (!res.canceled) {
       this.queue!.handleCreate(res);
       return;
@@ -328,7 +335,7 @@ export class WatchManager {
    * Dispatches some a watch response on the event stream.
    */
   private handleResponse(res: RPC.IWatchResponse) {
-    this.backoff = this.backoff.reset();
+    this.backoff = this.initialBackoff;
     const watcher = this.watchers.find(w => w.id === res.watch_id);
     if (!watcher) {
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');

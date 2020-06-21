@@ -3,8 +3,7 @@
  *--------------------------------------------------------*/
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { CallOptions } from '@grpc/grpc-js';
-
-import { IBackoffStrategy } from './backoff/backoff';
+import { IPolicy, IBackoff } from 'cockatiel';
 
 /**
  * IOptions are passed into the client constructor to configure how the client
@@ -65,20 +64,26 @@ export interface IOptions {
   dialTimeout?: number;
 
   /**
-   * Backoff strategy to use for connecting to hosts. Defaults to an
-   * exponential strategy, starting at a 500 millisecond
-   * retry with a 30 second max.
-   */
-  backoffStrategy?: IBackoffStrategy;
-
-  /**
-   * Whether, if a query fails as a result of a primitive GRPC error, to retry
-   * it on a different server (provided one is available). This can make
-   * service disruptions less-severe but can cause a domino effect if a
-   * particular operation causes a failure that grpc reports as some sort of
-   * internal or network error.
+   * Defines the fault-handling policies for the client via
+   * [Cockatiel](https://github.com/connor4312/cockatiel/blob/master/readme.md).
+   * There are two policies: per-host, and global. Calls will call through the
+   * global policy, and then to a host policy. Each time the global policy
+   * retries, it will pick a new host to run the call on.
    *
-   * Defaults to false.
+   * The recommended setup for this is to put a retry policy on the `global`
+   * slot, and a circuit-breaker policy guarding each `host`. Additionally,
+   * you can configure a backoff that the watch manager will use for
+   * reconnecting watch streams.
+   *
+   * By default, `global` is set to a three-retry policy and `host` is a
+   * circuit breaker that will open (stop sending requests) for five seconds
+   * after three consecutive failures. The watch backoff defaults to
+   * Cockatiel's default exponential options (a max 30 second delay on
+   * a decorrelated jitter).
    */
-  retry?: boolean;
+  faultHandling?: Partial<{
+    host: () => IPolicy<unknown>;
+    global: IPolicy<unknown>;
+    watchBackoff: IBackoff<unknown>;
+  }>;
 }

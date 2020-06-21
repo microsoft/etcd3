@@ -70,13 +70,13 @@ describe('watch()', () => {
       const proxiedClient = await createTestClientAndKeys();
 
       const watcher = await proxiedClient.watch().key('foo1').create();
-
       proxy.suspend();
       await onceEvent(watcher, 'disconnected');
       proxy.unsuspend();
       await onceEvent(watcher, 'connected');
       await expectWatching(watcher, 'foo1');
 
+      await watcher.cancel();
       proxiedClient.close();
       await proxy.deactivate();
     });
@@ -106,6 +106,7 @@ describe('watch()', () => {
         expect(res.value.toString()).to.equal('update 2');
       });
 
+      await watcher.cancel();
       proxiedClient.close();
       await proxy.deactivate();
     });
@@ -122,6 +123,10 @@ describe('watch()', () => {
       proxy.unsuspend();
       await onceEvent(watcher, 'connected');
       expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+
+      await watcher.cancel();
+      proxiedClient.close();
+      await proxy.deactivate();
     });
 
     describe('emits an error if a watcher is cancelled upon creation (#114)', () => {
@@ -152,6 +157,7 @@ describe('watch()', () => {
       const watcher = await client.watch().key('foo1').create();
       await expectWatching(watcher, 'foo1');
       expect(getWatchers()).to.deep.equal([watcher]);
+      await watcher.cancel();
     });
 
     it('subscribes while the connection is still being established', async () => {
@@ -164,6 +170,8 @@ describe('watch()', () => {
       ]);
 
       expect(getWatchers()).to.deep.equal(watchers);
+      await (await watcher1).cancel();
+      await (await watcher2).cancel();
     });
 
     it('subscribes in series', async () => {
@@ -179,6 +187,8 @@ describe('watch()', () => {
       await onceEvent(watcher2, 'connected');
 
       expect(events).to.deep.equal(['connecting1', 'connected1', 'connecting2', 'connected2']);
+      await watcher1.cancel();
+      await watcher2.cancel();
     });
 
     it('subscribes after the connection is fully established', async () => {
@@ -187,6 +197,8 @@ describe('watch()', () => {
       const watcher2 = await client.watch().key('bar').create();
       await expectWatching(watcher2, 'bar');
       expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
+      await watcher1.cancel();
+      await watcher2.cancel();
     });
 
     it('allows successive resubscription (issue #51)', async () => {
@@ -219,6 +231,7 @@ describe('watch()', () => {
       proxy.unsuspend();
       expect(getWatchers()).to.deep.equal([]);
 
+      await watcher.cancel();
       proxiedClient.close();
       await proxy.deactivate();
     });

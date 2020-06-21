@@ -16,11 +16,12 @@ export interface ICallable<T> {
     options?: grpc.CallOptions,
   ): Promise<T>;
 
-  getConnection(
+  withConnection<R>(
     service: keyof typeof Services,
-  ): Promise<{ resource: T; client: grpc.Client, metadata: grpc.Metadata }>;
+    fn: (args: { resource: T; client: grpc.Client; metadata: grpc.Metadata }) => Promise<R> | R,
+  ): Promise<R>;
 
-  markFailed(resource: T): void;
+  markFailed(resource: T, error: Error): void;
 }
 
 export interface IResponseStream<T> {

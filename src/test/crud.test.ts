@@ -81,8 +81,8 @@ describe('crud', () => {
     it('gets previous', async () => {
       expect(await client.delete().key('foo1').getPrevious()).to.containSubset([
         {
-          key: new Buffer('foo1'),
-          value: new Buffer('bar1'),
+          key: Buffer.from('foo1'),
+          value: Buffer.from('bar1'),
         },
       ]);
     });
@@ -102,8 +102,8 @@ describe('crud', () => {
 
       it('includes previous values', async () => {
         expect(await client.put('foo1').value('updated').getPrevious()).to.containSubset({
-          key: new Buffer('foo1'),
-          value: new Buffer('bar1'),
+          key: Buffer.from('foo1'),
+          value: Buffer.from('bar1'),
         });
       });
     });

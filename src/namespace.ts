@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as Builder from './builder';
-import { ConnectionPool, defaultBackoffStrategy } from './connection-pool';
+import { ConnectionPool } from './connection-pool';
 import { Lease, ILeaseOptions } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
@@ -11,6 +11,7 @@ import * as RPC from './rpc';
 import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
 import { NSApplicator, toBuffer } from './util';
 import { WatchBuilder, WatchManager } from './watch';
+import { ExponentialBackoff } from 'cockatiel';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default
@@ -39,7 +40,7 @@ export class Namespace {
   private readonly nsApplicator = new NSApplicator(this.prefix);
   private readonly watchManager = new WatchManager(
     this.watchClient,
-    this.options.backoffStrategy || defaultBackoffStrategy,
+    this.options.faultHandling?.watchBackoff ?? new ExponentialBackoff(),
   );
 
   protected constructor(

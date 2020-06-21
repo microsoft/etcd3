@@ -9,16 +9,31 @@ export class ClientRuntimeError extends Error {
 }
 
 /**
+ * Thrown if a method is called after the client is closed.
+ */
+export class ClientClosedError extends Error {
+  constructor(namespace: string) {
+    super(`Tried to call a ${namespace} method on etcd3, but the client was already closed`);
+  }
+}
+
+/**
+ * Symbol present on transient errors which will be resolved through default
+ * fault handling.
+ */
+export const RecoverableError = Symbol('RecoverableError');
+
+/**
+ * Returns whether the error is a network or server error that should trigger
+ * fault-handling policies.
+ */
+export const isRecoverableError = (error: Error) => RecoverableError in error;
+
+/**
  * A GRPCGenericError is rejected via the connection when some error occurs
  * that we can't be more specific about.
  */
 export class GRPCGenericError extends Error {}
-
-/**
- * GRPCConnectFailed is thrown when connecting to GRPC fails.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L151-L158
- */
-export class GRPCConnectFailedError extends GRPCGenericError {}
 
 /**
  * GRPCProtocolError is thrown when a protocol error occurs on the other end,
@@ -28,85 +43,111 @@ export class GRPCProtocolError extends GRPCGenericError {}
 
 /**
  * GRPCInternalError is thrown when a internal error occurs on either end.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L145-L150
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCInternalError extends GRPCGenericError {}
+export class GRPCInternalError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * GRPCCancelledError is emitted when an ongoing call is cancelled.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L48-L49
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCCancelledError extends GRPCGenericError {}
+export class GRPCCancelledError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * Unknown error.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L50-L57
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCUnknownError extends GRPCGenericError {}
+export class GRPCUnknownError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * Client specified an invalid argument.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L58-L64
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCInvalidArgumentError extends GRPCGenericError {}
 
 /**
  * Deadline expired before operation could complete.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L65-L72
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCDeadlineExceededError extends GRPCGenericError {}
+export class GRPCDeadlineExceededError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * Some requested entity (e.g., file or directory) was not found.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L73-L74
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCNotFoundError extends GRPCGenericError {}
 
 /**
  * Some entity that we attempted to create (e.g., file or directory) already exists.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L75-L79
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCAlreadyExistsError extends GRPCGenericError {}
 
 /**
  * Some resource has been exhausted, perhaps a per-user quota, or
  * perhaps the entire file system is out of space.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L89-L93
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCResourceExhastedError extends GRPCGenericError {}
+export class GRPCResourceExhastedError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * Operation was rejected because the system is not in a state
  * required for the operation's execution.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L94-L116
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCFailedPreconditionError extends GRPCGenericError {}
 
 /**
  * The operation was aborted, typically due to a concurrency issue
  * like sequencer check failures, transaction aborts, etc.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L117-L124
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
-export class GRPCAbortedError extends GRPCGenericError {}
+export class GRPCAbortedError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
 
 /**
  * Operation is not implemented or not supported/enabled in this service.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L143-L144
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCNotImplementedError extends GRPCGenericError {}
 
 /**
  * Operation was attempted past the valid range.  E.g., seeking or reading
  * past end of file.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L125-L142
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCOutOfRangeError extends GRPCGenericError {}
 
 /**
  * Unrecoverable data loss or corruption.
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L159-L160
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class GRPCDataLossError extends GRPCGenericError {}
+
+/**
+ * Unrecoverable data loss or corruption.
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
+ */
+export class GRPCUnavailableError extends GRPCGenericError {
+  [RecoverableError] = true;
+}
+
+/**
+ * The request does not have valid authentication credentials for the operation.
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
+ */
+export class GRPCUnauthenticatedError extends GRPCGenericError {}
 
 /**
  * EtcdError is an application error returned by etcd.
@@ -160,7 +201,7 @@ export class EtcdLockFailedError extends Error {}
  * EtcdAuthenticationFailedError is thrown when an invalid username/password
  * combination is submitted.
  *
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L161-L165
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class EtcdAuthenticationFailedError extends Error {}
 
@@ -176,7 +217,7 @@ export class EtcdInvalidAuthTokenError extends Error {}
  *
  * Also can be emitted from GRPC.
  *
- * @see https://github.com/grpc/grpc/blob/v1.4.x/src/node/src/constants.js#L80-L88
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
  */
 export class EtcdPermissionDeniedError extends Error {}
 
@@ -210,32 +251,6 @@ type IErrorCtor = new (message: string) => Error;
  * by default and sourced from within a mess of C code.
  */
 const grpcMessageToError = new Map<string, IErrorCtor>([
-  ['Connect Failed', GRPCConnectFailedError],
-  ['Channel Disconnected', GRPCConnectFailedError],
-  ['No connection established', GRPCConnectFailedError],
-  ['failed to connect to all addresses', GRPCConnectFailedError],
-  ['DEADLINE_EXCEEDED', GRPCDeadlineExceededError],
-  ['Endpoint read failed', GRPCProtocolError],
-  ['Got config after disconnection', GRPCProtocolError],
-  ['Failed to create subchannel', GRPCProtocolError],
-  ['Attempt to send initial metadata after stream was closed', GRPCProtocolError],
-  ['Attempt to send message after stream was closed', GRPCProtocolError],
-  ['Last stream closed after sending GOAWAY', GRPCProtocolError],
-  ['Failed parsing HTTP/2', GRPCProtocolError],
-  ['TCP stream shutting down', GRPCProtocolError],
-  ['Secure read failed', GRPCProtocolError],
-  ['Handshake read failed', GRPCProtocolError],
-  ['Handshake write failed', GRPCProtocolError],
-  ['FD shutdown', GRPCInternalError],
-  ['Failed to load file', GRPCInternalError],
-  ['Unable to configure socket', GRPCInternalError],
-  ['Failed to add port to server', GRPCInternalError],
-  ['Failed to prepare server socket', GRPCInternalError],
-  ['Call batch failed', GRPCInternalError],
-  ['Missing :authority or :path', GRPCInternalError],
-  ['Cancelled before creating subchannel', GRPCCancelledError],
-  ['Pick cancelled', GRPCCancelledError],
-  ['Disconnected', GRPCCancelledError],
   ['etcdserver: role name already exists', EtcdRoleExistsError],
   ['etcdserver: user name already exists', EtcdUserExistsError],
   ['etcdserver: role is not granted to the user', EtcdRoleNotGrantedError],
@@ -247,14 +262,37 @@ const grpcMessageToError = new Map<string, IErrorCtor>([
   ['etcdserver: requested lease not found', EtcdLeaseInvalidError],
 ]);
 
-function getMatchingGrpcError(message: string): IErrorCtor | null {
+/**
+ * Error code mapping
+ * @see https://grpc.github.io/grpc/core/md_doc_statuscodes.html
+ */
+const grpcCodeToError = new Map<number, IErrorCtor>([
+  [1, GRPCCancelledError],
+  [2, GRPCUnknownError],
+  [3, GRPCInvalidArgumentError],
+  [4, GRPCDeadlineExceededError],
+  [5, GRPCNotFoundError],
+  [6, GRPCAlreadyExistsError],
+  [7, EtcdPermissionDeniedError],
+  [8, GRPCResourceExhastedError],
+  [9, GRPCFailedPreconditionError],
+  [10, GRPCAbortedError],
+  [11, GRPCOutOfRangeError],
+  [12, GRPCNotImplementedError],
+  [13, GRPCInternalError],
+  [14, GRPCUnavailableError],
+  [15, GRPCDataLossError],
+  [16, GRPCUnauthenticatedError],
+]);
+
+function getMatchingGrpcError(message: string): IErrorCtor | undefined {
   for (const [key, value] of grpcMessageToError) {
     if (message.includes(key)) {
       return value;
     }
   }
 
-  return null;
+  return undefined;
 }
 
 function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): string {
@@ -273,12 +311,16 @@ export function castGrpcErrorMessage(message: string): Error {
  * Tries to convert GRPC's generic, untyped errors to typed errors we can
  * consume. Yes, this method is abhorrent.
  */
-export function castGrpcError(err: Error): Error {
-  if ((err as any).constructor !== Error) {
+export function castGrpcError<T extends Error>(err: T): Error {
+  if (err.constructor !== Error) {
     return err; // it looks like it's already some kind of typed error
   }
 
   let ctor = getMatchingGrpcError(err.message);
+  if (!ctor && 'code' in err && typeof (err as any).code === 'number') {
+    ctor = grpcCodeToError.get((err as any).code);
+  }
+
   if (!ctor) {
     ctor = err.message.includes('etcdserver:') ? EtcdError : GRPCGenericError;
   }

@@ -3,14 +3,18 @@
  *--------------------------------------------------------*/
 import { loadSync } from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
+import { isBrokenCircuitError, Policy, IPolicy, ConsecutiveBreaker } from 'cockatiel';
 
-import { ExponentialBackoff } from './backoff/exponential';
-import { castGrpcError, EtcdInvalidAuthTokenError, GRPCGenericError } from './errors';
+import {
+  castGrpcError,
+  EtcdInvalidAuthTokenError,
+  ClientRuntimeError,
+  ClientClosedError,
+  isRecoverableError,
+} from './errors';
 import { IOptions } from './options';
 import { ICallable, Services } from './rpc';
-import { SharedPool } from './shared-pool';
-import { forOwn } from './util';
-import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   keepCase: true,
@@ -21,12 +25,6 @@ const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
 });
 const services = grpc.loadPackageDefinition(packageDefinition);
 const etcdserverpb = services.etcdserverpb as { [service: string]: typeof grpc.Client };
-
-export const defaultBackoffStrategy = new ExponentialBackoff({
-  initial: 300,
-  max: 10 * 1000,
-  random: 1,
-});
 
 const secureProtocolPrefix = 'https:';
 
@@ -141,6 +139,9 @@ class Authenticator {
   }
 }
 
+const defaultCircuitBreaker = () =>
+  Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3));
+
 /**
  * A Host is one instance of the etcd server, which can contain multiple
  * services. It holds GRPC clients to communicate with the host, and will
@@ -148,12 +149,14 @@ class Authenticator {
  */
 export class Host {
   private readonly host: string;
+  private closed = false;
   private cachedServices: { [name in keyof typeof Services]?: grpc.Client } = Object.create(null);
 
   constructor(
     host: string,
     private readonly channelCredentials: grpc.ChannelCredentials,
     private readonly channelOptions?: ChannelOptions,
+    public readonly faultHandling: IPolicy<unknown> = defaultCircuitBreaker(),
   ) {
     this.host = removeProtocolPrefix(host);
   }
@@ -167,6 +170,10 @@ export class Host {
       return service;
     }
 
+    if (this.closed) {
+      throw new ClientClosedError(name);
+    }
+
     const newService = new etcdserverpb[name](
       this.host,
       this.channelCredentials,
@@ -177,12 +184,32 @@ export class Host {
   }
 
   /**
+   * Closes the all clients for the given host, allowing them to be
+   * reestablished on subsequent calls.
+   */
+  public resetAllServices() {
+    for (const service of Object.values(this.cachedServices)) {
+      if (service) {
+        // workaround: https://github.com/grpc/grpc-node/issues/1487
+        const state = service.getChannel().getConnectivityState(false);
+        if (state === grpc.connectivityState.CONNECTING) {
+          service.waitForReady(Date.now() + 10_0000, () => service.close());
+        } else {
+          service.close();
+        }
+      }
+    }
+
+    this.cachedServices = Object.create(null);
+  }
+
+  /**
    * Close frees resources associated with the host, tearing down any
    * existing client
    */
   public close() {
-    forOwn(this.cachedServices, (service: grpc.Client) => grpc.closeClient(service));
-    this.cachedServices = Object.create(null);
+    this.resetAllServices();
+    this.closed = true;
   }
 }
 
@@ -191,12 +218,31 @@ export class Host {
  * host can contain multiple discreet services.
  */
 export class ConnectionPool implements ICallable<Host> {
-  private pool = new SharedPool<Host>(this.options.backoffStrategy || defaultBackoffStrategy);
+  /**
+   * Toggles whether hosts are looped through in a deterministic order.
+   * For use in tests, should not be toggled in production/
+   */
+  public static deterministicOrder = false;
+
+  private readonly hosts: Host[];
+  private readonly globalPolicy: IPolicy<unknown> =
+    this.options.faultHandling?.global ?? Policy.handleWhen(isRecoverableError).retry().attempts(3);
   private mockImpl: ICallable<Host> | null;
   private authenticator: Authenticator;
 
-  constructor(private options: IOptions) {
-    this.seedHosts();
+  constructor(private readonly options: IOptions) {
+    const credentials = this.buildAuthentication();
+    const { hosts, grpcOptions } = this.options;
+
+    if (typeof hosts === 'string') {
+      this.hosts = [new Host(hosts, credentials, grpcOptions, options.faultHandling?.host?.())];
+    } else if (hosts.length === 0) {
+      throw new Error('Cannot construct an etcd client with no hosts specified');
+    } else {
+      this.hosts = hosts.map(
+        h => new Host(h, credentials, grpcOptions, options.faultHandling?.host?.()),
+      );
+    }
   }
 
   /**
@@ -217,13 +263,13 @@ export class ConnectionPool implements ICallable<Host> {
    * Tears down all ongoing connections and resoruces.
    */
   public close() {
-    this.pool.all().forEach(host => host.close());
+    this.hosts.forEach(host => host.close());
   }
 
   /**
    * @override
    */
-  public exec<T>(
+  public async exec<T>(
     serviceName: keyof typeof Services,
     method: string,
     payload: unknown,
@@ -233,81 +279,120 @@ export class ConnectionPool implements ICallable<Host> {
       return this.mockImpl.exec(serviceName, method, payload);
     }
 
-    return this.getConnection(serviceName).then(({ resource, client, metadata }) => {
-      return runServiceCall(client, metadata, options, method, payload)
-        .then(res => {
-          this.pool.succeed(resource);
-          return res;
-        })
-        .catch(err => {
-          if (err instanceof EtcdInvalidAuthTokenError) {
-            this.authenticator.invalidateMetadata();
-            return this.exec(serviceName, method, payload, options);
-          }
+    const shuffleGen = this.shuffledHosts();
+    let lastError: Error | undefined;
 
-          if (err instanceof GRPCGenericError) {
-            this.pool.fail(resource);
-            resource.close();
+    try {
+      return await this.globalPolicy.execute(() =>
+        this.withConnection(
+          serviceName,
+          async ({ client, metadata }) => {
+            try {
+              return await runServiceCall(client, metadata, options, method, payload);
+            } catch (err) {
+              if (err instanceof EtcdInvalidAuthTokenError) {
+                this.authenticator.invalidateMetadata();
+                return this.exec(serviceName, method, payload, options);
+              }
 
-            if (this.pool.available().length && this.options.retry) {
-              return this.exec(serviceName, method, payload, options);
+              lastError = err;
+              throw err;
             }
-          }
-
-          throw err;
-        });
-    });
+            debugger;
+          },
+          shuffleGen,
+        ),
+      );
+    } catch (e) {
+      // If we ran into an error that caused the a circuit to open, but we had
+      // an error before that happened, throw the original error rather than
+      // the broken circuit error.
+      if (isBrokenCircuitError(e) && lastError && !isBrokenCircuitError(lastError)) {
+        throw lastError;
+      } else {
+        throw e;
+      }
+    }
   }
 
   /**
    * @override
    */
-  public getConnection(
+  public async withConnection<T>(
     service: keyof typeof Services,
-  ): Promise<{ resource: Host; client: grpc.Client; metadata: grpc.Metadata }> {
+    fn: (args: { resource: Host; client: grpc.Client; metadata: grpc.Metadata }) => Promise<T> | T,
+    shuffleGenerator = this.shuffledHosts(),
+  ): Promise<T> {
     if (this.mockImpl) {
-      return Promise.resolve(this.mockImpl.getConnection(service) as any).then(connection => ({
-        metadata: new grpc.Metadata(),
-        ...connection,
-      }));
+      return this.mockImpl.withConnection(service, fn);
     }
 
-    return Promise.all([this.pool.pull(), this.authenticator.getMetadata()]).then(
-      ([host, metadata]) => {
-        const client = host.getServiceClient(service);
-        return { resource: host, client, metadata };
-      },
-    );
+    const metadata = await this.authenticator.getMetadata();
+    let lastError: Error | undefined;
+    for (let i = 0; i < this.hosts.length; i++) {
+      const host = shuffleGenerator.next().value as Host;
+      let didCallThrough = false;
+      try {
+        return await host.faultHandling.execute(() => {
+          didCallThrough = true;
+          return fn({ resource: host, client: host.getServiceClient(service), metadata });
+        });
+      } catch (e) {
+        if (isRecoverableError(e)) {
+          host.resetAllServices();
+        }
+
+        // Check if the call was blocked by some circuit breaker/bulkhead policy
+        if (didCallThrough) {
+          throw castGrpcError(e);
+        }
+
+        lastError = e;
+      }
+    }
+
+    if (!lastError) {
+      throw new ClientRuntimeError('Connection pool has no hosts');
+    }
+
+    throw castGrpcError(lastError);
   }
 
   /**
    * @override
    */
-  public markFailed(host: Host) {
-    if (this.mockImpl) {
-      this.mockImpl.markFailed(host);
-    } else {
-      this.pool.fail(host);
+  public markFailed(resource: Host, error: Error): void {
+    error = castGrpcError(error);
+    let threw = false;
+
+    if (isRecoverableError(error)) {
+      resource.resetAllServices();
     }
+
+    resource.faultHandling
+      .execute(() => {
+        if (!threw) {
+          threw = true;
+          throw error;
+        }
+      })
+      .catch(() => undefined);
   }
 
   /**
-   * Adds configured etcd hosts to the connection pool.
+   * A generator function that endlessly loops through hosts in a
+   * fisher-yates shuffle for each iteration.
    */
-  private seedHosts() {
-    const credentials = this.buildAuthentication();
-    const { hosts, grpcOptions } = this.options;
+  private *shuffledHosts() {
+    const hosts = this.hosts.slice();
 
-    if (typeof hosts === 'string') {
-      this.pool.add(new Host(hosts, credentials, grpcOptions));
-      return;
+    while (true) {
+      for (let i = hosts.length - 1; i >= 0; i--) {
+        const idx = ConnectionPool.deterministicOrder ? i : Math.floor((i + 1) * Math.random());
+        [hosts[idx], hosts[i]] = [hosts[i], hosts[idx]];
+        yield hosts[i];
+      }
     }
-
-    if (hosts.length === 0) {
-      throw new Error('Cannot construct an etcd client with no hosts specified');
-    }
-
-    hosts.forEach(host => this.pool.add(new Host(host, credentials, grpcOptions)));
   }
 
   /**

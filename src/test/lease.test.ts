@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
-import { Etcd3, EtcdLeaseInvalidError, GRPCConnectFailedError, Lease } from '..';
+import { Etcd3, EtcdLeaseInvalidError, Lease } from '..';
 import { onceEvent } from '../util';
 import {
   createTestClientAndKeys,
@@ -12,7 +12,9 @@ import {
   proxy,
   tearDownTestClient,
   TrafficDirection,
+  unmockedDelay,
 } from './util';
+import { GRPCUnavailableError } from '../errors';
 
 describe('lease()', () => {
   let client: Etcd3;
@@ -21,6 +23,10 @@ describe('lease()', () => {
 
   beforeEach(async () => (client = await createTestClientAndKeys()));
   afterEach(async () => {
+    if (lease && !lease.revoked()) {
+      await lease.revoke();
+    }
+
     await tearDownTestClient(client);
 
     if (clock) {
@@ -39,12 +45,6 @@ describe('lease()', () => {
     return output;
   };
 
-  afterEach(async () => {
-    if (lease && !lease.revoked()) {
-      await lease.revoke();
-    }
-  });
-
   it('throws if trying to use too short of a ttl, or an undefined ttl', () => {
     expect(() => client.lease(0)).to.throw(/must be at least 1 second/);
     expect(() => (client.lease as any)()).to.throw(/must be at least 1 second/);
@@ -54,7 +54,7 @@ describe('lease()', () => {
     const badClient = new Etcd3(getOptions({ hosts: '127.0.0.1:1' }));
     lease = badClient.lease(1);
     const err = await onceEvent(lease, 'lost');
-    expect(err).to.be.an.instanceof(GRPCConnectFailedError);
+    expect(err).to.be.an.instanceof(GRPCUnavailableError);
     await lease
       .grant()
       .then(() => {
@@ -149,6 +149,7 @@ describe('lease()', () => {
   });
 
   it('emits a loss if the touched key is lost', async () => {
+    lease = client.lease(10);
     (lease as any).leaseID = Promise.resolve('123456789');
     const lost = onceEvent(lease, 'lost');
 
@@ -211,14 +212,15 @@ describe('lease()', () => {
 
       const failedEvent = watchEmission('keepaliveFailed');
       clock.tick(50000);
-      await Promise.resolve(); // drain task queues
+      await unmockedDelay(2); // drain task queues
 
       expect(failedEvent.fired).to.be.false;
       clock.tick(10000);
-      await Promise.resolve(); // drain task queues
+      await unmockedDelay(2); // drain task queues
 
       expect(failedEvent.fired).to.be.true;
-      lease.release();
+      proxy.resume(TrafficDirection.FromEtcd);
+      await lease.revoke();
       proxiedClient.close();
       await proxy.deactivate();
     });

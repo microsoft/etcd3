@@ -16,11 +16,12 @@ export interface ICallable<T> {
     options?: grpc.CallOptions,
   ): Promise<T>;
 
-  getConnection(
+  withConnection<R>(
     service: keyof typeof Services,
-  ): Promise<{ resource: T; client: grpc.Client; metadata: grpc.Metadata }>;
+    fn: (args: { resource: T; client: grpc.Client; metadata: grpc.Metadata }) => Promise<R> | R,
+  ): Promise<R>;
 
-  markFailed(resource: T): void;
+  markFailed(resource: T, error: Error): void;
 }
 
 export interface IResponseStream<T> {
@@ -96,10 +97,10 @@ export class WatchClient {
    * last compaction revision.
    */
   public watch(options?: grpc.CallOptions): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
-    return this.client.getConnection('Watch').then(({ resource, client, metadata }) => {
+    return this.client.withConnection('Watch', ({ resource, client, metadata }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stream = (<any>client).watch(metadata, options);
-      stream.on('error', () => this.client.markFailed(resource));
+      stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
       return stream;
     });
   }
@@ -134,10 +135,10 @@ export class LeaseClient {
   public leaseKeepAlive(
     options?: grpc.CallOptions,
   ): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
-    return this.client.getConnection('Lease').then(({ resource, client, metadata }) => {
+    return this.client.withConnection('Lease', ({ resource, client, metadata }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stream = (<any>client).leaseKeepAlive(metadata, options);
-      stream.on('error', () => this.client.markFailed(resource));
+      stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
       return stream;
     });
   }
@@ -249,10 +250,10 @@ export class MaintenanceClient {
    * Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
    */
   public snapshot(options?: grpc.CallOptions): Promise<IResponseStream<ISnapshotResponse>> {
-    return this.client.getConnection('Maintenance').then(({ resource, client, metadata }) => {
+    return this.client.withConnection('Maintenance', ({ resource, client, metadata }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stream = (<any>client).snapshot(metadata, options, {});
-      stream.on('error', () => this.client.markFailed(resource));
+      stream.on('error', (err: Error) => this.client.markFailed(resource, err));
       return stream;
     });
   }

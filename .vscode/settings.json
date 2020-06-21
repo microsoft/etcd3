@@ -9,5 +9,6 @@
   },
   "files.exclude": {
     "**/.nyc_output": true,
-  }
+  },
+  "debug.node.autoAttach": "off"
 }

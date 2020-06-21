@@ -1,12 +1,39 @@
 ## 1.0.0 TBA
 
-- **breaking**: **chore:**: Node < 10 is no longer supported
-- **breaking**: **chore:**: `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
-- **breaking**: **chore:**: TypeScript is updated to 3.9, and the types of some function signatures have been narrowed
+- **breaking**: **chore:** Node < 10 is no longer supported
+- **breaking**: **chore:** `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
+- **breaking**: **chore:** TypeScript is updated to 3.9, and the types of some function signatures have been narrowed
 - **breaking**: **chore:** grpc has been updated from `grpc@1.24` to `@grpc/grpc-js@1.0.05`. This affects the optional `grpcOptions` that the client can be configured with. The previous package was a couple years old, so you may additionally see different behavior of grpc on your network.
 
   Thank you to [@pauliusuza](https://github.com/pauliusuza) for his help updating everything
 
+- **breaking**: `retry` and `backoffStrategy` options have been deprecated in favor of a new `faultHandling` option.
+- **breaking**: `GRPCConnectFailedError` has been removed in favor of more accurate, specific GRPC error types.
+- **feat**: add `faultHandling` option that allows configuring error handling through [Cockatiel](https://github.com/connor4312/cockatiel) policies. (see [#121](https://github.com/microsoft/etcd3/issues/121))
+
+  There are two policies: per-host, and global. Calls will call through the global policy, and then to a host policy. Each time the global policy retries, it will pick a new host to run the call on.
+
+  The recommended setup for this is to put a retry policy on the `global` slot, and a circuit-breaker policy guarding each `host`. Additionally, you can configure a backoff that the watch manager will use for reconnecting watch streams.
+
+  By default, `global` is set to a three-retry policy and `host` is a circuit breaker that will open (stop sending requests) for five seconds after three consecutive failures. The watch backoff defaults to Cockatiel's default exponential options (a max 30 second delay on a decorrelated jitter).
+
+  For example, these are the default options:
+
+  ```ts
+  import { Etcd3, isRecoverableError } from 'etcd3';
+  import { Policy, ConsecutiveBreaker, ExponentialBackoff } from 'cockatiel';
+
+  new Etcd3({
+    faultHandling: {
+      host: () =>
+        Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3)),
+      global: Policy.handleWhen(isRecoverableError).retry(3),
+      watchBackoff: new ExponentialBackoff(),
+    },
+  });
+  ```
+
+- **feat**: export an `isRecoverableError` function that can be used to detect whether the given error is transient, as defined by grpc. Useful when creating retry policies. Recoverable errors will have the exported symbol `RecoverableError` as one of their properties.
 - **feat**: add `SingleRangeBuilder.exists()` that returns if the given key exists
 - **feat**: allow apply call options to authentication token exchange (see [#111](https://github.com/microsoft/etcd3/issues/111))
 - **feat**: allow disabling automatic lease keep-alives (see [#110](https://github.com/microsoft/etcd3/issues/110))

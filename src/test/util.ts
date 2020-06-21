@@ -8,6 +8,7 @@ import * as tls from 'tls';
 import { Etcd3, IOptions, Namespace } from '..';
 import { AddressInfo } from 'net';
 import { resolve } from 'path';
+import { Policy } from 'cockatiel';
 
 const rootPath = resolve(__dirname, '..', '..');
 const rootCertificate = fs.readFileSync(`${rootPath}/src/test/certs/certs/ca.crt`);
@@ -58,7 +59,10 @@ export class Proxy {
         resolve();
       });
 
-      this.server.on('error', reject);
+      this.server.on('error', err => {
+        reject(err);
+        console.error('error setting up server', err);
+      });
     });
   }
 
@@ -68,9 +72,8 @@ export class Proxy {
    * resume().
    */
   public suspend() {
-    this.server.close();
     this.connections.forEach(cnx => cnx.end());
-    this.connections = [];
+    this.server.close();
   }
 
   /**
@@ -188,6 +191,10 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
   return {
     hosts: getHost(),
     credentials: { rootCertificate },
+    faultHandling: {
+      global: Policy.noop,
+      host: () => Policy.noop,
+    },
     ...defaults,
   };
 }
@@ -301,3 +308,7 @@ const compareVersion = (version: string) => {
 
 export const isAtLeastVersion = (version: string) => compareVersion(version) >= 0;
 export const atAtMostVersion = (version: string) => compareVersion(version) <= 0;
+
+const originalSetTimeout = setTimeout;
+export const unmockedDelay = (duration: number) =>
+  new Promise(r => originalSetTimeout(r, duration));

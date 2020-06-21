@@ -3,13 +3,15 @@
  *--------------------------------------------------------*/
 import { expect } from 'chai';
 
-import { GRPCConnectFailedError, IOptions, KVClient } from '..';
+import { IOptions, KVClient } from '..';
 import { ConnectionPool } from '../connection-pool';
 import { getHost, getOptions } from './util';
+import { Policy } from 'cockatiel';
+import { GRPCUnavailableError } from '../errors';
 
 function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
   return getOptions({
-    hosts: ['127.0.0.1:1', getHost()],
+    hosts: [getHost(), '127.0.0.1:1'],
     ...options,
   });
 }
@@ -56,11 +58,18 @@ describe('connection pool', () => {
       .then(() => {
         throw new Error('expected to reject');
       })
-      .catch(err => expect(err).to.be.an.instanceof(GRPCConnectFailedError));
+      .catch(err => expect(err).to.be.an.instanceof(GRPCUnavailableError));
   });
 
-  it('retries when requested', async () => {
-    pool = new ConnectionPool(getOptionsWithBadHost({ retry: true }));
+  it('should retry through policy', async () => {
+    pool = new ConnectionPool(
+      getOptionsWithBadHost({
+        faultHandling: {
+          global: Policy.handleAll().retry().attempts(3),
+          host: () => Policy.noop,
+        },
+      }),
+    );
     const kv = new KVClient(pool);
     expect((await kv.range({ key })).kvs).to.deep.equal([]);
   });

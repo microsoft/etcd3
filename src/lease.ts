@@ -6,7 +6,7 @@ import * as grpc from '@grpc/grpc-js';
 
 import { PutBuilder } from './builder';
 import { ConnectionPool, Host } from './connection-pool';
-import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCConnectFailedError } from './errors';
+import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCCancelledError } from './errors';
 import * as RPC from './rpc';
 import { NSApplicator, debounce } from './util';
 
@@ -45,11 +45,11 @@ class LeaseClientWrapper implements RPC.ICallable<Host> {
     });
   }
 
-  public markFailed(host: Host): void {
-    this.pool.markFailed(host);
+  public markFailed(host: Host, error: Error): void {
+    this.pool.markFailed(host, error);
   }
 
-  public getConnection(): never {
+  public withConnection(): never {
     throw new Error('not supported');
   }
 }
@@ -295,7 +295,7 @@ export class Lease extends EventEmitter {
       this.close();
       this.emit(
         'lost',
-        new GRPCConnectFailedError('We lost connection to etcd and our lease has expired.'),
+        new EtcdLeaseInvalidError('We lost connection to etcd and our lease has expired.'),
       );
       return;
     }
@@ -311,7 +311,7 @@ export class Lease extends EventEmitter {
         const keepAliveInterval = (1000 * this.ttl) / 3;
         const keepaliveTimer = setInterval(() => this.fireKeepAlive(stream), keepAliveInterval);
         const keepAliveTimeout = debounce(1000 * this.ttl, () =>
-          this.handleKeepaliveError(new GRPCConnectFailedError('GRPC watch stream has timed out.')),
+          this.handleKeepaliveError(new GRPCCancelledError('GRPC watch stream has timed out.')),
         );
 
         this.teardown = () => {

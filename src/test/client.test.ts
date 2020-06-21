@@ -16,7 +16,6 @@ describe('client', () => {
   it('allows mocking', async () => {
     const mock = client.mock({
       exec: sinon.stub() as any,
-      getConnection: sinon.stub(),
     });
 
     mock.exec.resolves({ kvs: [] });
