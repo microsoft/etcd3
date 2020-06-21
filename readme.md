@@ -33,11 +33,11 @@ const client = new Etcd3();
   const fooValue = await client.get('foo').string();
   console.log('foo was:', fooValue);
 
-  const allFValues = client.getAll().prefix('f').keys()
+  const allFValues = await client.getAll().prefix('f').keys();
   console.log('all our keys starting with "f":', allFValues);
 
   await client.delete().all();
-})
+})();
 ```
 
 ### API Documentation
