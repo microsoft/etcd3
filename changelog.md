@@ -1,3 +1,7 @@
+## 1.0.1 2020-06-21
+
+- **fix:** `proto` files not included in npm package
+
 ## 1.0.0 2020-06-21
 
 - **breaking**: **chore:** Node < 10 is no longer supported
