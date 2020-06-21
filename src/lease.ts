@@ -154,16 +154,22 @@ export class Lease extends EventEmitter {
    * Revoke frees the lease from etcd. Keys that the lease owns will be
    * evicted.
    */
-  public revoke(options: grpc.CallOptions | undefined = this.options): Promise<void> {
+  public async revoke(options: grpc.CallOptions | undefined = this.options): Promise<void> {
     this.close();
-    return this.leaseID.then(id => {
-      if (!(id instanceof Error)) {
-        // if an error, we didn't grant in the first place
-        return this.client.leaseRevoke({ ID: id }, options).then(() => undefined);
-      }
 
-      return undefined;
-    });
+    const id = await this.leaseID;
+    if (id instanceof Error) {
+      // if an error, we didn't grant in the first place
+      return;
+    }
+
+    try {
+      await this.client.leaseRevoke({ ID: id }, options);
+    } catch (e) {
+      if (!(e instanceof EtcdLeaseInvalidError)) {
+        throw e;
+      }
+    }
   }
 
   /**

@@ -149,7 +149,7 @@ describe('lease()', () => {
   });
 
   it('emits a loss if the touched key is lost', async () => {
-    lease = client.lease(10);
+    lease = client.lease(100, { autoKeepAlive: false });
     (lease as any).leaseID = Promise.resolve('123456789');
     const lost = onceEvent(lease, 'lost');
 
@@ -217,12 +217,12 @@ describe('lease()', () => {
       expect(failedEvent.fired).to.be.false;
       clock.tick(10000);
       await unmockedDelay(2); // drain task queues
-
       expect(failedEvent.fired).to.be.true;
+
       proxy.resume(TrafficDirection.FromEtcd);
       await lease.revoke();
       proxiedClient.close();
-      await proxy.deactivate();
+      proxy.deactivate();
     });
 
     it('tears down if the lease gets revoked', async () => {
