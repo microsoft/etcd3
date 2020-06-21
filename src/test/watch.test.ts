@@ -231,9 +231,12 @@ describe('watch()', () => {
       proxy.unsuspend();
       expect(getWatchers()).to.deep.equal([]);
 
-      await watcher.cancel();
       proxiedClient.close();
-      await proxy.deactivate();
+
+      // todo: this should be awaited, but when the client is closed the tcp
+      // end will time out (after 2 minutes). We can implement a client graceful
+      // close once https://github.com/grpc/grpc-node/issues/1340
+      proxy.deactivate();
     });
   });
 });
