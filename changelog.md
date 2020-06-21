@@ -1,4 +1,4 @@
-## 1.0.0 TBA
+## 1.0.0 2020-06-21
 
 - **breaking**: **chore:** Node < 10 is no longer supported
 - **breaking**: **chore:** `bignumber.js`, used to handle 64-bit numbers returned from etcd, updated from 5.x to 9.0.0
@@ -15,9 +15,11 @@
 
   The recommended setup for this is to put a retry policy on the `global` slot, and a circuit-breaker policy guarding each `host`. Additionally, you can configure a backoff that the watch manager will use for reconnecting watch streams.
 
-  By default, `global` is set to a three-retry policy and `host` is a circuit breaker that will open (stop sending requests) for five seconds after three consecutive failures. The watch backoff defaults to Cockatiel's default exponential options (a max 30 second delay on a decorrelated jitter).
+  By default, `global` is set to a three-retry policy and `host` is a circuit breaker that will open (stop sending requests) for five seconds after three consecutive failures. The watch backoff defaults to Cockatiel's default exponential options (a max 30 second delay on a decorrelated jitter). If you would like to disable these policies, you can pass `Policy.noop` from Cockatiel to the `global` and `host` options.
 
-  For example, these are the default options:
+  **Notably**, with the default options, you may now receive `BrokenCircuitError`s from Cockatiel if calls to a host repeatedly fail.
+
+  For example, this is how you would manually specify the default options:
 
   ```ts
   import { Etcd3, isRecoverableError } from 'etcd3';
@@ -29,6 +31,20 @@
         Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3)),
       global: Policy.handleWhen(isRecoverableError).retry(3),
       watchBackoff: new ExponentialBackoff(),
+    },
+  });
+  ```
+
+  Here's how you can disable all fault-handling logic:
+
+  ```ts
+  import { Etcd3 } from 'etcd3';
+  import { Policy } from 'cockatiel';
+
+  new Etcd3({
+    faultHandling: {
+      host: () => Policy.noop,
+      global: Policy.noop,
     },
   });
   ```

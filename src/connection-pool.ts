@@ -232,15 +232,17 @@ export class ConnectionPool implements ICallable<Host> {
 
   constructor(private readonly options: IOptions) {
     const credentials = this.buildAuthentication();
-    const { hosts, grpcOptions } = this.options;
+    const { hosts = '127.0.0.1:2379', grpcOptions } = this.options;
 
     if (typeof hosts === 'string') {
-      this.hosts = [new Host(hosts, credentials, grpcOptions, options.faultHandling?.host?.())];
+      this.hosts = [
+        new Host(hosts, credentials, grpcOptions, options.faultHandling?.host?.(hosts)),
+      ];
     } else if (hosts.length === 0) {
       throw new Error('Cannot construct an etcd client with no hosts specified');
     } else {
       this.hosts = hosts.map(
-        h => new Host(h, credentials, grpcOptions, options.faultHandling?.host?.()),
+        h => new Host(h, credentials, grpcOptions, options.faultHandling?.host?.(h)),
       );
     }
   }
@@ -298,7 +300,6 @@ export class ConnectionPool implements ICallable<Host> {
               lastError = err;
               throw err;
             }
-            debugger;
           },
           shuffleGen,
         ),

@@ -1,6 +1,6 @@
 # etcd3 [![Run Tests](https://github.com/microsoft/etcd3/workflows/Run%20Tests/badge.svg)](https://github.com/microsoft/etcd3/actions?query=workflow%3A%22Run+Tests%22)
 
-etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://microsoft.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#stm), [high-level query builders](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#delete) and [lease management](https://microsoft.github.io/etcd3/classes/lease_.lease.html), [watchers](https://microsoft.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://microsoft.github.io/etcd3/classes/index_.etcd3.html#mock), and is type-safe for TypeScript consumers.
+etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://microsoft.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://microsoft.github.io/etcd3/classes/etcd3.html#stm), [high-level query builders](https://microsoft.github.io/etcd3/classes/etcd3.html#delete) and [lease management](https://microsoft.github.io/etcd3/classes/lease_.lease.html), [watchers](https://microsoft.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://microsoft.github.io/etcd3/classes/etcd3.html#mock), and is type-safe for TypeScript consumers.
 
 ### Quickstart
 
@@ -16,21 +16,24 @@ Start CRUD-ing!
 const { Etcd3 } = require('etcd3');
 const client = new Etcd3();
 
-client
-  .put('foo')
-  .value('bar')
-  .then(() => client.get('foo').string())
-  .then(value => console.log('foo was:', value))
-  .then(() => client.getAll().prefix('f').strings())
-  .then(keys => console.log('all our keys starting with "f":', keys))
-  .then(() => client.delete().all());
+(() => {
+  await client.put('foo').value('bar');
+
+  const fooValue = await client.get('foo').string();
+  console.log('foo was:', fooValue);
+
+  const allFValues = client.getAll().prefix('f').keys()
+  console.log('all our keys starting with "f":', allFValues);
+
+  await client.delete().all();
+})
 ```
 
 ### API Documentation
 
-Our [TypeDoc docs are available here](https://microsoft.github.io/etcd3/classes/index_.etcd3.html).
+Our [TypeDoc docs are available here](https://microsoft.github.io/etcd3/classes/etcd3.html).
 
-Our [test cases](https://github.com/microsoft/etcd3/blob/master/test/) are also quite readable.
+Our [test cases](https://github.com/microsoft/etcd3/blob/master/test/) are also readable.
 
 ### Running tests
 

@@ -16,6 +16,16 @@ export interface IOptions {
    * {@link https://coreos.com/etcd/docs/latest/op-guide/security.html here},
    * passed into the createSsl function in GRPC
    * {@link https://grpc.io/grpc/node/grpc.credentials.html#.createSsl__anchor here}.
+   *
+   * For example:
+   *
+   * ```ts
+   * const etcd = new Etcd3({
+   *   credentials: {
+   *     rootCertificate: fs.readFileSync('ca.crt'),
+   *   },
+   * });
+   * ```
    */
   credentials?: {
     rootCertificate: Buffer;
@@ -40,7 +50,8 @@ export interface IOptions {
   grpcOptions?: ChannelOptions;
 
   /**
-   * Etcd password auth, if using.
+   * Etcd password auth, if using. You can also specify call options for the
+   * authentication token exchange call.
    */
   auth?: {
     username: string;
@@ -80,9 +91,39 @@ export interface IOptions {
    * after three consecutive failures. The watch backoff defaults to
    * Cockatiel's default exponential options (a max 30 second delay on
    * a decorrelated jitter).
+   *
+   * For example, this is how you would manually specify the default options:
+   *
+   * ```ts
+   * import { Etcd3, isRecoverableError } from 'etcd3';
+   * import { Policy, ConsecutiveBreaker, ExponentialBackoff } from 'cockatiel';
+   *
+   * const etcd = new Etcd3({
+   *   faultHandling: {
+   *     host: () =>
+   *       Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3)),
+   *     global: Policy.handleWhen(isRecoverableError).retry(3),
+   *     watchBackoff: new ExponentialBackoff(),
+   *   },
+   * });
+   * ```
+   *
+   * Here's how you can disable all fault-handling logic:
+   *
+   * ```ts
+   * import { Etcd3 } from 'etcd3';
+   * import { Policy } from 'cockatiel';
+   *
+   * const etcd = new Etcd3({
+   *   faultHandling: {
+   *     host: () => Policy.noop,
+   *     global: Policy.noop,
+   *   },
+   * });
+   * ```
    */
   faultHandling?: Partial<{
-    host: () => IPolicy<unknown>;
+    host: (hostname: string) => IPolicy<unknown>;
     global: IPolicy<unknown>;
     watchBackoff: IBackoff<unknown>;
   }>;

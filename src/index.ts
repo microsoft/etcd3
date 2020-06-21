@@ -37,10 +37,25 @@ export { WatchBuilder, Watcher } from './watch';
  * ```
  */
 export class Etcd3 extends Namespace {
+  /**
+   * @internal
+   */
   public readonly auth = new RPC.AuthClient(this.pool);
+
+  /**
+   * @internal
+   */
   public readonly maintenance = new RPC.MaintenanceClient(this.pool);
+
+  /**
+   * @internal
+   */
   public readonly cluster = new RPC.ClusterClient(this.pool);
 
+  /**
+   * Creates a new etcd3 client. See the docs on the {@link IOptions} for
+   * more information.
+   */
   constructor(options: IOptions = { hosts: '127.0.0.1:2379' }) {
     super(Buffer.from([]), new ConnectionPool(options), options);
   }

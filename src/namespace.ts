@@ -34,8 +34,19 @@ import { ExponentialBackoff } from 'cockatiel';
  * applications and when using Etcd's access control.
  */
 export class Namespace {
+  /**
+   * @internal
+   */
   public readonly kv = new RPC.KVClient(this.pool);
+
+  /**
+   * @internal
+   */
   public readonly leaseClient = new RPC.LeaseClient(this.pool);
+
+  /**
+   * @internal
+   */
   public readonly watchClient = new RPC.WatchClient(this.pool);
   private readonly nsApplicator = new NSApplicator(this.prefix);
   private readonly watchManager = new WatchManager(
@@ -44,8 +55,11 @@ export class Namespace {
   );
 
   protected constructor(
+    /** @internal */
     protected readonly prefix: Buffer,
+    /** @internal */
     protected readonly pool: ConnectionPool,
+    /** @internal */
     protected readonly options: IOptions,
   ) {}
 
