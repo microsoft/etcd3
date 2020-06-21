@@ -1,6 +1,17 @@
 # etcd3 [![Run Tests](https://github.com/microsoft/etcd3/workflows/Run%20Tests/badge.svg)](https://github.com/microsoft/etcd3/actions?query=workflow%3A%22Run+Tests%22)
 
-etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes [load balancing](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html), [reconnections](https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy), [transactions](https://microsoft.github.io/etcd3/classes/builder_.comparatorbuilder.html), [software transactional memory](https://microsoft.github.io/etcd3/classes/etcd3.html#stm), [high-level query builders](https://microsoft.github.io/etcd3/classes/etcd3.html#delete) and [lease management](https://microsoft.github.io/etcd3/classes/lease_.lease.html), [watchers](https://microsoft.github.io/etcd3/classes/watch_.watchbuilder.html), [mocking](https://microsoft.github.io/etcd3/classes/etcd3.html#mock), and is type-safe for TypeScript consumers.
+etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes:
+
+- [load balancing](https://microsoft.github.io/etcd3/interfaces/ioptions.html)
+- [fault handling and reconnections](https://microsoft.github.io/etcd3/interfaces/ioptions.html#faulthandling)
+- [transactions](https://microsoft.github.io/etcd3/classes/comparatorbuilder.html)
+- [software transactional memory](https://microsoft.github.io/etcd3/classes/softwaretransaction.html)
+- [high-level query builders](https://microsoft.github.io/etcd3/classes/etcd3.html)
+- [lease management](https://microsoft.github.io/etcd3/classes/lease.html)
+- [watchers](https://microsoft.github.io/etcd3/classes/watchbuilder.html)
+- [user](https://microsoft.github.io/etcd3/classes/etcd3.html#user) and [role](https://microsoft.github.io/etcd3/classes/etcd3.html#role) [mocking](https://microsoft.github.io/etcd3/classes/etcd3.html#mock) management
+
+and is type-safe for TypeScript consumers.
 
 ### Quickstart
 
@@ -10,7 +21,7 @@ Install via:
 npm install --save etcd3
 ```
 
-Start CRUD-ing!
+Start building!
 
 ```js
 const { Etcd3 } = require('etcd3');
