@@ -2894,6 +2894,12 @@ img {
 			<a href="interfaces/iwatchresponse.html" class="tsd-kind-icon">IWatch<wbr>Response</a>
 		</li>
 		<li class=" tsd-kind-type-alias">
+			<a href="globals.html#callcontext" class="tsd-kind-icon">Call<wbr>Context</a>
+		</li>
+		<li class=" tsd-kind-type-alias">
+			<a href="globals.html#calloptionsfactory" class="tsd-kind-icon">Call<wbr>Options<wbr>Factory</a>
+		</li>
+		<li class=" tsd-kind-type-alias">
 			<a href="globals.html#ipermissionrequest" class="tsd-kind-icon">IPermission<wbr>Request</a>
 		</li>
 		<li class=" tsd-kind-type-alias">
@@ -2928,26 +2934,37 @@ img {
 			<a href="#etcd3-" id="etcd3-" style="color: inherit; text-decoration: none;">
 				<h1>etcd3 <a href="https://github.com/microsoft/etcd3/actions?query=workflow%3A%22Run+Tests%22"><img src="https://github.com/microsoft/etcd3/workflows/Run%20Tests/badge.svg" alt="Run Tests"></a></h1>
 			</a>
-			<p>etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes <a href="https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html">load balancing</a>, <a href="https://microsoft.github.io/etcd3/interfaces/options_.ioptions.html#backoffstrategy">reconnections</a>, <a href="https://microsoft.github.io/etcd3/classes/builder_.comparatorbuilder.html">transactions</a>, <a href="https://microsoft.github.io/etcd3/classes/etcd3.html#stm">software transactional memory</a>, <a href="https://microsoft.github.io/etcd3/classes/etcd3.html#delete">high-level query builders</a> and <a href="https://microsoft.github.io/etcd3/classes/lease_.lease.html">lease management</a>, <a href="https://microsoft.github.io/etcd3/classes/watch_.watchbuilder.html">watchers</a>, <a href="https://microsoft.github.io/etcd3/classes/etcd3.html#mock">mocking</a>, and is type-safe for TypeScript consumers.</p>
+			<p>etcd3 aims is a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes:</p>
+			<ul>
+				<li><a href="https://microsoft.github.io/etcd3/interfaces/ioptions.html">load balancing</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/interfaces/ioptions.html#faulthandling">fault handling and reconnections</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/comparatorbuilder.html">transactions</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/softwaretransaction.html">software transactional memory</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/etcd3.html">high-level query builders</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/lease.html">lease management</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/watchbuilder.html">watchers</a></li>
+				<li><a href="https://microsoft.github.io/etcd3/classes/etcd3.html#user">user</a> and <a href="https://microsoft.github.io/etcd3/classes/etcd3.html#role">role</a> <a href="https://microsoft.github.io/etcd3/classes/etcd3.html#mock">mocking</a> management</li>
+			</ul>
+			<p>and is type-safe for TypeScript consumers.</p>
 			<a href="#quickstart" id="quickstart" style="color: inherit; text-decoration: none;">
 				<h3>Quickstart</h3>
 			</a>
 			<p>Install via:</p>
-			<pre><code>npm <span class="hljs-keyword">install</span> <span class="hljs-comment">--save etcd3</span></code></pre><p>Start CRUD-ing!</p>
+			<pre><code>npm <span class="hljs-keyword">install</span> <span class="hljs-comment">--save etcd3</span></code></pre><p>Start building!</p>
 			<pre><code class="language-js"><span class="hljs-keyword">const</span> { Etcd3 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'etcd3'</span>);
 <span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Etcd3();
 
-<span class="hljs-function">(<span class="hljs-params">(</span>) =&gt;</span> {
+<span class="hljs-function">(<span class="hljs-params"><span class="hljs-keyword">async</span> (</span>) =&gt;</span> {
   <span class="hljs-keyword">await</span> client.put(<span class="hljs-string">'foo'</span>).value(<span class="hljs-string">'bar'</span>);
 
   <span class="hljs-keyword">const</span> fooValue = <span class="hljs-keyword">await</span> client.get(<span class="hljs-string">'foo'</span>).string();
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'foo was:'</span>, fooValue);
 
-  <span class="hljs-keyword">const</span> allFValues = client.getAll().prefix(<span class="hljs-string">'f'</span>).keys()
+  <span class="hljs-keyword">const</span> allFValues = <span class="hljs-keyword">await</span> client.getAll().prefix(<span class="hljs-string">'f'</span>).keys();
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'all our keys starting with "f":'</span>, allFValues);
 
   <span class="hljs-keyword">await</span> client.delete().all();
-})</code></pre>
+})();</code></pre>
 			<a href="#api-documentation" id="api-documentation" style="color: inherit; text-decoration: none;">
 				<h3>API Documentation</h3>
 			</a>
@@ -2957,7 +2974,7 @@ img {
 				<h3>Running tests</h3>
 			</a>
 			<pre><code class="language-sh">$ npm install
-$ docker-compose up
+$ <span class="hljs-built_in">cd</span> src/<span class="hljs-built_in">test</span>/containers/3.2 &amp;&amp; docker-compose up <span class="hljs-comment"># in a separate shell</span>
 $ npm <span class="hljs-built_in">test</span>
 $ docker-compose down</code></pre>
 			<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
@@ -3165,6 +3182,8 @@ $ docker-compose down</code></pre>
 					<section class="tsd-index-section ">
 						<h3>Type aliases</h3>
 						<ul class="tsd-index-list">
+							<li class="tsd-kind-type-alias"><a href="globals.html#callcontext" class="tsd-kind-icon">Call<wbr>Context</a></li>
+							<li class="tsd-kind-type-alias"><a href="globals.html#calloptionsfactory" class="tsd-kind-icon">Call<wbr>Options<wbr>Factory</a></li>
 							<li class="tsd-kind-type-alias"><a href="globals.html#ipermissionrequest" class="tsd-kind-icon">IPermission<wbr>Request</a></li>
 							<li class="tsd-kind-type-alias"><a href="globals.html#rangable" class="tsd-kind-icon">Rangable</a></li>
 						</ul>
@@ -3197,12 +3216,32 @@ $ docker-compose down</code></pre>
 		<section class="tsd-panel-group tsd-member-group ">
 			<h2>Type aliases</h2>
 			<section class="tsd-panel tsd-member tsd-kind-type-alias">
+				<a name="callcontext" class="tsd-anchor"></a>
+				<h3>Call<wbr>Context</h3>
+				<div class="tsd-signature tsd-kind-icon">Call<wbr>Context<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"range"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/irangerequest.html" class="tsd-signature-type">IRangeRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"put"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iputrequest.html" class="tsd-signature-type">IPutRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"deleteRange"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ideleterangerequest.html" class="tsd-signature-type">IDeleteRangeRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"txn"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/itxnrequest.html" class="tsd-signature-type">ITxnRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"compact"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/icompactionrequest.html" class="tsd-signature-type">ICompactionRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"KV"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"watch"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Watch"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"leaseGrant"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ileasegrantrequest.html" class="tsd-signature-type">ILeaseGrantRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"leaseRevoke"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ileaserevokerequest.html" class="tsd-signature-type">ILeaseRevokeRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"leaseKeepAlive"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"leaseTimeToLive"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ileasetimetoliverequest.html" class="tsd-signature-type">ILeaseTimeToLiveRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"leaseLeases"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Lease"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"memberAdd"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imemberaddrequest.html" class="tsd-signature-type">IMemberAddRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"memberRemove"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imemberremoverequest.html" class="tsd-signature-type">IMemberRemoveRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"memberUpdate"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imemberupdaterequest.html" class="tsd-signature-type">IMemberUpdateRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"memberList"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imemberlistrequest.html" class="tsd-signature-type">IMemberListRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"memberPromote"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imemberpromoterequest.html" class="tsd-signature-type">IMemberPromoteRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Cluster"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"alarm"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ialarmrequest.html" class="tsd-signature-type">IAlarmRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"status"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"defragment"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"hash"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"hashKV"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/ihashkvrequest.html" class="tsd-signature-type">IHashKVRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"snapshot"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"moveLeader"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/imoveleaderrequest.html" class="tsd-signature-type">IMoveLeaderRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"downgrade"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/idowngraderequest.html" class="tsd-signature-type">IDowngradeRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Maintenance"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"authEnable"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"authDisable"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"authStatus"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"authenticate"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthenticaterequest.html" class="tsd-signature-type">IAuthenticateRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userAdd"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthuseraddrequest.html" class="tsd-signature-type">IAuthUserAddRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userGet"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthusergetrequest.html" class="tsd-signature-type">IAuthUserGetRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userList"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userDelete"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthuserdeleterequest.html" class="tsd-signature-type">IAuthUserDeleteRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userChangePassword"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthuserchangepasswordrequest.html" class="tsd-signature-type">IAuthUserChangePasswordRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userGrantRole"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthusergrantrolerequest.html" class="tsd-signature-type">IAuthUserGrantRoleRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"userRevokeRole"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthuserrevokerolerequest.html" class="tsd-signature-type">IAuthUserRevokeRoleRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleAdd"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthroleaddrequest.html" class="tsd-signature-type">IAuthRoleAddRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleGet"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthrolegetrequest.html" class="tsd-signature-type">IAuthRoleGetRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleList"</span><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleDelete"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthroledeleterequest.html" class="tsd-signature-type">IAuthRoleDeleteRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleGrantPermission"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthrolegrantpermissionrequest.html" class="tsd-signature-type">IAuthRoleGrantPermissionRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>isStream<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol">; </span>method<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"roleRevokePermission"</span><span class="tsd-signature-symbol">; </span>params<span class="tsd-signature-symbol">: </span><a href="interfaces/iauthrolerevokepermissionrequest.html" class="tsd-signature-type">IAuthRoleRevokePermissionRequest</a><span class="tsd-signature-symbol">; </span>service<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">"Auth"</span><span class="tsd-signature-symbol"> }</span></div>
+				<aside class="tsd-sources">
+					<ul>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1430">src/rpc.ts:1430</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-type-alias">
+				<a name="calloptionsfactory" class="tsd-anchor"></a>
+				<h3>Call<wbr>Options<wbr>Factory</h3>
+				<div class="tsd-signature tsd-kind-icon">Call<wbr>Options<wbr>Factory<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span>context<span class="tsd-signature-symbol">: </span><a href="globals.html#callcontext" class="tsd-signature-type">CallContext</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol">)</span></div>
+				<aside class="tsd-sources">
+					<ul>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/options.ts#L10">src/options.ts:10</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-type-alias">
 				<a name="ipermissionrequest" class="tsd-anchor"></a>
 				<h3>IPermission<wbr>Request</h3>
 				<div class="tsd-signature tsd-kind-icon">IPermission<wbr>Request<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>permission<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">keyof </span><span class="tsd-signature-symbol">typeof </span><span class="tsd-signature-type">Permission</span><span class="tsd-signature-symbol">; </span>range<span class="tsd-signature-symbol">: </span><a href="classes/range.html" class="tsd-signature-type">Range</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>permission<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">keyof </span><span class="tsd-signature-symbol">typeof </span><span class="tsd-signature-type">Permission</span><span class="tsd-signature-symbol"> }</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/auth.ts#L14">src/auth.ts:14</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/auth.ts#L14">src/auth.ts:14</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -3218,7 +3257,7 @@ $ docker-compose down</code></pre>
 				<div class="tsd-signature tsd-kind-icon">Rangable<span class="tsd-signature-symbol">:</span> <a href="classes/range.html" class="tsd-signature-type">Range</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>end<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>start<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>prefix<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol"> }</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/range.ts#L18">src/range.ts:18</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/range.ts#L18">src/range.ts:18</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -3231,7 +3270,7 @@ $ docker-compose down</code></pre>
 				<div class="tsd-signature tsd-kind-icon">Recoverable<wbr>Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">unique symbol</span><span class="tsd-signature-symbol"> = Symbol(&#x27;RecoverableError&#x27;)</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/errors.ts#L24">src/errors.ts:24</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/errors.ts#L24">src/errors.ts:24</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -3254,7 +3293,7 @@ $ docker-compose down</code></pre>
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/errors.ts#L314">src/errors.ts:314</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/errors.ts#L314">src/errors.ts:314</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3289,7 +3328,7 @@ $ docker-compose down</code></pre>
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/errors.ts#L305">src/errors.ts:305</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/errors.ts#L305">src/errors.ts:305</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3317,7 +3356,7 @@ $ docker-compose down</code></pre>
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/errors.ts#L30">src/errors.ts:30</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/errors.ts#L30">src/errors.ts:30</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3345,7 +3384,7 @@ $ docker-compose down</code></pre>
 				<div class="tsd-signature tsd-kind-icon">Services<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1400">src/rpc.ts:1400</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1422">src/rpc.ts:1422</a></li>
 					</ul>
 				</aside>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
@@ -3354,7 +3393,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Auth<span class="tsd-signature-symbol">:</span> <a href="classes/authclient.html" class="tsd-signature-type">AuthClient</a><span class="tsd-signature-symbol"> = AuthClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1406">src/rpc.ts:1406</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1428">src/rpc.ts:1428</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3364,7 +3403,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Cluster<span class="tsd-signature-symbol">:</span> <a href="classes/clusterclient.html" class="tsd-signature-type">ClusterClient</a><span class="tsd-signature-symbol"> = ClusterClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1404">src/rpc.ts:1404</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1426">src/rpc.ts:1426</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3374,7 +3413,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">KV<span class="tsd-signature-symbol">:</span> <a href="classes/kvclient.html" class="tsd-signature-type">KVClient</a><span class="tsd-signature-symbol"> = KVClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1401">src/rpc.ts:1401</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1423">src/rpc.ts:1423</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3384,7 +3423,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Lease<span class="tsd-signature-symbol">:</span> <a href="classes/leaseclient.html" class="tsd-signature-type">LeaseClient</a><span class="tsd-signature-symbol"> = LeaseClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1403">src/rpc.ts:1403</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1425">src/rpc.ts:1425</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3394,7 +3433,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Maintenance<span class="tsd-signature-symbol">:</span> <a href="classes/maintenanceclient.html" class="tsd-signature-type">MaintenanceClient</a><span class="tsd-signature-symbol"> = MaintenanceClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1405">src/rpc.ts:1405</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1427">src/rpc.ts:1427</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3404,7 +3443,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Watch<span class="tsd-signature-symbol">:</span> <a href="classes/watchclient.html" class="tsd-signature-type">WatchClient</a><span class="tsd-signature-symbol"> = WatchClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/rpc.ts#L1402">src/rpc.ts:1402</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/rpc.ts#L1424">src/rpc.ts:1424</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3415,7 +3454,7 @@ $ docker-compose down</code></pre>
 				<div class="tsd-signature tsd-kind-icon">comparator<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L15">src/builder.ts:15</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L15">src/builder.ts:15</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -3429,7 +3468,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">!&#61;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.NotEqual</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L20">src/builder.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L20">src/builder.ts:20</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3439,7 +3478,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">!&#61;&#61;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.NotEqual</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L21">src/builder.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L21">src/builder.ts:21</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3449,7 +3488,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">&lt;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.Less</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L19">src/builder.ts:19</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L19">src/builder.ts:19</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3459,7 +3498,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">&#61;&#61;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.Equal</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L16">src/builder.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L16">src/builder.ts:16</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3469,7 +3508,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">&#61;&#61;&#61;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.Equal</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L17">src/builder.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L17">src/builder.ts:17</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3479,7 +3518,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">&gt;<span class="tsd-signature-symbol">:</span> <a href="enums/compareresult.html" class="tsd-signature-type">CompareResult</a><span class="tsd-signature-symbol"> = RPC.CompareResult.Greater</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L18">src/builder.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L18">src/builder.ts:18</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3490,7 +3529,7 @@ $ docker-compose down</code></pre>
 				<div class="tsd-signature tsd-kind-icon">compare<wbr>Target<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L36">src/builder.ts:36</a></li>
+						<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L36">src/builder.ts:36</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -3504,7 +3543,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Create<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"create_revision"</span><span class="tsd-signature-symbol"> = &quot;create_revision&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L39">src/builder.ts:39</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L39">src/builder.ts:39</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3514,7 +3553,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Lease<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"lease"</span><span class="tsd-signature-symbol"> = &quot;lease&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L41">src/builder.ts:41</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L41">src/builder.ts:41</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3524,7 +3563,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Mod<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"mod_revision"</span><span class="tsd-signature-symbol"> = &quot;mod_revision&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L40">src/builder.ts:40</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L40">src/builder.ts:40</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3534,7 +3573,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"value"</span><span class="tsd-signature-symbol"> = &quot;value&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L37">src/builder.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L37">src/builder.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -3544,7 +3583,7 @@ $ docker-compose down</code></pre>
 					<div class="tsd-signature tsd-kind-icon">Version<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"version"</span><span class="tsd-signature-symbol"> = &quot;version&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/builder.ts#L38">src/builder.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/builder.ts#L38">src/builder.ts:38</a></li>
 						</ul>
 					</aside>
 				</section>

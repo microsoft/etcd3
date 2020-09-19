@@ -2474,7 +2474,7 @@ img {
 }
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableHosts</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">await</span> client.get().keys().strings();
+  <span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">await</span> client.getAll().prefix(hostPrefix).keys();
   <span class="hljs-keyword">return</span> keys.map(<span class="hljs-function"><span class="hljs-params">key</span> =&gt;</span> key.slice(hostPrefix.length));
 }</code></pre>
 			</div>
@@ -2552,7 +2552,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.__constructor</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L107">src/lease.ts:107</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L110">src/lease.ts:110</a></li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2567,7 +2567,7 @@ img {
 								<h5>ttl: <span class="tsd-signature-type">number</span></h5>
 							</li>
 							<li>
-								<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <a href="../interfaces/ileaseoptions.html" class="tsd-signature-type">ILeaseOptions</a></h5>
+								<h5><span class="tsd-flag ts-flagDefault value">Default value</span> options: <a href="../interfaces/ileaseoptions.html" class="tsd-signature-type">ILeaseOptions</a><span class="tsd-signature-symbol"> = {}</span></h5>
 							</li>
 						</ul>
 						<h4 class="tsd-returns-title">Returns <a href="lease.html" class="tsd-signature-type">Lease</a></h4>
@@ -2623,7 +2623,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#addlistener">addListener</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:553</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:62</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2668,7 +2668,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#emit">emit</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:563</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:72</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2695,7 +2695,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#eventnames">eventNames</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:568</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:77</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -2713,7 +2713,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#getmaxlisteners">getMaxListeners</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:560</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:69</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -2730,7 +2730,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L149">src/lease.ts:149</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L155">src/lease.ts:155</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2756,7 +2756,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L198">src/lease.ts:198</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L204">src/lease.ts:204</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2767,7 +2767,7 @@ img {
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
 							<li>
-								<h5><span class="tsd-flag ts-flagDefault value">Default value</span> options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> = this.options</span></h5>
+								<h5><span class="tsd-flag ts-flagDefault value">Default value</span> options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> = this.defaultOptions</span></h5>
 							</li>
 						</ul>
 						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/ileasekeepaliveresponse.html" class="tsd-signature-type">ILeaseKeepAliveResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -2785,7 +2785,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#listenercount">listenerCount</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:564</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:73</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2809,7 +2809,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#listeners">listeners</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:561</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:70</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2833,7 +2833,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#off">off</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:557</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:66</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2882,7 +2882,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.on</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L237">src/lease.ts:237</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L243">src/lease.ts:243</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2932,7 +2932,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.on</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L243">src/lease.ts:243</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L249">src/lease.ts:249</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2968,7 +2968,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.on</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L249">src/lease.ts:249</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L255">src/lease.ts:255</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3010,7 +3010,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.on</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L256">src/lease.ts:256</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L262">src/lease.ts:262</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3053,7 +3053,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Overrides EventEmitter.on</p>
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L262">src/lease.ts:262</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L268">src/lease.ts:268</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3098,7 +3098,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#once">once</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:555</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:64</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3143,7 +3143,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#prependlistener">prependListener</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:566</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:75</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3188,7 +3188,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#prependoncelistener">prependOnceListener</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:567</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:76</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3232,7 +3232,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L187">src/lease.ts:187</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L193">src/lease.ts:193</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3261,7 +3261,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#rawlisteners">rawListeners</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:562</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:71</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3284,7 +3284,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L180">src/lease.ts:180</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L186">src/lease.ts:186</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3309,7 +3309,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#removealllisteners">removeAllListeners</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:558</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:67</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3333,7 +3333,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#removelistener">removeListener</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:556</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:65</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3377,7 +3377,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L157">src/lease.ts:157</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L163">src/lease.ts:163</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3389,7 +3389,7 @@ img {
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
 							<li>
-								<h5><span class="tsd-flag ts-flagDefault value">Default value</span> options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> = this.options</span></h5>
+								<h5><span class="tsd-flag ts-flagDefault value">Default value</span> options: <span class="tsd-signature-type">CallOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> = this.defaultOptions</span></h5>
 							</li>
 						</ul>
 						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -3406,7 +3406,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/9dce550/src/lease.ts#L223">src/lease.ts:223</a></li>
+								<li>Defined in <a href="https://github.com/mixer/etcd3/blob/3476cc8/src/lease.ts#L229">src/lease.ts:229</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -3429,7 +3429,7 @@ img {
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="watcher.html">Watcher</a>.<a href="watcher.html#setmaxlisteners">setMaxListeners</a></p>
 							<ul>
-								<li>Defined in node_modules/@types/node/globals.d.ts:559</li>
+								<li>Defined in node_modules/@types/node/events.d.ts:68</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
