@@ -1,8 +1,13 @@
 --<%= getCommentPrefixing(`rpc ${name}(`) %>
   public <%= _.lowerFirst(name) %>(<%= req.empty ? '' : `req: ${requestTsType}, ` %>options?: grpc.CallOptions): Promise<IResponseStream<<%= responseTsType %>>> {
     return this.client.withConnection('<%= service %>', ({ resource, client, metadata }) => {
+        const resolved = resolveCallOptions(options, this.client.callOptionsFactory, {
+          service: '<%= service %>',
+          method: '<%= _.lowerFirst(name) %>', <%= req.empty ? '' : 'params: req, ' %> isStream: true,
+        });
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stream = (<any> client).<%= _.lowerFirst(name) %>(metadata, options, <%= req.empty ? '{}' : 'req' %>);
+        const stream = (<any> client).<%= _.lowerFirst(name) %>(metadata, resolved, <%= req.empty ? '{}' : 'req' %>);
         stream.on('error', (err: Error) => this.client.markFailed(resource, err));
         return stream;
       });

@@ -13,6 +13,7 @@
  * create the output ourselves since it's pretty simple (~100 lines of code).
  */
 
+const prettier = require('prettier');
 const pbjs = require('protobufjs');
 const fs = require('fs');
 const _ = require('lodash');
@@ -66,12 +67,24 @@ class MessageCollection {
 
 const messages = new MessageCollection();
 
+let result = '';
+
 function emit(string) {
   if (string) {
-    process.stdout.write(string.replace(/\n\n+/g, '\n\n'));
+    result += string;
   }
 
   return emit;
+}
+
+function writeOut() {
+  fs.writeFileSync(
+    `${__dirname}/../src/rpc.ts`,
+    prettier.format(result, {
+      ...require('../package.json').prettier,
+      parser: 'typescript',
+    }),
+  );
 }
 
 function template(name, params) {
@@ -89,7 +102,7 @@ function template(name, params) {
   emit(
     templates[name](params)
       .replace(/^\-\- *\n/gm, '')
-      .replace(/^\-\-/gm, '')
+      .replace(/^\-\-/gm, ''),
   );
 }
 
@@ -169,7 +182,7 @@ function getCommentPrefixing(substring, from = 0, indentation = 1) {
 }
 
 function generateMethodCalls(node, name) {
-  services[name] = `${name}Client`;
+  const service = (services[name] = { cls: `${name}Client`, methods: new Map() });
   template('class-header', { name });
 
   _.forOwn(node.methods, (method, mname) => {
@@ -183,7 +196,11 @@ function generateMethodCalls(node, name) {
       res,
       responseTsType: res.empty ? 'void' : formatType(method.responseType),
       service: name,
+      responseStream: method.responseStream,
+      requestStream: method.requestStream,
     };
+
+    service.methods.set(method, params);
 
     if (method.responseStream && !method.requestStream) {
       template('response-stream-method', params);
@@ -197,6 +214,18 @@ function generateMethodCalls(node, name) {
   });
 
   emit('}\n\n');
+}
+
+function generateCallContext() {
+  emit('export type CallContext = \n');
+
+  for (const service of Object.values(services)) {
+    for (const params of service.methods.values()) {
+      template('call-context', params);
+    }
+  }
+
+  emit(';\n');
 }
 
 function generateInterface(node, name) {
@@ -276,6 +305,7 @@ function codeGen(ast) {
   });
 
   template('service-map', { services });
+  generateCallContext();
 }
 
 new pbjs.Root()
@@ -284,5 +314,6 @@ new pbjs.Root()
     prepareForGeneration(ast.nested);
     template('rpc-prefix');
     codeGen(ast.nested);
+    writeOut();
   })
   .catch(err => console.error(err.stack));

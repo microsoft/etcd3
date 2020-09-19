@@ -1,0 +1,1 @@
+| { service: '<%= service %>', method: '<%= _.lowerFirst(name) %>', isStream: <%= !!(responseStream || requestStream) %>, <%= req.empty || requestStream ? '' : `params: ${requestTsType}` %> }

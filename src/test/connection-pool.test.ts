@@ -2,12 +2,12 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { expect } from 'chai';
-
+import { Policy } from 'cockatiel';
+import { stub } from 'sinon';
 import { IOptions, KVClient } from '..';
 import { ConnectionPool } from '../connection-pool';
+import { GRPCDeadlineExceededError, GRPCUnavailableError } from '../errors';
 import { getHost, getOptions } from './util';
-import { Policy } from 'cockatiel';
-import { GRPCUnavailableError } from '../errors';
 
 function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
   return getOptions({
@@ -36,6 +36,20 @@ describe('connection pool', () => {
     expect(res.kvs).to.containSubset([{ key, value }]);
 
     await kv.deleteRange({ key });
+  });
+
+  it('applies call options', async () => {
+    const optsStub = stub()
+      .onFirstCall()
+      .returns({ deadline: new Date(0) })
+      .onSecondCall()
+      .returns({ deadline: new Date(Date.now() + 30_000) });
+
+    const pool = new ConnectionPool({ ...getOptions(), defaultCallOptions: optsStub });
+
+    const kv = new KVClient(pool);
+    await expect(kv.range({ key })).to.be.rejectedWith(GRPCDeadlineExceededError);
+    expect(await kv.range({ key })).be.ok;
   });
 
   it('rejects instantiating with a mix of secure and unsecure hosts', () => {

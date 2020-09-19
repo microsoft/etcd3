@@ -1,6 +1,6 @@
 # etcd3 [![Run Tests](https://github.com/microsoft/etcd3/workflows/Run%20Tests/badge.svg)](https://github.com/microsoft/etcd3/actions?query=workflow%3A%22Run+Tests%22)
 
-etcd3 aims to be (with its first stable release) a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes:
+etcd3 aims is a high-quality, production-ready client for the Protocol Buffer-based etcdv3 API. It includes:
 
 - [load balancing](https://microsoft.github.io/etcd3/interfaces/ioptions.html)
 - [fault handling and reconnections](https://microsoft.github.io/etcd3/interfaces/ioptions.html#faulthandling)

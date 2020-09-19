@@ -2,6 +2,32 @@
 
 - **fix:** update version of cockatiel to fix incompatible TypeScript types (see [#128](https://github.com/microsoft/etcd3/issues/128))
 - **fix:** don't include the deadline in inherited lease call options (see [#131](https://github.com/microsoft/etcd3/issues/131))
+- **feat:** allow passing a set of default CallOptions in new Etcd3() (see [#133](https://github.com/microsoft/etcd3/issues/133))
+
+  When constructing `Etcd3`, you can now pass `defaultCallOptions`. This can be an object, or a function which will be called for each etcd method call and should return an object. As a function, it will be called with a context object, which looks like:
+
+  ```js
+  {
+    service: 'KV',   // etcd service name
+    method: 'range', // etcd method name
+    isStream: false, // whether the call create a stream
+    params: { ... }, // arguments given to the call
+  }
+  ```
+
+  For example, this will set a 10 second timeout on all calls which are not streams:
+
+  ```js
+  const etcd3 = new Etcd3({
+    defaultCallOptions: context => context.isStream ? {} : Date.now() + 10000,
+  });
+  ```
+
+  The default options are shallow merged with any call-specific options. For example this will always result in a 5 second timeout, regardless of what the `defaultCallOptions` contains:
+
+  ```js
+  etcd3.get('foo').options({ deadline: Date.now() + 5000 })
+  ```
 
 ## 1.0.1 2020-06-21
 

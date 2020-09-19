@@ -1,26 +1,26 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { loadSync } from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
+import { loadSync } from '@grpc/proto-loader';
 import {
-  isBrokenCircuitError,
-  Policy,
-  IPolicy,
   ConsecutiveBreaker,
   IDefaultPolicyContext,
+  IPolicy,
+  isBrokenCircuitError,
+  Policy,
 } from 'cockatiel';
-
 import {
   castGrpcError,
-  EtcdInvalidAuthTokenError,
-  ClientRuntimeError,
   ClientClosedError,
+  ClientRuntimeError,
+  EtcdInvalidAuthTokenError,
   isRecoverableError,
 } from './errors';
 import { IOptions } from './options';
-import { ICallable, Services } from './rpc';
+import { CallContext, ICallable, Services } from './rpc';
+import { resolveCallOptions } from './util';
 
 const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
   keepCase: true,
@@ -108,11 +108,22 @@ class Authenticator {
 
       const meta = new grpc.Metadata();
       const host = removeProtocolPrefix(hosts[index]);
+      const context: CallContext = {
+        method: 'authenticate',
+        params: { name: auth.username, password: auth.password },
+        service: 'Auth',
+        isStream: false,
+      };
+
       return this.getCredentialsFromHost(
         host,
         auth.username,
         auth.password,
-        auth.callOptions,
+        resolveCallOptions(
+          resolveCallOptions(undefined, auth.callOptions, context),
+          resolveCallOptions(undefined, this.options.defaultCallOptions, context),
+          context,
+        ),
         this.credentials,
       )
         .then(token => {
@@ -199,7 +210,7 @@ export class Host {
         // workaround: https://github.com/grpc/grpc-node/issues/1487
         const state = service.getChannel().getConnectivityState(false);
         if (state === grpc.connectivityState.CONNECTING) {
-          service.waitForReady(Date.now() + 10_0000, () => service.close());
+          service.waitForReady(Date.now() + 10_00, () => service.close());
         } else {
           service.close();
         }
@@ -229,6 +240,8 @@ export class ConnectionPool implements ICallable<Host> {
    * For use in tests, should not be toggled in production/
    */
   public static deterministicOrder = false;
+
+  public readonly callOptionsFactory = this.options.defaultCallOptions;
 
   private readonly hosts: Host[];
   private readonly globalPolicy: IPolicy<IDefaultPolicyContext> =
@@ -295,8 +308,15 @@ export class ConnectionPool implements ICallable<Host> {
         this.withConnection(
           serviceName,
           async ({ client, metadata }) => {
+            const resolvedOpts = resolveCallOptions(options, this.callOptionsFactory, {
+              service: serviceName,
+              method,
+              params: payload,
+              isStream: false,
+            } as CallContext);
+
             try {
-              return await runServiceCall(client, metadata, options, method, payload);
+              return await runServiceCall(client, metadata, resolvedOpts, method, payload);
             } catch (err) {
               if (err instanceof EtcdInvalidAuthTokenError) {
                 this.authenticator.invalidateMetadata();

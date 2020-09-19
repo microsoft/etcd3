@@ -1,9 +1,13 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
+
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { CallOptions } from '@grpc/grpc-js';
 import { IPolicy, IBackoff, IDefaultPolicyContext } from 'cockatiel';
+import { CallContext } from './rpc';
+
+export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOptions);
 
 /**
  * IOptions are passed into the client constructor to configure how the client
@@ -60,8 +64,39 @@ export interface IOptions {
     /**
      * Call options to use for the password-to-token exchange.
      */
-    callOptions?: CallOptions;
+    callOptions?: CallOptionsFactory;
   };
+
+  /**
+   * Default call options used for all requests. This can be an object, or a
+   * function which will be called for each etcd method call.  As a function,
+   * it will be called with a context object, which looks like:
+   * ```js
+   * {
+   *   service: 'KV',   // etcd service name
+   *   method: 'range', // etcd method name
+   *   isStream: false, // whether the call create a stream
+   *   params: { ... }, // arguments given to the call
+   * }
+   * ```
+   *
+   * For example, this will set a 10 second timeout on all calls which are not streams:
+   *
+   * ```js
+   * const etcd3 = new Etcd3({
+   *   defaultCallOptions: context => context.isStream ? {} : Date.now() + 10000,
+   * });
+   * ```
+   *
+   * The default options are shallow merged with any call-specific options.
+   * For example this will always result in a 5 second timeout, regardless of
+   * what the `defaultCallOptions` contains:
+   *
+   * ```js
+   * etcd3.get('foo').options({ deadline: Date.now() + 5000 })
+   * ```
+   */
+  defaultCallOptions?: CallOptionsFactory;
 
   /**
    * A list of hosts to connect to. Hosts should include the `https?://` prefix.

@@ -8,17 +8,13 @@
       "type": "pwa-node",
       "request": "launch",
       "name": "Run Tests",
+      "trace": true,
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/mocha/bin/mocha",
-      "preLaunchTask": "tsc: build - tsconfig.json",
-      "args": [
-        "--timeout",
-        "60000",
-        "--require",
-        "source-map-support/register",
-        "--require",
-        "./lib/test/_setup.js",
-        "\"lib/test/**/*.test.js\""
+      "args": ["--timeout", "10000", "--require", "./lib/test/_setup.js", "lib/test/**/*.test.js"],
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
       ]
     }
   ]

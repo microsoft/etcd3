@@ -1,9 +1,12 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { EventEmitter } from 'events';
 
+import { CallOptions } from '@grpc/grpc-js';
+import { EventEmitter } from 'events';
 import { ClientRuntimeError } from './errors';
+import { CallOptionsFactory } from './options';
+import { CallContext, Services } from './rpc';
 
 export const zeroKey = Buffer.from([0]);
 export const emptyKey = Buffer.from([]);
@@ -237,3 +240,29 @@ export abstract class PromiseWrap<T> implements PromiseLike<T> {
    */
   protected abstract createPromise(): Promise<T>;
 }
+
+export interface ICallContext {
+  service: keyof typeof Services;
+  method: string;
+  params: unknown;
+}
+
+/**
+ * Applies the defaultOptions or defaultOptions factory to the given
+ * call-specific options.
+ */
+export const resolveCallOptions = (
+  callOptions: CallOptions | undefined,
+  defaultOptions: undefined | CallOptionsFactory,
+  context: CallContext,
+): CallOptions | undefined => {
+  if (defaultOptions === undefined) {
+    return callOptions;
+  }
+
+  if (typeof defaultOptions === 'function') {
+    defaultOptions = defaultOptions(context);
+  }
+
+  return callOptions ? { ...defaultOptions, ...callOptions } : defaultOptions;
+};

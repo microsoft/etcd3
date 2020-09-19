@@ -27,6 +27,8 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  * put requests before executing them.
  */
 class LeaseClientWrapper implements RPC.ICallable<Host> {
+  public readonly callOptionsFactory = this.pool.callOptionsFactory;
+
   constructor(
     private pool: ConnectionPool,
     private readonly lease: {

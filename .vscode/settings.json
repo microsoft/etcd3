@@ -1,14 +1,16 @@
 {
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "search.exclude": {
     "**/lib": true,
     "**/.nyc_output": true,
-    "**/docs": true,
+    "**/docs": true
   },
   "files.exclude": {
-    "**/.nyc_output": true,
-  },
-  "debug.node.autoAttach": "off"
+    "**/.nyc_output": true
+  }
 }

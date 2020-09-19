@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import * as grpc from '@grpc/grpc-js';
+import type { CallOptionsFactory } from './options';
+import { resolveCallOptions } from './util';
 
 export interface ICallable<T> {
   exec<T>(
@@ -22,6 +24,8 @@ export interface ICallable<T> {
   ): Promise<R>;
 
   markFailed(resource: T, error: Error): void;
+
+  readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
 export interface IResponseStream<T> {

@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import * as grpc from '@grpc/grpc-js';
+import type { CallOptionsFactory } from './options';
+import { resolveCallOptions } from './util';
 
 export interface ICallable<T> {
   exec<T>(
@@ -22,6 +24,8 @@ export interface ICallable<T> {
   ): Promise<R>;
 
   markFailed(resource: T, error: Error): void;
+
+  readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
 export interface IResponseStream<T> {
@@ -39,7 +43,7 @@ export interface IRequestStream<T> {
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
 export class KVClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * Range gets the keys in the range from the key-value store.
    */
@@ -88,7 +92,7 @@ export class KVClient {
 }
 
 export class WatchClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * Watch watches for events happening or that have happened. Both input and output
    * are streams; the input stream is for creating and canceling watchers and the output
@@ -99,7 +103,13 @@ export class WatchClient {
   public watch(options?: grpc.CallOptions): Promise<IDuplexStream<IWatchRequest, IWatchResponse>> {
     return this.client.withConnection('Watch', ({ resource, client, metadata }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stream = (<any>client).watch(metadata, options);
+      const resolved = resolveCallOptions(options, this.client.callOptionsFactory, {
+        service: 'Watch',
+        method: 'watch',
+        isStream: true,
+      });
+
+      const stream = (<any>client).watch(metadata, resolved);
       stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
       return stream;
     });
@@ -107,7 +117,7 @@ export class WatchClient {
 }
 
 export class LeaseClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * LeaseGrant creates a lease which expires if the server does not receive a keepAlive
    * within a given time to live period. All keys attached to the lease will be expired and
@@ -137,7 +147,13 @@ export class LeaseClient {
   ): Promise<IDuplexStream<ILeaseKeepAliveRequest, ILeaseKeepAliveResponse>> {
     return this.client.withConnection('Lease', ({ resource, client, metadata }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stream = (<any>client).leaseKeepAlive(metadata, options);
+      const resolved = resolveCallOptions(options, this.client.callOptionsFactory, {
+        service: 'Lease',
+        method: 'leaseKeepAlive',
+        isStream: true,
+      });
+
+      const stream = (<any>client).leaseKeepAlive(metadata, resolved);
       stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
       return stream;
     });
@@ -160,7 +176,7 @@ export class LeaseClient {
 }
 
 export class ClusterClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * MemberAdd adds a member into the cluster.
    */
@@ -209,7 +225,7 @@ export class ClusterClient {
 }
 
 export class MaintenanceClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * Alarm activates, deactivates, and queries alarms regarding cluster health.
    */
@@ -251,8 +267,14 @@ export class MaintenanceClient {
    */
   public snapshot(options?: grpc.CallOptions): Promise<IResponseStream<ISnapshotResponse>> {
     return this.client.withConnection('Maintenance', ({ resource, client, metadata }) => {
+      const resolved = resolveCallOptions(options, this.client.callOptionsFactory, {
+        service: 'Maintenance',
+        method: 'snapshot',
+        isStream: true,
+      });
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stream = (<any>client).snapshot(metadata, options, {});
+      const stream = (<any>client).snapshot(metadata, resolved, {});
       stream.on('error', (err: Error) => this.client.markFailed(resource, err));
       return stream;
     });
@@ -278,7 +300,7 @@ export class MaintenanceClient {
 }
 
 export class AuthClient {
-  constructor(private client: ICallable<unknown>) {}
+  constructor(private readonly client: ICallable<unknown>) {}
   /**
    * AuthEnable enables authentication.
    */
@@ -1405,3 +1427,70 @@ export const Services = {
   Maintenance: MaintenanceClient,
   Auth: AuthClient,
 };
+export type CallContext =
+  | { service: 'KV'; method: 'range'; isStream: false; params: IRangeRequest }
+  | { service: 'KV'; method: 'put'; isStream: false; params: IPutRequest }
+  | { service: 'KV'; method: 'deleteRange'; isStream: false; params: IDeleteRangeRequest }
+  | { service: 'KV'; method: 'txn'; isStream: false; params: ITxnRequest }
+  | { service: 'KV'; method: 'compact'; isStream: false; params: ICompactionRequest }
+  | { service: 'Watch'; method: 'watch'; isStream: true }
+  | { service: 'Lease'; method: 'leaseGrant'; isStream: false; params: ILeaseGrantRequest }
+  | { service: 'Lease'; method: 'leaseRevoke'; isStream: false; params: ILeaseRevokeRequest }
+  | { service: 'Lease'; method: 'leaseKeepAlive'; isStream: true }
+  | {
+      service: 'Lease';
+      method: 'leaseTimeToLive';
+      isStream: false;
+      params: ILeaseTimeToLiveRequest;
+    }
+  | { service: 'Lease'; method: 'leaseLeases'; isStream: false }
+  | { service: 'Cluster'; method: 'memberAdd'; isStream: false; params: IMemberAddRequest }
+  | { service: 'Cluster'; method: 'memberRemove'; isStream: false; params: IMemberRemoveRequest }
+  | { service: 'Cluster'; method: 'memberUpdate'; isStream: false; params: IMemberUpdateRequest }
+  | { service: 'Cluster'; method: 'memberList'; isStream: false; params: IMemberListRequest }
+  | { service: 'Cluster'; method: 'memberPromote'; isStream: false; params: IMemberPromoteRequest }
+  | { service: 'Maintenance'; method: 'alarm'; isStream: false; params: IAlarmRequest }
+  | { service: 'Maintenance'; method: 'status'; isStream: false }
+  | { service: 'Maintenance'; method: 'defragment'; isStream: false }
+  | { service: 'Maintenance'; method: 'hash'; isStream: false }
+  | { service: 'Maintenance'; method: 'hashKV'; isStream: false; params: IHashKVRequest }
+  | { service: 'Maintenance'; method: 'snapshot'; isStream: true }
+  | { service: 'Maintenance'; method: 'moveLeader'; isStream: false; params: IMoveLeaderRequest }
+  | { service: 'Maintenance'; method: 'downgrade'; isStream: false; params: IDowngradeRequest }
+  | { service: 'Auth'; method: 'authEnable'; isStream: false }
+  | { service: 'Auth'; method: 'authDisable'; isStream: false }
+  | { service: 'Auth'; method: 'authStatus'; isStream: false }
+  | { service: 'Auth'; method: 'authenticate'; isStream: false; params: IAuthenticateRequest }
+  | { service: 'Auth'; method: 'userAdd'; isStream: false; params: IAuthUserAddRequest }
+  | { service: 'Auth'; method: 'userGet'; isStream: false; params: IAuthUserGetRequest }
+  | { service: 'Auth'; method: 'userList'; isStream: false }
+  | { service: 'Auth'; method: 'userDelete'; isStream: false; params: IAuthUserDeleteRequest }
+  | {
+      service: 'Auth';
+      method: 'userChangePassword';
+      isStream: false;
+      params: IAuthUserChangePasswordRequest;
+    }
+  | { service: 'Auth'; method: 'userGrantRole'; isStream: false; params: IAuthUserGrantRoleRequest }
+  | {
+      service: 'Auth';
+      method: 'userRevokeRole';
+      isStream: false;
+      params: IAuthUserRevokeRoleRequest;
+    }
+  | { service: 'Auth'; method: 'roleAdd'; isStream: false; params: IAuthRoleAddRequest }
+  | { service: 'Auth'; method: 'roleGet'; isStream: false; params: IAuthRoleGetRequest }
+  | { service: 'Auth'; method: 'roleList'; isStream: false }
+  | { service: 'Auth'; method: 'roleDelete'; isStream: false; params: IAuthRoleDeleteRequest }
+  | {
+      service: 'Auth';
+      method: 'roleGrantPermission';
+      isStream: false;
+      params: IAuthRoleGrantPermissionRequest;
+    }
+  | {
+      service: 'Auth';
+      method: 'roleRevokePermission';
+      isStream: false;
+      params: IAuthRoleRevokePermissionRequest;
+    };

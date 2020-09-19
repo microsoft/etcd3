@@ -10,7 +10,7 @@
     "test:cover": "nyc mocha",
     "test:lint": "eslint \"src/**/*.ts\"",
     "watch": "tsc --watch",
-    "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto > src/rpc.ts && npm run fmt",
+    "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js",
     "build:doc": "rimraf docs && typedoc --theme minimal --mode library --exclude \"src/test/*\" --excludePrivate --stripInternal --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc",
     "fmt": "prettier --write \"src/**/*.{ts,js}\" && npm run -s test:lint -- --fix",
@@ -68,7 +68,7 @@
     "rimraf": "^3.0.2",
     "sinon": "^9.0.3",
     "ts-node": "^9.0.0",
-    "typedoc": "^0.19.1",
+    "typedoc": " 0.17.0-3",
     "typescript": "^4.0.3"
   },
   "dependencies": {
