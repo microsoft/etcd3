@@ -105,25 +105,29 @@ export class Lease extends EventEmitter {
 
   private client = new RPC.LeaseClient(this.pool);
   private lastKeepAlive: number;
+  private defaultOptions: grpc.CallOptions;
 
   constructor(
     private readonly pool: ConnectionPool,
     private readonly namespace: NSApplicator,
     private ttl: number,
-    private readonly options?: ILeaseOptions,
+    options: ILeaseOptions = {},
   ) {
     super();
+
+    const { autoKeepAlive, deadline, ...rest } = options;
+    this.defaultOptions = rest;
 
     if (!ttl || ttl < 1) {
       throw new Error(`The TTL in an etcd lease must be at least 1 second. Got: ${ttl}`);
     }
 
     this.leaseID = this.client
-      .leaseGrant({ TTL: ttl }, this.options)
+      .leaseGrant({ TTL: ttl }, options)
       .then(res => {
         this.state = State.Alive;
         this.lastKeepAlive = Date.now();
-        if (options?.autoKeepAlive !== false) {
+        if (autoKeepAlive !== false) {
           this.keepalive();
         }
 
@@ -154,7 +158,7 @@ export class Lease extends EventEmitter {
    * Revoke frees the lease from etcd. Keys that the lease owns will be
    * evicted.
    */
-  public async revoke(options: grpc.CallOptions | undefined = this.options): Promise<void> {
+  public async revoke(options: grpc.CallOptions | undefined = this.defaultOptions): Promise<void> {
     this.close();
 
     const id = await this.leaseID;
@@ -196,7 +200,7 @@ export class Lease extends EventEmitter {
    * keepaliveOnce fires an immediate keepalive for the lease.
    */
   public keepaliveOnce(
-    options: grpc.CallOptions | undefined = this.options,
+    options: grpc.CallOptions | undefined = this.defaultOptions,
   ): Promise<RPC.ILeaseKeepAliveResponse> {
     return Promise.all([this.client.leaseKeepAlive(options), this.grant()]).then(([stream, id]) => {
       return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {

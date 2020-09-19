@@ -19,7 +19,8 @@ module.exports = {
       'error',
       'block',
       '---------------------------------------------------------\n * Copyright (C) Microsoft Corporation. All rights reserved.\n *--------------------------------------------------------',
-    ],
+      ],
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
 
     // todo: clean these:
     '@typescript-eslint/no-explicit-any': 'off',

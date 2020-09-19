@@ -1,6 +1,7 @@
-## 1.0.1 2020-09-18
+## 1.0.2 2020-09-18
 
 - **fix:** update version of cockatiel to fix incompatible TypeScript types (see [#128](https://github.com/microsoft/etcd3/issues/128))
+- **fix:** don't include the deadline in inherited lease call options (see [#131](https://github.com/microsoft/etcd3/issues/131))
 
 ## 1.0.1 2020-06-21
 
