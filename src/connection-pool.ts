@@ -4,7 +4,13 @@
 import { loadSync } from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
-import { isBrokenCircuitError, Policy, IPolicy, ConsecutiveBreaker } from 'cockatiel';
+import {
+  isBrokenCircuitError,
+  Policy,
+  IPolicy,
+  ConsecutiveBreaker,
+  IDefaultPolicyContext,
+} from 'cockatiel';
 
 import {
   castGrpcError,
@@ -156,7 +162,7 @@ export class Host {
     host: string,
     private readonly channelCredentials: grpc.ChannelCredentials,
     private readonly channelOptions?: ChannelOptions,
-    public readonly faultHandling: IPolicy<unknown> = defaultCircuitBreaker(),
+    public readonly faultHandling: IPolicy<IDefaultPolicyContext> = defaultCircuitBreaker(),
   ) {
     this.host = removeProtocolPrefix(host);
   }
@@ -225,7 +231,7 @@ export class ConnectionPool implements ICallable<Host> {
   public static deterministicOrder = false;
 
   private readonly hosts: Host[];
-  private readonly globalPolicy: IPolicy<unknown> =
+  private readonly globalPolicy: IPolicy<IDefaultPolicyContext> =
     this.options.faultHandling?.global ?? Policy.handleWhen(isRecoverableError).retry().attempts(3);
   private mockImpl: ICallable<Host> | null;
   private authenticator: Authenticator;

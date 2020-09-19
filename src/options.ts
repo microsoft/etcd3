@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { CallOptions } from '@grpc/grpc-js';
-import { IPolicy, IBackoff } from 'cockatiel';
+import { IPolicy, IBackoff, IDefaultPolicyContext } from 'cockatiel';
 
 /**
  * IOptions are passed into the client constructor to configure how the client
@@ -123,8 +123,8 @@ export interface IOptions {
    * ```
    */
   faultHandling?: Partial<{
-    host: (hostname: string) => IPolicy<unknown>;
-    global: IPolicy<unknown>;
+    host: (hostname: string) => IPolicy<IDefaultPolicyContext>;
+    global: IPolicy<IDefaultPolicyContext>;
     watchBackoff: IBackoff<unknown>;
   }>;
 }

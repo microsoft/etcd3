@@ -1,3 +1,7 @@
+## 1.0.1 2020-09-18
+
+- **fix:** update version of cockatiel to fix incompatible TypeScript types (see [#128](https://github.com/microsoft/etcd3/issues/128))
+
 ## 1.0.1 2020-06-21
 
 - **fix:** `proto` files not included in npm package
