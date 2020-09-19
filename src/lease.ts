@@ -94,7 +94,7 @@ export interface ILeaseOptions extends grpc.CallOptions {
  * }
  *
  * function getAvailableHosts() {
- *   const keys = await client.get().keys().strings();
+ *   const keys = await client.getAll().prefix(hostPrefix).keys();
  *   return keys.map(key => key.slice(hostPrefix.length));
  * }
  * ```

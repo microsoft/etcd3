@@ -50,7 +50,7 @@ Our [test cases](https://github.com/microsoft/etcd3/blob/master/test/) are also 
 
 ```sh
 $ npm install
-$ docker-compose up
+$ cd src/test/containers/3.2 && docker-compose up # in a separate shell
 $ npm test
 $ docker-compose down
 ```
