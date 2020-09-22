@@ -84,7 +84,7 @@ export interface IOptions {
    *
    * ```js
    * const etcd3 = new Etcd3({
-   *   defaultCallOptions: context => context.isStream ? {} : Date.now() + 10000,
+   *   defaultCallOptions: context => context.isStream ? {} : { deadline: Date.now() + 10000 },
    * });
    * ```
    *
