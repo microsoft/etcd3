@@ -44,7 +44,7 @@ const client = new Etcd3();
 
 Our [TypeDoc docs are available here](https://microsoft.github.io/etcd3/classes/etcd3.html).
 
-Our [test cases](https://github.com/microsoft/etcd3/blob/master/test/) are also readable.
+Our [test cases](https://github.com/microsoft/etcd3/tree/master/src/test/) are also readable.
 
 ### Running tests
 
