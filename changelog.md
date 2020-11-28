@@ -3,6 +3,7 @@
 ## 1.1.0 TBA
 
 - **fix:** buffers not allowed in typings `Namespace.get(<key>)`
+- **fix:** prevent user errors in watcher event listeners from causing backoffs in the underlying stream
 
 ## 1.0.2 2020-09-18
 
@@ -25,14 +26,14 @@
 
   ```js
   const etcd3 = new Etcd3({
-    defaultCallOptions: context => context.isStream ? {} : Date.now() + 10000,
+    defaultCallOptions: context => (context.isStream ? {} : Date.now() + 10000),
   });
   ```
 
   The default options are shallow merged with any call-specific options. For example this will always result in a 5 second timeout, regardless of what the `defaultCallOptions` contains:
 
   ```js
-  etcd3.get('foo').options({ deadline: Date.now() + 5000 })
+  etcd3.get('foo').options({ deadline: Date.now() + 5000 });
   ```
 
 ## 1.0.1 2020-06-21

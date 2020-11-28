@@ -306,7 +306,15 @@ export class WatchManager {
    * Emits a data update on the target watcher.
    */
   private handleUpdateResponse(watcher: Watcher, res: RPC.IWatchResponse) {
+    try {
     watcher.emit('data', res);
+    } catch (e) {
+      // throw any user errors in a new microtask so they don't get handled
+      // as a stream error.
+      setImmediate(() => {
+        throw e;
+      });
+    }
   }
 
   /**
