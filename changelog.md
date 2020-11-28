@@ -1,3 +1,9 @@
+# Changelog
+
+## 1.1.0 TBA
+
+- **fix:** buffers not allowed in typings `Namespace.get(<key>)`
+
 ## 1.0.2 2020-09-18
 
 - **fix:** update version of cockatiel to fix incompatible TypeScript types (see [#128](https://github.com/microsoft/etcd3/issues/128))

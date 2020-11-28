@@ -66,7 +66,7 @@ export class Namespace {
   /**
    * `.get()` starts a query to look up a single key from etcd.
    */
-  public get(key: string): Builder.SingleRangeBuilder {
+  public get(key: string | Buffer): Builder.SingleRangeBuilder {
     return new Builder.SingleRangeBuilder(this.kv, this.nsApplicator, key);
   }
 
