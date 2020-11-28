@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import BigNumber from 'bignumber.js';
+import { IBackoff } from 'cockatiel';
 import { EventEmitter } from 'events';
-
 import {
   castGrpcErrorMessage,
   ClientRuntimeError,
@@ -13,7 +13,6 @@ import {
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
 import { NSApplicator, onceEvent, toBuffer } from './util';
-import { IBackoff } from 'cockatiel';
 
 const enum State {
   Idle,
@@ -307,7 +306,7 @@ export class WatchManager {
    */
   private handleUpdateResponse(watcher: Watcher, res: RPC.IWatchResponse) {
     try {
-    watcher.emit('data', res);
+      watcher.emit('data', res);
     } catch (e) {
       // throw any user errors in a new microtask so they don't get handled
       // as a stream error.
@@ -434,7 +433,7 @@ export class WatchBuilder {
    * Watch starting from a specific revision.
    */
   public startRevision(revision: string): this {
-    this.request.start_revision = revision;
+    this.request.start_revision = Number(revision);
     return this;
   }
 
@@ -546,7 +545,6 @@ export class Watcher extends EventEmitter {
    * Implements EventEmitter.on(...).
    */
   public on(event: string, handler: (...args: any[]) => void): this {
-    // tslint:disable-line
     return super.on(event, handler);
   }
 

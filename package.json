@@ -66,6 +66,7 @@
     "prettier": "^2.1.2",
     "protobufjs": "^6.10.1",
     "rimraf": "^3.0.2",
+    "rxjs": "^6.6.3",
     "sinon": "^9.0.3",
     "ts-node": "^9.0.0",
     "typedoc": " 0.17.0-3",

@@ -1,6 +1,9 @@
 import { expect } from 'chai';
+import { fromEvent } from 'rxjs';
+import { take } from 'rxjs/operators';
 import * as sinon from 'sinon';
 import { Election, Etcd3 } from '../';
+import { delay } from '../util';
 import { getOptions, tearDownTestClient } from './util';
 
 const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t));
@@ -130,46 +133,58 @@ describe('election', () => {
   });
 
   describe('observe', () => {
-    it('should emit leader event', async () => {
+    it('emits when existing leader resigns and other in queue', async () => {
       const client2 = new Etcd3(getOptions());
       const election2 = new Election(client2, 'test-election', 1);
 
-      let currentLeaderKey = '';
-      election.on('leader', leaderKey => (currentLeaderKey = leaderKey));
+      const observer = await election.observe();
+      const changeEvent = fromEvent(observer, 'change');
 
-      expect(election.isObserving).to.be.true;
-
-      // looking for current leader and emit it
-      await sleep(30);
-
-      expect(currentLeaderKey).to.equal(election.leaderKey);
+      expect(observer.leader()).to.equal('candidate');
 
       const waitElection2 = election2.campaign('candidate2');
+      while ((await client2.getAll().prefix('election').keys()).length < 2) {
+        await delay(5);
+      }
 
-      await election.resign();
+      const [newLeader] = await Promise.all([
+        changeEvent.pipe(take(1)).toPromise(),
+        election.resign(),
+        waitElection2,
+      ]);
 
-      await waitElection2;
-
-      // waiting for watcher
-      await sleep(30);
-
-      expect(currentLeaderKey).to.equal(election2.leaderKey);
+      expect(newLeader).to.equal('candidate2');
+      await observer.cancel();
     });
 
-    it('should wait for leader', async () => {
+    it('emits when leader steps down', async () => {
+      const observer = await election.observe();
+      expect(observer.leader()).to.equal('candidate');
+
+      const changeEvent = fromEvent(observer, 'change');
+      const [newLeader] = await Promise.all([
+        changeEvent.pipe(take(1)).toPromise(),
+        election.resign(),
+      ]);
+
+      expect(newLeader).to.be.undefined;
+    });
+
+    it('emits when leader is newly elected', async () => {
       await election.resign();
 
-      let currentLeaderKey = '';
-      election.on('leader', leaderKey => (currentLeaderKey = leaderKey));
+      const observer = await election.observe();
+      const changeEvent = fromEvent(observer, 'change');
 
-      // waiting for watcher created
-      await sleep(30);
+      expect(observer.leader()).to.be.undefined;
 
-      await election.campaign('candidate');
+      const [, newLeader] = await Promise.all([
+        election.campaign('candidate'),
+        changeEvent.pipe(take(1)).toPromise(),
+      ]);
 
-      await sleep(30);
-
-      expect(currentLeaderKey).to.equal(election.leaderKey);
+      expect(newLeader).to.equal('candidate');
+      await observer.cancel();
     });
   });
 });

@@ -56,7 +56,8 @@ class LeaseClientWrapper implements RPC.ICallable<Host> {
   }
 }
 
-const enum State {
+export enum LeaseState {
+  Pending,
   Alive,
   Revoked,
 }
@@ -103,11 +104,15 @@ export interface ILeaseOptions extends grpc.CallOptions {
  */
 export class Lease extends EventEmitter {
   private leaseID: Promise<string | Error>;
-  private state = State.Alive;
+  private innerState = LeaseState.Pending;
 
   private client = new RPC.LeaseClient(this.pool);
   private lastKeepAlive: number;
   private defaultOptions: grpc.CallOptions;
+
+  public get state() {
+    return this.innerState;
+  }
 
   constructor(
     private readonly pool: ConnectionPool,
@@ -121,13 +126,13 @@ export class Lease extends EventEmitter {
     this.defaultOptions = rest;
 
     if (!ttl || ttl < 1) {
-      throw new Error(`The TTL in an etcd lease must be at least 1 second. Got: ${ttl}`);
+      throw new RangeError(`The TTL in an etcd lease must be at least 1 second. Got: ${ttl}`);
     }
 
     this.leaseID = this.client
       .leaseGrant({ TTL: ttl }, options)
       .then(res => {
-        this.state = State.Alive;
+        this.innerState = LeaseState.Alive;
         this.lastKeepAlive = Date.now();
         if (autoKeepAlive !== false) {
           this.keepalive();
@@ -227,7 +232,7 @@ export class Lease extends EventEmitter {
    * Returns whether etcd has told us that this lease revoked.
    */
   public revoked(): boolean {
-    return this.state === State.Revoked;
+    return this.innerState === LeaseState.Revoked;
   }
 
   /**
@@ -283,7 +288,7 @@ export class Lease extends EventEmitter {
    * Tears down resources associated with the lease.
    */
   private close() {
-    this.state = State.Revoked;
+    this.innerState = LeaseState.Revoked;
     this.teardown();
   }
 
@@ -315,7 +320,7 @@ export class Lease extends EventEmitter {
     this.client
       .leaseKeepAlive()
       .then(stream => {
-        if (this.state !== State.Alive) {
+        if (this.innerState === LeaseState.Revoked) {
           return stream.end();
         }
 
@@ -361,7 +366,7 @@ export class Lease extends EventEmitter {
   }
 
   private handleKeepaliveError(err: Error) {
-    if (this.state === State.Revoked) {
+    if (this.innerState === LeaseState.Revoked) {
       return; // often write-after-end, or something along those lines
     }
 
