@@ -414,9 +414,16 @@ export class WatchBuilder {
   }
 
   /**
-   * ignore omits certain operation kinds from the watch stream.
+   * @deprecated this does the opposite of what it says -- use `only` instead
    */
   public ignore(...operations: (keyof typeof operationNames)[]): this {
+    return this.only(...operations);
+  }
+
+  /**
+   * Requests only changes for the given kinds of operations.
+   */
+  public only(...operations: (keyof typeof operationNames)[]): this {
     this.request.filters = operations.map(op => operationNames[op]);
     return this;
   }

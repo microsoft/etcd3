@@ -5,24 +5,10 @@
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
 import { ClientRuntimeError, EtcdNotLeaderError } from './errors';
-import { Lease, LeaseState } from './lease';
+import { Lease } from './lease';
 import { Namespace } from './namespace';
 import { IKeyValue } from './rpc';
-
-export interface Election {
-  // tslint:disable-line interface-name
-  /**
-   * fired after leader elected
-   */
-  on(event: 'leader', listener: (leaderKey: string) => void): this;
-  /**
-   * errors are fired when:
-   * - observe error
-   * - recreate lease fail after lease lost
-   */
-  on(event: 'error', listener: (error: any) => void): this;
-  on(event: string | symbol, listener: Function): this;
-}
+import { getDeferred, IDeferred, toBuffer } from './util';
 
 const UnsetCurrent = Symbol('unset');
 
@@ -180,6 +166,173 @@ export class ElectionObserver extends EventEmitter {
   }
 }
 
+const ResignedCampaign = Symbol('ResignedCampaign');
+
+/**
+ * A Campaign is returned from {@link Election.campaign}. See the docs on that
+ * method for usage details.
+ */
+export class Campaign extends EventEmitter {
+  private lease: Lease;
+  private keyRevision?: string | typeof ResignedCampaign;
+  private value: Buffer;
+  private pendingProclaimation?: IDeferred<void>;
+
+  constructor(private readonly namespace: Namespace, value: string | Buffer, ttl: number) {
+    super();
+    this.value = toBuffer(value);
+    this.lease = this.namespace.lease(ttl);
+    this.lease.on('lost', err => this.emit('error', err));
+    this.start().catch(error => {
+      this.resign().catch(() => undefined);
+      this.pendingProclaimation?.reject(error);
+      this.emit('error', error);
+    });
+  }
+
+  /**
+   * elected is fired when the current instance becomes the leader.
+   */
+  public on(event: 'elected', handler: () => void): this;
+
+  /**
+   * error is fired if the underlying lease experiences an error. When this
+   * is emitted, the campaign has failed. You should handle this and create
+   * a new campaign if appropriate.
+   */
+  public on(event: 'error', handler: (error: Error) => void): this;
+
+  /**
+   * Implements EventEmitter.on(...).
+   */
+  public on(event: string, handler: (...args: any[]) => void): this {
+    return super.on(event, handler);
+  }
+
+  /**
+   * Helper function that returns a promise when the node becomes the leader.
+   * If `resign()` is called before this happens, the promise never resolves.
+   * If an error is emitted, the promise is rejected.
+   */
+  public wait() {
+    return new Promise<this>((resolve, reject) => {
+      this.on('elected', () => resolve(this));
+      this.on('error', reject);
+    });
+  }
+
+  /**
+   * Updates the value announced by this candidate (without starting a new
+   * election). If this candidate is currently the leader, then the change
+   * will be seen on other consumers as well.
+   * {@throws EtcdNotLeaderError} is the instance is no longer campaigning
+   */
+  public async proclaim(value: string | Buffer) {
+    if (this.keyRevision === ResignedCampaign) {
+      throw new EtcdNotLeaderError();
+    }
+
+    const buf = toBuffer(value);
+    if (buf.equals(this.value)) {
+      return Promise.resolve();
+    }
+
+    return this.proclaimInner(buf, this.keyRevision);
+  }
+
+  /**
+   * Gets the etcd key in which the proclaimed value is stored. This is derived
+   * from the underlying lease, and thus may throw if the lease was not granted
+   * successfully.
+   */
+  public async getCampaignKey() {
+    const leaseId = await this.lease.grant();
+    return this.namespace.prefix.toString() + leaseId;
+  }
+
+  /**
+   * Resigns from the campaign. A new leader is elected if this instance was
+   * formerly the leader.
+   */
+  public async resign() {
+    if (this.keyRevision !== ResignedCampaign) {
+      this.keyRevision = ResignedCampaign;
+      await this.lease.revoke();
+    }
+  }
+
+  private async start() {
+    const leaseId = await this.lease.grant();
+
+    const originalValue = this.value;
+    const result = await this.namespace
+      .if(leaseId, 'Create', '==', 0)
+      .then(this.namespace.put(leaseId).value(originalValue).lease(leaseId))
+      .else(this.namespace.get(leaseId))
+      .commit();
+
+    if (this.keyRevision === ResignedCampaign) {
+      return; // torn down in the meantime
+    }
+
+    this.keyRevision = result.header.revision;
+
+    if (result.succeeded) {
+      if (this.pendingProclaimation) {
+        await this.proclaimInner(this.value, this.keyRevision);
+        this.pendingProclaimation.resolve();
+      }
+    } else {
+      const kv = result.responses[0].response_range.kvs[0];
+      this.keyRevision = kv.create_revision;
+      if (!kv.value.equals(this.value)) {
+        await this.proclaimInner(this.value, this.keyRevision);
+        this.pendingProclaimation?.resolve();
+      }
+    }
+
+    await this.waitForElected(result.header.revision);
+    this.emit('elected');
+  }
+
+  private async proclaimInner(buf: Buffer, keyRevision: string | undefined) {
+    if (!keyRevision) {
+      this.pendingProclaimation = this.pendingProclaimation ?? getDeferred();
+      this.value = buf;
+      return this.pendingProclaimation.promise;
+    }
+
+    const leaseId = await this.lease.grant();
+    const r = await this.namespace
+      .if(leaseId, 'Create', '==', keyRevision)
+      .then(this.namespace.put(leaseId).value(buf).lease(leaseId))
+      .commit();
+    this.value = buf;
+
+    if (!r.succeeded) {
+      this.resign().catch(() => undefined);
+      throw new EtcdNotLeaderError();
+    }
+  }
+
+  private async waitForElected(revision: string) {
+    // find last created before this one
+    const lastRevision = new BigNumber(revision).minus(1).toString();
+    const result = await this.namespace
+      .getAll()
+      .maxCreateRevision(lastRevision)
+      .sort('Create', 'Descend')
+      .limit(1)
+      .exec();
+
+    // wait for all older keys to be deleted for us to become the leader
+    await waitForDeletes(
+      this.namespace,
+      result.kvs.map(k => k.key),
+    );
+  }
+}
+
 /**
  * Implmentation of etcd election.
  * @see https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go
@@ -197,121 +350,31 @@ export class Election extends EventEmitter {
    * Prefix used in the namespace for election-based operations.
    */
   public static readonly prefix = 'election';
-
   private readonly namespace: Namespace;
-  private lease?: Lease;
 
-  private _leaderKey = '';
-  private _leaderRevision = '';
-  private _isCampaigning = false;
-
-  public get leaderKey(): string {
-    return this._leaderKey;
-  }
-  public get leaderRevision(): string {
-    return this._leaderRevision;
-  }
-  public get isReady(): boolean {
-    return this.lease?.state === LeaseState.Alive;
-  }
-  public get isCampaigning(): boolean {
-    return this._isCampaigning;
-  }
-
-  constructor(
-    public readonly parent: Namespace,
-    public readonly name: string,
-    public readonly ttl: number = 60,
-  ) {
+  constructor(parent: Namespace, public readonly name: string, private readonly ttl: number = 60) {
     super();
-    this.namespace = parent.namespace(this.getPrefix());
+    this.namespace = parent.namespace(`${Election.prefix}/${this.name}/`);
   }
 
   /**
    * Puts the value as eligible for election. Multiple sessions can participate
-   * in the election for the same prefix, but only one can be the leader at a
-   * time.
+   * in the election, but only one can be the leader at a time.
    *
    * A common pattern in cluster-based applications is to campaign the hostname
    * or IP of the current server, and allow the leader server to be elected
    * among them.
    *
-   * This will block until the node is elected.
+   * You should listen to the `error` and `elected` events on the returned
+   * object to know when the instance becomes the leader, and when its campaign
+   * fails. Once you're finished, you can use {@link Campaign.resign} to
+   * forfeit its bid at leadership.
+   *
+   * An instance will not lose its leadership unless `resign()` is called,
+   * or an error is emitted.
    */
-  public async campaign(value: string) {
-    const leaseId = await this.acquireLease();
-    const result = await this.namespace
-      .if(leaseId, 'Create', '==', 0)
-      .then(this.namespace.put(leaseId).value(value).lease(leaseId))
-      .else(this.namespace.get(leaseId))
-      .commit();
-
-    this._leaderKey = `${this.getPrefix()}${leaseId}`;
-    this._leaderRevision = result.header.revision;
-    this._isCampaigning = true;
-
-    if (!result.succeeded) {
-      try {
-        const kv = result.responses[0].response_range.kvs[0];
-        this._leaderRevision = kv.create_revision;
-        if (kv.value.toString() !== value) {
-          await this.proclaim(value);
-        }
-      } catch (error) {
-        await this.resign();
-        throw error;
-      }
-    }
-
-    try {
-      await this.waitForElected();
-    } catch (error) {
-      await this.resign();
-      throw error;
-    }
-  }
-
-  public async proclaim(value: any) {
-    if (!this._isCampaigning) {
-      throw new EtcdNotLeaderError();
-    }
-
-    const leaseId = await this.lease!.grant();
-    const r = await this.namespace
-      .if(leaseId, 'Create', '==', this._leaderRevision)
-      .then(this.namespace.put(leaseId).value(value).lease(leaseId))
-      .commit();
-
-    if (!r.succeeded) {
-      this._leaderKey = '';
-      throw new EtcdNotLeaderError();
-    }
-  }
-
-  public async resign() {
-    if (!this.isCampaigning) {
-      return;
-    }
-
-    const leaseId = await this.lease!.grant();
-    const r = await this.namespace
-      .if(leaseId, 'Create', '==', this._leaderRevision)
-      .then(this.namespace.delete().key(leaseId))
-      .commit();
-
-    if (!r.succeeded) {
-      if (!this.lease) {
-        return;
-      }
-      // If fail, revoke lease for performing resigning
-      await this.lease.revoke();
-      this.lease = this.namespace.lease(this.ttl);
-      this.lease.on('lost', err => this.onLeaseLost(err));
-    }
-
-    this._leaderKey = '';
-    this._leaderRevision = '';
-    this._isCampaigning = false;
+  public campaign(value: string) {
+    return new Campaign(this.namespace, value, this.ttl);
   }
 
   /**
@@ -335,45 +398,6 @@ export class Election extends EventEmitter {
     return encoding === 'buffer' ? leader.value : leader.value.toString();
   }
 
-  public getPrefix() {
-    return `${Election.prefix}/${this.name}/`;
-  }
-
-  /**
-   * Creates the lease for a campaign, if it does not exist, and returns the
-   * lease ID once available.
-   */
-  private acquireLease() {
-    if (!this.lease) {
-      this.lease = this.namespace.lease(this.ttl);
-      this.lease.on('lost', err => this.onLeaseLost(err));
-    }
-
-    return this.lease.grant();
-  }
-
-  private async waitForElected() {
-    // find last create before this
-    const lastRevision = new BigNumber(this.leaderRevision).minus(1).toString();
-    const result = await this.namespace
-      .getAll()
-      .maxCreateRevision(lastRevision)
-      .sort('Create', 'Descend')
-      .exec();
-
-    // no one before this, elected
-    if (result.kvs.length === 0) {
-      return;
-    }
-
-    // wait all keys created ealier are deleted
-    await waitForDeletes(
-      this.namespace,
-      result.kvs.map(k => k.key),
-      result.header.revision,
-    );
-  }
-
   /**
    * Creates an observer for the election, which emits events when results
    * change. The observer must be closed using `observer.cancel()` when
@@ -386,21 +410,11 @@ export class Election extends EventEmitter {
       observer.once('error', reject);
     });
   }
-
-  private onLeaseLost(error: Error) {
-    if (this.lease) {
-      this.lease.removeAllListeners();
-      this.lease = undefined;
-    }
-
-    this.emit('error', error);
-  }
 }
 
 async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
-  const watcher = await namespace.watch().key(key).startRevision(rev).create();
+  const watcher = await namespace.watch().key(key).startRevision(rev).only('delete').create();
   const deleteOrError = new Promise((resolve, reject) => {
-    // waiting for deleting of that key
     watcher.once('delete', resolve);
     watcher.once('error', reject);
   });
@@ -412,27 +426,14 @@ async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
   }
 }
 
-async function waitForDeletes(namespace: Namespace, keys: Buffer[], rev: string) {
-  if (keys.length === 0) {
-    return;
-  }
-
-  if (keys.length === 1) {
-    return waitForDelete(namespace, keys[0], rev);
-  }
-
-  const tasks = keys.map(key => async () => {
-    const keyExisted = (await namespace.get(key).string()) !== null;
-    if (!keyExisted) {
-      return;
+/**
+ * Returns a function that resolves when all of the given keys are deleted.
+ */
+async function waitForDeletes(namespace: Namespace, keys: Buffer[]) {
+  for (const key of keys) {
+    const res = await namespace.get(key).exec();
+    if (res.kvs.length) {
+      await waitForDelete(namespace, key, res.header.revision);
     }
-    await waitForDelete(namespace, key, rev);
-  });
-
-  let task = tasks.shift();
-
-  while (task) {
-    await task();
-    task = tasks.shift();
   }
 }

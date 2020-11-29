@@ -1,9 +1,10 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
+import { ExponentialBackoff } from 'cockatiel';
 import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
-import { Lease, ILeaseOptions } from './lease';
+import { ILeaseOptions, Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
 import { Rangable, Range } from './range';
@@ -11,7 +12,6 @@ import * as RPC from './rpc';
 import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
 import { NSApplicator, toBuffer } from './util';
 import { WatchBuilder, WatchManager } from './watch';
-import { ExponentialBackoff } from 'cockatiel';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default
@@ -56,7 +56,7 @@ export class Namespace {
 
   protected constructor(
     /** @internal */
-    protected readonly prefix: Buffer,
+    public readonly prefix: Buffer,
     /** @internal */
     protected readonly pool: ConnectionPool,
     /** @internal */
