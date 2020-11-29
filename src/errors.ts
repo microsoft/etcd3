@@ -234,14 +234,9 @@ export class EtcdWatchStreamEnded extends Error {
 }
 
 /**
- * Etcd leader election has no leader
+ * Thrown from methods of {@link ElectionCampaign} if the campaign has ceased.
  */
-export class EtcdNoLeaderError extends Error {}
-
-/**
- * Process in this etcd leader election is not a leader.
- */
-export class EtcdNotLeaderError extends Error {}
+export class NotCampaigningError extends Error {}
 
 /**
  * An STMConflictError is thrown from the `SoftwareTransaction.transact`

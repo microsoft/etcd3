@@ -11,7 +11,7 @@
     "test:lint": "eslint \"src/**/*.ts\"",
     "watch": "tsc --watch",
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js",
-    "build:doc": "rimraf docs && typedoc --theme minimal --mode library --exclude \"src/test/*\" --excludePrivate --stripInternal --out ./docs ./src/index.ts && node bin/tame-typedoc",
+    "build:doc": "rimraf docs && typedoc --theme minimal --mode file --exclude \"src/test/*\" --excludePrivate --stripInternal --out ./docs ./src/index.ts && node bin/tame-typedoc",
     "build:ts": "tsc",
     "fmt": "prettier --write \"src/**/*.{ts,js}\" && npm run -s test:lint -- --fix",
     "prepare": "npm run -s build:ts"
@@ -69,7 +69,8 @@
     "rxjs": "^6.6.3",
     "sinon": "^9.0.3",
     "ts-node": "^9.0.0",
-    "typedoc": " 0.17.0-3",
+    "typedoc": "^0.19.2",
+    "typedoc-plugin-no-inherit": "^1.2.0",
     "typescript": "^4.0.3"
   },
   "dependencies": {

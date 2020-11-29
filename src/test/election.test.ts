@@ -3,7 +3,7 @@ import { fromEvent } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Election, Etcd3 } from '../';
 import { Campaign } from '../election';
-import { EtcdNotLeaderError } from '../errors';
+import { NotCampaigningError } from '../errors';
 import { delay } from '../util';
 import { getOptions, tearDownTestClient } from './util';
 
@@ -103,14 +103,14 @@ describe('election', () => {
     it('should not update if resigned', async () => {
       await campaign.resign();
       await expect(campaign.proclaim('new-candidate')).to.eventually.be.rejectedWith(
-        EtcdNotLeaderError,
+        NotCampaigningError,
       );
     });
 
     it('should not update key was tampered with', async () => {
       await client.delete().key(await campaign.getCampaignKey());
       await expect(campaign.proclaim('new-candidate')).to.eventually.be.rejectedWith(
-        EtcdNotLeaderError,
+        NotCampaigningError,
       );
     });
 

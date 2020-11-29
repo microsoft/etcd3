@@ -4,7 +4,7 @@
 
 import BigNumber from 'bignumber.js';
 import { EventEmitter } from 'events';
-import { ClientRuntimeError, EtcdNotLeaderError } from './errors';
+import { ClientRuntimeError, NotCampaigningError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
 import { IKeyValue } from './rpc';
@@ -15,6 +15,7 @@ const UnsetCurrent = Symbol('unset');
 /**
  * Object returned from election.observer() that exposees information about
  * the current election.
+ * @noInheritDoc
  */
 export class ElectionObserver extends EventEmitter {
   /**
@@ -43,9 +44,17 @@ export class ElectionObserver extends EventEmitter {
   public on(event: 'change', handler: (value: string | undefined) => void): this;
 
   /**
-   * error is fired if the underlying election watcher experiences an error.
+   * disconnected is fired when the underlying watcher is disconnected. Etcd3
+   * will automatically attempt to reconnect in the background. This has the
+   * same semantics as the `disconnected` event on the {@link Watcher}.
    */
-  public on(event: 'error', handler: (value: string | undefined) => void): this;
+  public on(event: 'disconnected', handler: (value: Error) => void): this;
+
+  /**
+   * error is fired if the underlying election watcher
+   * experiences an unrecoverable error.
+   */
+  public on(event: 'error', handler: (value: Error) => void): this;
 
   /**
    * Implements EventEmitter.on(...).
@@ -115,7 +124,7 @@ export class ElectionObserver extends EventEmitter {
           .watch()
           .startRevision(allKeys.header.revision)
           .prefix('')
-          .ignore('put')
+          .only('put')
           .watcher();
 
         await new Promise<void>((resolve, reject) => {
@@ -170,7 +179,8 @@ const ResignedCampaign = Symbol('ResignedCampaign');
 
 /**
  * A Campaign is returned from {@link Election.campaign}. See the docs on that
- * method for usage details.
+ * method for an example.
+ * @noInheritDoc
  */
 export class Campaign extends EventEmitter {
   private lease: Lease;
@@ -225,11 +235,12 @@ export class Campaign extends EventEmitter {
    * Updates the value announced by this candidate (without starting a new
    * election). If this candidate is currently the leader, then the change
    * will be seen on other consumers as well.
-   * {@throws EtcdNotLeaderError} is the instance is no longer campaigning
+   *
+   * @throws NotCampaigningError if the instance is no longer campaigning
    */
   public async proclaim(value: string | Buffer) {
     if (this.keyRevision === ResignedCampaign) {
-      throw new EtcdNotLeaderError();
+      throw new NotCampaigningError();
     }
 
     const buf = toBuffer(value);
@@ -311,7 +322,7 @@ export class Campaign extends EventEmitter {
 
     if (!r.succeeded) {
       this.resign().catch(() => undefined);
-      throw new EtcdNotLeaderError();
+      throw new NotCampaigningError();
     }
   }
 
@@ -334,26 +345,62 @@ export class Campaign extends EventEmitter {
 }
 
 /**
- * Implmentation of etcd election.
- * @see https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go
+ * Implementation of elections, as seen in etcd's Go client. Elections are
+ * most commonly used if you need a single server in charge of a certain task;
+ * you run an election on every server where your program is running, and
+ * among them they will choose one "leader".
+ *
+ * There are two main entrypoints: campaigning via {@link Election.campaign},
+ * and observing the leader via {@link Election.observe}.
+ *
+ * @see https://github.com/etcd-io/etcd/blob/master/client/v3/concurrency/election.go
  *
  * @example
- * const client = new Etcd3()
- * const election = new Election(client, 'singleton_service')
- * const id = BigNumber.random().toString()
  *
- * // process will hang here until elected
- * await election.campaign(id)
+ * ```js
+ * const os = require('os');
+ * const client = new Etcd3();
+ * const election = client.election('singleton-job');
+ *
+ * function runCampaign() {
+ *   const campaign = election.campaign(os.hostname())
+ *   campaign.on('elected', () => {
+ *     // This server is now the leader! Let's start doing work
+ *     doSomeWork();
+ *   });
+ *   campaign.on('error', error => {
+ *     // An error happened that caused our campaign to fail. If we were the
+ *     // leader, make sure to stop doing work (another server is the leader
+ *     // now) and create a new campaign.
+ *     console.error(error);
+ *     stopDoingWork();
+ *     setTimeout(runCampaign, 5000);
+ *   });
+ * }
+ *
+ * async function observeLeader() {
+ *   const observer = await election.observe();
+ *   console.log('The current leader is', observer.leader());
+ *   observer.on('change', leader => console.log('The new leader is', leader));
+ *   observer.on('error', () => {
+ *     // Something happened that fatally interrupted observation.
+ *     setTimeout(observeLeader, 5000);
+ *   });
+ * }
+ * ```
+ * @noInheritDoc
  */
-export class Election extends EventEmitter {
+export class Election {
   /**
    * Prefix used in the namespace for election-based operations.
    */
   public static readonly prefix = 'election';
   private readonly namespace: Namespace;
 
+  /**
+   * @internal
+   */
   constructor(parent: Namespace, public readonly name: string, private readonly ttl: number = 60) {
-    super();
     this.namespace = parent.namespace(`${Election.prefix}/${this.name}/`);
   }
 
@@ -370,8 +417,8 @@ export class Election extends EventEmitter {
    * fails. Once you're finished, you can use {@link Campaign.resign} to
    * forfeit its bid at leadership.
    *
-   * An instance will not lose its leadership unless `resign()` is called,
-   * or an error is emitted.
+   * Once acquired, instance will not lose its leadership unless `resign()`
+   * is called, or `error` is emitted.
    */
   public campaign(value: string) {
     return new Campaign(this.namespace, value, this.ttl);

@@ -1,7 +1,48 @@
 # Changelog
 
-## 1.1.0 TBA
+## 1.1.0 2020-11-28
 
+- **feat:** implement elections
+
+  Implementation of elections, as seen in etcd's Go client. Elections are most commonly used if you need a single server in charge of a certain task; you run an election on every server where your program is running, and among them they will choose one "leader".
+
+  There are two main entrypoints: campaigning via Election.campaign, and observing the leader via Election.observe.
+
+  ```js
+  const os = require('os');
+  const client = new Etcd3();
+  const election = client.election('singleton-job');
+
+  function runCampaign() {
+    const campaign = election.campaign(os.hostname());
+    campaign.on('elected', () => {
+      // This server is now the leader! Let's start doing work
+      doSomeWork();
+    });
+    campaign.on('error', error => {
+      // An error happened that caused our campaign to fail. If we were the
+      // leader, make sure to stop doing work (another server is the leader
+      // now) and create a new campaign.
+      console.error(error);
+      stopDoingWork();
+      setTimeout(runCampaign, 5000);
+    });
+  }
+
+  async function observeLeader() {
+    const observer = await election.observe();
+    console.log('The current leader is', observer.leader());
+    observer.on('change', leader => console.log('The new leader is', leader));
+    observer.on('error', () => {
+      // Something happened that fatally interrupted observation.
+      setTimeout(observeLeader, 5000);
+    });
+  }
+  ```
+
+  Thanks to [@yujuiting](https://github.com/yujuiting) for their help with the initial implementation. (see [#66](https://github.com/microsoft/etcd3/pull/66), [#85](https://github.com/microsoft/etcd3/issues/85)).
+
+- **fix:** **deprecation:** `watcherBuilder.ignore()` was available for "ignoring" types of events, but it actually did the opposite: it was an include-list, rather than a deny-list. It's deprecated in favor of `watchBuilder.only()`
 - **fix:** buffers not allowed in typings `Namespace.get(<key>)`
 - **fix:** prevent user errors in watcher event listeners from causing backoffs in the underlying stream
 

@@ -31,6 +31,7 @@ const enum QueueState {
  * Etcd does not guarentee that watchers are attached in order, so to properly
  * respond to leases and ensure state is consistent, watchers must be attached
  * one at a time.
+ * @internal
  */
 class AttachQueue {
   private state = QueueState.Idle;
@@ -466,7 +467,9 @@ export class WatchBuilder {
 }
 
 /**
- * The Watcher encapsulates
+ * The Watcher is an event emitter that handles watching on a key or set
+ * of keys. See {@link WatchBuilder} for a usage example.
+ * @noInheritDoc
  */
 export class Watcher extends EventEmitter {
   /**
@@ -475,6 +478,9 @@ export class Watcher extends EventEmitter {
    */
   public readonly id: string | null = null;
 
+  /**
+   * @internal
+   */
   constructor(
     private readonly manager: WatchManager,
     private readonly namespace: NSApplicator,

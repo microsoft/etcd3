@@ -4,6 +4,7 @@
 import { ExponentialBackoff } from 'cockatiel';
 import * as Builder from './builder';
 import { ConnectionPool } from './connection-pool';
+import { Election } from './election';
 import { ILeaseOptions, Lease } from './lease';
 import { Lock } from './lock';
 import { IOptions } from './options';
@@ -165,5 +166,17 @@ export class Namespace {
    */
   public namespace(prefix: string | Buffer): Namespace {
     return new Namespace(Buffer.concat([this.prefix, toBuffer(prefix)]), this.pool, this.options);
+  }
+
+  /**
+   * Creates a new {@link Election} instead. See more information on the
+   * Election class documentation.
+   * @param name Name of the election in the etcd instance.
+   * @param ttl Lease TTL used in the election. This is the maximum time that
+   * a node which goes down can remain the leader before being
+   * automatically evicted.
+   */
+  public election(name: string, ttl?: number) {
+    return new Election(this, name, ttl);
   }
 }

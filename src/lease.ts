@@ -101,6 +101,7 @@ export interface ILeaseOptions extends grpc.CallOptions {
  *   return keys.map(key => key.slice(hostPrefix.length));
  * }
  * ```
+ * @noInheritDoc
  */
 export class Lease extends EventEmitter {
   private leaseID: Promise<string | Error>;

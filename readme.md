@@ -10,6 +10,7 @@ etcd3 aims is a high-quality, production-ready client for the Protocol Buffer-ba
 - [lease management](https://microsoft.github.io/etcd3/classes/lease.html)
 - [watchers](https://microsoft.github.io/etcd3/classes/watchbuilder.html)
 - [user](https://microsoft.github.io/etcd3/classes/etcd3.html#user) and [role](https://microsoft.github.io/etcd3/classes/etcd3.html#role) [mocking](https://microsoft.github.io/etcd3/classes/etcd3.html#mock) management
+- [elections](https://microsoft.github.io/etcd3/classes/election.html)
 
 and is type-safe for TypeScript consumers.
 
