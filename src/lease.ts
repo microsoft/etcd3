@@ -133,6 +133,10 @@ export class Lease extends EventEmitter {
     this.leaseID = this.client
       .leaseGrant({ TTL: ttl }, options)
       .then(res => {
+        if (this.innerState === LeaseState.Revoked) {
+          return res.ID;
+        }
+
         this.innerState = LeaseState.Alive;
         this.lastKeepAlive = Date.now();
         if (autoKeepAlive !== false) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## TBA
+
+- **fix:** leases revoked or released before grant completes leaking
+
 ## 1.1.0 2020-11-28
 
 - **feat:** implement elections

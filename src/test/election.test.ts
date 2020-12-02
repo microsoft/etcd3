@@ -189,7 +189,7 @@ describe('election', () => {
       ]);
 
       expect(newLeader).to.equal('candidate');
-      campaign2.resign();
+      await campaign2.resign();
       await observer.cancel();
     });
   });
