@@ -145,7 +145,7 @@ describe('election', () => {
 
       expect(observer.leader()).to.equal('candidate');
 
-      const waitElection2 = election2.campaign('candidate2');
+      const campaign2 = election2.campaign('candidate2');
       while ((await client2.getAll().prefix('election').keys()).length < 2) {
         await delay(5);
       }
@@ -153,11 +153,11 @@ describe('election', () => {
       const [newLeader] = await Promise.all([
         changeEvent.pipe(take(1)).toPromise(),
         campaign.resign(),
-        waitElection2,
       ]);
 
       expect(newLeader).to.equal('candidate2');
       await observer.cancel();
+      await campaign2.resign();
     });
 
     it('emits when leader steps down', async () => {
