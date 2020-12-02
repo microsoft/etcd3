@@ -4,7 +4,7 @@ import { take } from 'rxjs/operators';
 import { Election, Etcd3 } from '../';
 import { Campaign } from '../election';
 import { NotCampaigningError } from '../errors';
-import { delay } from '../util';
+import { delay, getDeferred } from '../util';
 import { getOptions, tearDownTestClient } from './util';
 
 const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t));
@@ -23,6 +23,7 @@ describe('election', () => {
   afterEach(async () => {
     await campaign.resign();
     await tearDownTestClient(client);
+    client.close();
   });
 
   describe('campaign', () => {
@@ -41,44 +42,42 @@ describe('election', () => {
       let phase = 0;
 
       const campaign2 = election2.campaign('candidate2');
+      const phase1Defer = getDeferred<void>();
       const waitElection2 = campaign2
         .wait()
         .then(() => election.leader())
         .then(leader => {
           expect(phase).to.equal(1);
           expect(leader).to.equal('candidate2');
+          phase1Defer.resolve();
         });
 
       // essure client2 has joined campaign before client3
       await sleep(100);
 
       const campaign3 = election3.campaign('candidate3');
+      const phase2Defer = getDeferred<void>();
       const waitElection3 = campaign3
         .wait()
         .then(() => election.leader())
         .then(leader => {
           expect(phase).to.equal(2);
           expect(leader).to.equal('candidate3');
+          phase2Defer.resolve();
         });
 
       // ensure client3 joined campaign
       await sleep(100);
 
       phase = 1;
-
       await campaign.resign();
-
-      // ensure client2 and client3 watcher triggered
-      await sleep(100);
+      await phase1Defer.promise;
 
       phase = 2;
-
       await campaign2.resign();
-
-      await sleep(100);
+      await phase2Defer.promise;
 
       await campaign3.resign();
-
       await Promise.all([waitElection2, waitElection3]);
     });
 
