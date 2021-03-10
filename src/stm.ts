@@ -412,7 +412,7 @@ class SerializableTransaction extends BasicTransaction {
  *     return Promise.all([
  *       tx.put('bank/account1').value(balance1 - amount),
  *       tx.put('bank/account2').value(balance2 + amount),
- *     });
+ *     ]);
  *   });
  * });
  * ```
