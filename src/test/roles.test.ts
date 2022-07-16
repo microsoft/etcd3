@@ -84,7 +84,7 @@ describe('roles and auth', () => {
         },
       ]);
 
-      await fooRole.revoke(perms[0]);
+      await fooRole.revoke(perms);
       expect(await fooRole.permissions()).to.have.length(0);
     });
   });
