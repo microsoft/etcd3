@@ -9,14 +9,14 @@ import {
   IDefaultPolicyContext,
   IPolicy,
   isBrokenCircuitError,
-  Policy,
+  Policy
 } from 'cockatiel';
 import {
   castGrpcError,
   ClientClosedError,
   ClientRuntimeError,
   EtcdInvalidAuthTokenError,
-  isRecoverableError,
+  isRecoverableError
 } from './errors';
 import { IOptions } from './options';
 import { CallContext, ICallable, Services } from './rpc';
@@ -318,11 +318,6 @@ export class ConnectionPool implements ICallable<Host> {
             try {
               return await runServiceCall(client, metadata, resolvedOpts, method, payload);
             } catch (err) {
-              if (err instanceof EtcdInvalidAuthTokenError) {
-                this.authenticator.invalidateMetadata();
-                return this.exec(serviceName, method, payload, options);
-              }
-
               lastError = err;
               throw err;
             }
@@ -331,6 +326,13 @@ export class ConnectionPool implements ICallable<Host> {
         ),
       );
     } catch (e) {
+      
+      // Tf auth token error, clear metadata and retry
+      if (e instanceof EtcdInvalidAuthTokenError) {
+        this.authenticator.invalidateMetadata();
+        return this.exec(serviceName, method, payload, options);
+      }
+
       // If we ran into an error that caused the a circuit to open, but we had
       // an error before that happened, throw the original error rather than
       // the broken circuit error.
