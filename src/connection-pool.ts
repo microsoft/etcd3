@@ -215,7 +215,7 @@ export class Host {
         // workaround: https://github.com/grpc/grpc-node/issues/1487
         const state = service.getChannel().getConnectivityState(false);
         if (state === grpc.connectivityState.CONNECTING) {
-          service.waitForReady(Date.now() + 10_00, () => service.close());
+          service.waitForReady(Date.now() + 10_00, () => setImmediate(() => service.close()));
         } else {
           service.close();
         }
