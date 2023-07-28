@@ -188,7 +188,11 @@ export class Campaign extends EventEmitter {
   private value: Buffer;
   private pendingProclaimation?: IDeferred<void>;
 
-  constructor(private readonly namespace: Namespace, value: string | Buffer, ttl: number) {
+  constructor(
+    private readonly namespace: Namespace,
+    value: string | Buffer,
+    ttl: number,
+  ) {
     super();
     this.value = toBuffer(value);
     this.lease = this.namespace.lease(ttl);
@@ -400,7 +404,11 @@ export class Election {
   /**
    * @internal
    */
-  constructor(parent: Namespace, public readonly name: string, private readonly ttl: number = 60) {
+  constructor(
+    parent: Namespace,
+    public readonly name: string,
+    private readonly ttl: number = 60,
+  ) {
     this.namespace = parent.namespace(`${Election.prefix}/${this.name}/`);
   }
 

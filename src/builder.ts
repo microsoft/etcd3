@@ -45,10 +45,10 @@ export const compareTarget: { [key in keyof typeof RPC.CompareTarget]: keyof RPC
  * assertWithin throws a helpful error message if the value provided isn't
  * a key in the given map.
  */
-function assertWithin<T>(map: T, value: keyof T, thing: string) {
+function assertWithin<T extends object>(map: T, value: keyof T, thing: string) {
   if (!(value in map)) {
     const keys = Object.keys(map).join('" "');
-    throw new Error(`Unexpected "${value}" in ${thing}. Possible values are: "${keys}"`);
+    throw new Error(`Unexpected "${String(value)}" in ${thing}. Possible values are: "${keys}"`);
   }
 }
 
@@ -133,7 +133,11 @@ export abstract class RangeBuilder<T> extends PromiseWrap<T> implements IOperati
  * SingleRangeBuilder is a query builder that looks up a single key.
  */
 export class SingleRangeBuilder extends RangeBuilder<string | null> {
-  constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator, key: string | Buffer) {
+  constructor(
+    private readonly kv: RPC.KVClient,
+    namespace: NSApplicator,
+    key: string | Buffer,
+  ) {
     super(namespace);
     this.request.key = toBuffer(key);
     this.request.limit = 1;
@@ -200,7 +204,10 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
  * MultiRangeBuilder is a query builder that looks up multiple keys.
  */
 export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
-  constructor(private readonly kv: RPC.KVClient, namespace: NSApplicator) {
+  constructor(
+    private readonly kv: RPC.KVClient,
+    namespace: NSApplicator,
+  ) {
     super(namespace);
     this.prefix(emptyBuffer);
   }
@@ -353,7 +360,10 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
   private request: RPC.IDeleteRangeRequest = {};
   private callOptions: grpc.CallOptions | undefined;
 
-  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {
+  constructor(
+    private readonly kv: RPC.KVClient,
+    private readonly namespace: NSApplicator,
+  ) {
     super();
   }
 
@@ -577,7 +587,10 @@ export class ComparatorBuilder {
   } = { compare: [], success: [], failure: [] };
   private callOptions: grpc.CallOptions | undefined;
 
-  constructor(private readonly kv: RPC.KVClient, private readonly namespace: NSApplicator) {}
+  constructor(
+    private readonly kv: RPC.KVClient,
+    private readonly namespace: NSApplicator,
+  ) {}
 
   /**
    * Sets the GRPC call options for this request.

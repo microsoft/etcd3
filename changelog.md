@@ -1,8 +1,9 @@
 # Changelog
 
-## TBA
+## 1.2.0 2023-07-28
 
 - **fix:** leases revoked or released before grant completes leaking
+- **chore:** update dependencies
 
 ## 1.1.0 2020-11-28
 

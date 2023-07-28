@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import BigNumber from 'bignumber.js';
-import { IBackoff } from 'cockatiel';
+import { IBackoff, IBackoffFactory } from 'cockatiel';
 import { EventEmitter } from 'events';
 import {
   castGrpcErrorMessage,
@@ -12,7 +12,7 @@ import {
 } from './errors';
 import { Rangable, Range } from './range';
 import * as RPC from './rpc';
-import { NSApplicator, onceEvent, toBuffer } from './util';
+import { NSApplicator, delay, onceEvent, toBuffer } from './util';
 
 const enum State {
   Idle,
@@ -134,12 +134,15 @@ export class WatchManager {
   private queue: null | AttachQueue;
 
   /**
-   * Initial backoff policy, used to reset the backoffs.
+   * Current backoff value.
    */
-  private readonly initialBackoff: IBackoff<void>;
+  private backoff: IBackoff<void>;
 
-  constructor(private readonly client: RPC.WatchClient, private backoff: IBackoff<void>) {
-    this.initialBackoff = backoff;
+  constructor(
+    private readonly client: RPC.WatchClient,
+    private readonly initialBackoff: IBackoffFactory<void>,
+  ) {
+    this.backoff = initialBackoff.next();
   }
 
   /**
@@ -184,7 +187,12 @@ export class WatchManager {
     // wanted to cancel the Watcher.
     this.expectedClosers.add(watcher);
     this.getStream().write({ cancel_request: { watch_id: watcher.id } });
-    return onceEvent(watcher, 'end').then(() => undefined);
+    return onceEvent(watcher, 'end').then(async () => {
+      // There seem to be some bug(?) in grpc-js where if we call another
+      // method in the same task when the stream ended, then we get a GRPC
+      // "14 UNAVAILABLE" error. Adding any kind of task boundary resolve this.
+      await delay(0);
+    });
   }
 
   /**
@@ -281,7 +289,7 @@ export class WatchManager {
       if (this.state === State.Idle) {
         this.establishStream();
       }
-    }, this.backoff.duration());
+    }, this.backoff.duration);
 
     this.backoff = this.backoff.next() ?? this.backoff;
   }
@@ -321,7 +329,7 @@ export class WatchManager {
    * Handles the creation of a new watcher from etcd.
    */
   private handleCreatedResponse(res: RPC.IWatchResponse) {
-    this.backoff = this.initialBackoff;
+    this.backoff = this.initialBackoff.next();
     if (!res.canceled) {
       this.queue!.handleCreate(res);
       return;
@@ -343,7 +351,7 @@ export class WatchManager {
    * Dispatches some a watch response on the event stream.
    */
   private handleResponse(res: RPC.IWatchResponse) {
-    this.backoff = this.initialBackoff;
+    this.backoff = this.initialBackoff.next();
     const watcher = this.watchers.find(w => w.id === res.watch_id);
     if (!watcher) {
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');
@@ -388,7 +396,10 @@ export const operationNames = {
 export class WatchBuilder {
   private request: RPC.IWatchCreateRequest = { progress_notify: true };
 
-  constructor(private readonly manager: WatchManager, private readonly namespace: NSApplicator) {}
+  constructor(
+    private readonly manager: WatchManager,
+    private readonly namespace: NSApplicator,
+  ) {}
 
   /**
    * Sets a single key to be watched.

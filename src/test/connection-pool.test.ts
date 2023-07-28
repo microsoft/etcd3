@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { expect } from 'chai';
-import { Policy } from 'cockatiel';
+import { NoopPolicy, handleAll, retry } from 'cockatiel';
 import { stub } from 'sinon';
 import { IOptions, KVClient } from '..';
 import { ConnectionPool } from '../connection-pool';
@@ -79,8 +79,8 @@ describe('connection pool', () => {
     pool = new ConnectionPool(
       getOptionsWithBadHost({
         faultHandling: {
-          global: Policy.handleAll().retry().attempts(3),
-          host: () => Policy.noop,
+          global: retry(handleAll, { maxAttempts: 3 }),
+          host: () => new NoopPolicy(),
         },
       }),
     );

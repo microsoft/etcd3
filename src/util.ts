@@ -157,7 +157,7 @@ export function delay(duration: number): Promise<void> {
 /**
  * Implementation of lodash forOwn, with stronger typings and no dependency ;)
  */
-export function forOwn<T>(
+export function forOwn<T extends object>(
   obj: T,
   iterator: <K extends keyof T>(value: T[K], key: K) => void,
 ): void {

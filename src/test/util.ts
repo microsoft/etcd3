@@ -5,10 +5,10 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as tls from 'tls';
 
-import { Etcd3, IOptions, Namespace } from '..';
+import { NoopPolicy } from 'cockatiel';
 import { AddressInfo } from 'net';
 import { resolve } from 'path';
-import { Policy } from 'cockatiel';
+import { Etcd3, IOptions, Namespace } from '..';
 
 const rootPath = resolve(__dirname, '..', '..');
 const rootCertificate = fs.readFileSync(`${rootPath}/src/test/certs/certs/ca.crt`);
@@ -192,8 +192,8 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
     hosts: getHost(),
     credentials: { rootCertificate },
     faultHandling: {
-      global: Policy.noop,
-      host: () => Policy.noop,
+      global: new NoopPolicy(),
+      host: () => new NoopPolicy(),
     },
     ...defaults,
   };
