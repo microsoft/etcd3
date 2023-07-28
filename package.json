@@ -20,6 +20,9 @@
     "type": "git",
     "url": "git+https://github.com/microsoft/etcd3.git"
   },
+  "engines": {
+    "node": ">=16"
+  },
   "nyc": {
     "reporter": [
       "text-summary",
