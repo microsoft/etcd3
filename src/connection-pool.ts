@@ -98,7 +98,8 @@ class Authenticator {
       typeof this.options.hosts === 'string' ? [this.options.hosts] : this.options.hosts;
     const auth = this.options.auth;
 
-    if (!auth) {
+    const ignoreAuth = !auth || !(auth.username && auth.password);
+    if (ignoreAuth) {
       return Promise.resolve(new grpc.Metadata());
     }
 
