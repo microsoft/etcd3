@@ -4,7 +4,7 @@ import { take } from 'rxjs/operators';
 import { Election, Etcd3 } from '../';
 import { Campaign } from '../election';
 import { NotCampaigningError } from '../errors';
-import { delay, getDeferred } from '../util';
+import { delay, getDeferred, onceEvent } from '../util';
 import { getOptions, tearDownTestClient } from './util';
 
 const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t));
@@ -191,5 +191,39 @@ describe('election', () => {
       await campaign2.resign();
       await observer.cancel();
     });
+  });
+
+  it('fixes #176', async function () {
+    const observer1 = await election.observe();
+
+    const client2 = new Etcd3(getOptions());
+    const election2 = client2.election('test-election', 1);
+    const observer2 = await election2.observe();
+    const campaign2 = election2.campaign('candidate2');
+    await onceEvent(campaign2, '_isWaiting');
+
+    const client3 = new Etcd3(getOptions());
+    const election3 = client3.election('test-election', 1);
+    const observer3 = await election3.observe();
+    const campaign3 = election3.campaign('candidate3');
+    await onceEvent(campaign3, '_isWaiting');
+
+    expect(observer1.leader()).to.equal('candidate');
+    expect(observer2.leader()).to.equal('candidate');
+    expect(observer3.leader()).to.equal('candidate');
+
+    const changes: string[] = [];
+    campaign.on('elected', () => changes.push('leader is now 1'));
+    campaign3.on('elected', () => changes.push('leader is now 3'));
+
+    await campaign2.resign();
+    await delay(1000); // give others a chance to see the change, if any
+
+    expect(observer1.leader()).to.equal('candidate');
+    expect(observer3.leader()).to.equal('candidate');
+    expect(changes).to.be.empty;
+
+    client2.close();
+    client3.close();
   });
 });

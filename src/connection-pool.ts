@@ -5,11 +5,14 @@ import * as grpc from '@grpc/grpc-js';
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { loadSync } from '@grpc/proto-loader';
 import {
+  circuitBreaker,
   ConsecutiveBreaker,
+  handleWhen,
   IDefaultPolicyContext,
   IPolicy,
   isBrokenCircuitError,
   Policy
+  retry,
 } from 'cockatiel';
 import {
   castGrpcError,
@@ -157,7 +160,10 @@ class Authenticator {
 }
 
 const defaultCircuitBreaker = () =>
-  Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3));
+  circuitBreaker(handleWhen(isRecoverableError), {
+    halfOpenAfter: 5_000,
+    breaker: new ConsecutiveBreaker(3),
+  });
 
 /**
  * A Host is one instance of the etcd server, which can contain multiple
@@ -210,7 +216,7 @@ export class Host {
         // workaround: https://github.com/grpc/grpc-node/issues/1487
         const state = service.getChannel().getConnectivityState(false);
         if (state === grpc.connectivityState.CONNECTING) {
-          service.waitForReady(Date.now() + 10_00, () => service.close());
+          service.waitForReady(Date.now() + 10_00, () => setImmediate(() => service.close()));
         } else {
           service.close();
         }
@@ -245,7 +251,7 @@ export class ConnectionPool implements ICallable<Host> {
 
   private readonly hosts: Host[];
   private readonly globalPolicy: IPolicy<IDefaultPolicyContext> =
-    this.options.faultHandling?.global ?? Policy.handleWhen(isRecoverableError).retry().attempts(3);
+    this.options.faultHandling?.global ?? retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
   private mockImpl: ICallable<Host> | null;
   private authenticator: Authenticator;
 

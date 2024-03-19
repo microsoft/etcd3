@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [^10, ^12, ^14]
+        node-version: [^16, ^18, ^20]
         etcd-version: [v3.1.5, v3.2.4, v3.3.9]
     steps:
     - uses: actions/checkout@v1

@@ -38,7 +38,10 @@ export interface IPermissionResult {
  * ranges.
  */
 export class Role {
-  constructor(private client: AuthClient, public readonly name: string) {}
+  constructor(
+    private client: AuthClient,
+    public readonly name: string,
+  ) {}
 
   /**
    * Creates the role in etcd.
@@ -142,7 +145,10 @@ export class Role {
  * be added to Roles to manage permissions.
  */
 export class User {
-  constructor(private client: AuthClient, public readonly name: string) {}
+  constructor(
+    private client: AuthClient,
+    public readonly name: string,
+  ) {}
 
   /**
    * Creates the user, with the provided password.

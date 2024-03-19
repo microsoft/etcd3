@@ -1,8 +1,14 @@
 # Changelog
 
-## TBA
+# 1.1.2 2023-07-30
+
+- **fix:** elections sometimes electing >1 leader (see [#176](https://github.com/microsoft/etcd3/issues/176))
+- **fix:** a race condition in Host.resetAllServices (see [#182](https://github.com/microsoft/etcd3/issues/182))
+
+## 1.1.1 2023-07-28
 
 - **fix:** leases revoked or released before grant completes leaking
+- **chore:** update dependencies
 
 ## 1.1.0 2020-11-28
 

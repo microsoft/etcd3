@@ -1,8 +1,8 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import BigNumber from 'bignumber.js';
 import * as grpc from '@grpc/grpc-js';
+import BigNumber from 'bignumber.js';
 
 import * as Builder from './builder';
 import { ClientRuntimeError, STMConflictError } from './errors';
@@ -98,7 +98,8 @@ interface CompletedReads {
  * ReadSet records a set of reads in a SoftwareTransaction.
  */
 class ReadSet {
-  private readonly reads: { [key: string]: Promise<RPC.IRangeResponse> } = Object.create(null);
+  private readonly reads: Record<string, Promise<RPC.IRangeResponse> | undefined> =
+    Object.create(null);
   private readonly completedReads: CompletedReads[] = [];
   private earliestMod = new BigNumber(Infinity);
 
@@ -128,8 +129,9 @@ class ReadSet {
    */
   public runRequest(kv: RPC.KVClient, req: RPC.IRangeRequest): Promise<RPC.IRangeResponse> {
     const key = req.key!.toString();
-    if (this.reads[key]) {
-      return this.reads[key];
+    const previous = this.reads[key];
+    if (previous) {
+      return previous;
     }
 
     const promise = kv.range(req).then(res => {
@@ -340,7 +342,9 @@ class BasicTransaction {
   protected assertNoOption<T>(req: string, obj: T, keys: (keyof T)[]) {
     keys.forEach(key => {
       if (obj[key] !== undefined) {
-        throw new Error(`"${key}" is not supported in ${req} requests within STM transactions`);
+        throw new Error(
+          `"${String(key)}" is not supported in ${req} requests within STM transactions`,
+        );
       }
     });
   }

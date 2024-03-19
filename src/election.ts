@@ -8,7 +8,7 @@ import { ClientRuntimeError, NotCampaigningError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
 import { IKeyValue } from './rpc';
-import { getDeferred, IDeferred, toBuffer } from './util';
+import { IDeferred, getDeferred, toBuffer } from './util';
 
 const UnsetCurrent = Symbol('unset');
 
@@ -188,7 +188,11 @@ export class Campaign extends EventEmitter {
   private value: Buffer;
   private pendingProclaimation?: IDeferred<void>;
 
-  constructor(private readonly namespace: Namespace, value: string | Buffer, ttl: number) {
+  constructor(
+    private readonly namespace: Namespace,
+    value: string | Buffer,
+    ttl: number,
+  ) {
     super();
     this.value = toBuffer(value);
     this.lease = this.namespace.lease(ttl);
@@ -327,20 +331,28 @@ export class Campaign extends EventEmitter {
   }
 
   private async waitForElected(revision: string) {
-    // find last created before this one
-    const lastRevision = new BigNumber(revision).minus(1).toString();
-    const result = await this.namespace
-      .getAll()
-      .maxCreateRevision(lastRevision)
-      .sort('Create', 'Descend')
-      .limit(1)
-      .exec();
+    while (this.keyRevision !== ResignedCampaign) {
+      // find last created before this one
+      const lastRevision = new BigNumber(revision).minus(1).toString();
+      const result = await this.namespace
+        .getAll()
+        .maxCreateRevision(lastRevision)
+        .sort('Create', 'Descend')
+        .limit(1)
+        .exec();
 
-    // wait for all older keys to be deleted for us to become the leader
-    await waitForDeletes(
-      this.namespace,
-      result.kvs.map(k => k.key),
-    );
+      if (result.kvs.length === 0) {
+        return;
+      }
+
+      this.emit('_isWaiting'); // internal event used to sync unit tests
+
+      // wait for all it to be deleted for us to become the leader
+      await waitForDeletes(
+        this.namespace,
+        result.kvs.map(k => k.key),
+      );
+    }
   }
 }
 
@@ -400,7 +412,11 @@ export class Election {
   /**
    * @internal
    */
-  constructor(parent: Namespace, public readonly name: string, private readonly ttl: number = 60) {
+  constructor(
+    parent: Namespace,
+    public readonly name: string,
+    private readonly ttl: number = 60,
+  ) {
     this.namespace = parent.namespace(`${Election.prefix}/${this.name}/`);
   }
 
