@@ -9,13 +9,13 @@ jobs:
         node-version: [^16, ^18, ^20]
         etcd-version: [v3.1.5, v3.2.4, v3.3.9]
     steps:
-    - uses: actions/checkout@50fbc622fc4ef5163becd7fab6573eac35f8462e # v1.2.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - run: curl -L https://github.com/coreos/etcd/releases/download/${{ matrix.etcd-version }}/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz -o /tmp/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz
     - run: mkdir -p /tmp/etcd
     - run: tar xzvf /tmp/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
     - run: /tmp/etcd/etcd --advertise-client-urls https://127.0.0.1:2379 --listen-client-urls https://127.0.0.1:2379 --cert-file ${{ github.workspace }}/src/test/certs/certs/etcd0.localhost.crt --key-file ${{ github.workspace }}/src/test/certs/private/etcd0.localhost.key > /dev/null &
 
-    - uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e # v1.4.6
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
