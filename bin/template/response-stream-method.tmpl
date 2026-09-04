@@ -7,7 +7,7 @@
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stream = (<any> client).<%= _.lowerFirst(name) %>(metadata, resolved, <%= req.empty ? '{}' : 'req' %>);
+        const stream = (<any> client).<%= _.lowerFirst(name) %>(<%= req.empty ? '{}' : 'req' %>, metadata, resolved);
         stream.on('error', (err: Error) => this.client.markFailed(resource, err));
         return stream;
       });
