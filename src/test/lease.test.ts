@@ -3,8 +3,9 @@
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Etcd3, EtcdLeaseInvalidError, Lease } from '..';
-import { onceEvent } from '../util';
+import { Etcd3, EtcdLeaseInvalidError } from '../index.js';
+import type { Lease } from '../index.js';
+import { onceEvent } from '../util.js';
 import {
   createTestClientAndKeys,
   getOptions,
@@ -12,8 +13,8 @@ import {
   tearDownTestClient,
   TrafficDirection,
   unmockedDelay,
-} from './util';
-import { GRPCUnavailableError } from '../errors';
+} from './util.js';
+import { GRPCUnavailableError } from '../errors.js';
 
 describe('lease()', () => {
   let client: Etcd3;

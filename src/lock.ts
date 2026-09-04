@@ -3,12 +3,12 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { ComparatorBuilder, PutBuilder } from './builder';
-import { ConnectionPool } from './connection-pool';
-import { EtcdLockFailedError } from './errors';
-import { Lease } from './lease';
-import * as RPC from './rpc';
-import { NSApplicator } from './util';
+import { ComparatorBuilder, PutBuilder } from './builder.js';
+import { ConnectionPool } from './connection-pool.js';
+import { EtcdLockFailedError } from './errors.js';
+import { Lease } from './lease.js';
+import * as RPC from './rpc.js';
+import { NSApplicator } from './util.js';
 
 /**
  * A Lock can be used for distributed locking to create atomic operations
@@ -26,7 +26,7 @@ import { NSApplicator } from './util';
  * A quick example:
  *
  * ```
- * const { Etcd3 } = require('etcd3');
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * client.lock('my_resource').do(() => {

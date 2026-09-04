@@ -3,9 +3,10 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, PromiseWrap, toBuffer } from './util';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, PromiseWrap, toBuffer } from './util.js';
 
 const emptyBuffer = Buffer.from([]);
 

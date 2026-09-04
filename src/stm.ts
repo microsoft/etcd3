@@ -3,11 +3,11 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import * as Builder from './builder';
-import { ClientRuntimeError, STMConflictError } from './errors';
-import { Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, toBuffer } from './util';
+import * as Builder from './builder.js';
+import { ClientRuntimeError, STMConflictError } from './errors.js';
+import { Range } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, toBuffer } from './util.js';
 
 /**
  * Isolation level which can be passed into the ISTMOptions.

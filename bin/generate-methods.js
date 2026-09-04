@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * This script parses downloaded protobuf files to output TypeScript typings
  * and methods to call declared the declared types.
@@ -13,14 +11,15 @@
  * create the output ourselves since it's pretty simple (~100 lines of code).
  */
 
-const prettier = require('prettier');
-const pbjs = require('protobufjs');
-const fs = require('fs');
-const path = require('path');
-const _ = require('lodash');
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import _ from 'lodash';
+import pbjs from 'protobufjs';
+import prettier from 'prettier';
 
-const inputPath = process.argv[2] || path.resolve(__dirname, '../proto/rpc.proto');
-const outputPath = process.argv[3] || path.resolve(__dirname, '../src/rpc.ts');
+const inputPath = process.argv[2] ?? fileURLToPath(new URL('../proto/rpc.proto', import.meta.url));
+const outputPath = process.argv[3] ?? fileURLToPath(new URL('../src/rpc.ts', import.meta.url));
+const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const contents = fs.readFileSync(inputPath).toString();
 const lines = contents.split('\n');
 
@@ -84,7 +83,7 @@ async function writeOut() {
   fs.writeFileSync(
     outputPath,
     await prettier.format(result, {
-      ...require('../package.json').prettier,
+      ...packageJson.prettier,
       parser: 'typescript',
     }),
   );
@@ -92,7 +91,9 @@ async function writeOut() {
 
 function template(name, params) {
   if (!templates[name]) {
-    templates[name] = _.template(fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8'));
+    templates[name] = _.template(
+      fs.readFileSync(new URL(`template/${name}.tmpl`, import.meta.url), 'utf8'),
+    );
   }
 
   params = Object.assign(params || {}, {

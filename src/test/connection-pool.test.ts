@@ -3,10 +3,11 @@
  *--------------------------------------------------------*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NoopPolicy, handleAll, retry } from 'cockatiel';
-import { IOptions, KVClient } from '..';
-import { ConnectionPool } from '../connection-pool';
-import { GRPCDeadlineExceededError, GRPCUnavailableError } from '../errors';
-import { getHost, getOptions } from './util';
+import { KVClient } from '../index.js';
+import type { IOptions } from '../index.js';
+import { ConnectionPool } from '../connection-pool.js';
+import { GRPCDeadlineExceededError, GRPCUnavailableError } from '../errors.js';
+import { getHost, getOptions } from './util.js';
 
 function getOptionsWithBadHost(options: Partial<IOptions> = {}): IOptions {
   return getOptions({

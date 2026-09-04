@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util';
+import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util.js';
 
 function compare(a: Buffer, b: Buffer) {
   if (a.length === 0) {

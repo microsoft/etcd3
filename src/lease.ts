@@ -4,11 +4,12 @@
 import { EventEmitter } from 'node:events';
 import * as grpc from '@grpc/grpc-js';
 
-import { PutBuilder } from './builder';
-import { ConnectionPool, Host } from './connection-pool';
-import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCCancelledError } from './errors';
-import * as RPC from './rpc';
-import { NSApplicator, debounce } from './util';
+import { PutBuilder } from './builder.js';
+import { ConnectionPool } from './connection-pool.js';
+import type { Host } from './connection-pool.js';
+import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCCancelledError } from './errors.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, debounce } from './util.js';
 
 function throwIfError<T>(value: T | Error): T {
   if (value instanceof Error) {
@@ -80,8 +81,8 @@ export interface ILeaseOptions extends grpc.CallOptions {
  * Leases are great for things like service discovery:
  *
  * ```
- * const os = require('os');
- * const { Etcd3 } = require('etcd3');
+ * import * as os from 'node:os';
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * const hostPrefix = 'available-hosts/';

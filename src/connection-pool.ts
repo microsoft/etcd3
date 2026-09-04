@@ -4,6 +4,7 @@
 import * as grpc from '@grpc/grpc-js';
 import type { ChannelOptions } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
+import { fileURLToPath } from 'node:url';
 import {
   circuitBreaker,
   ConsecutiveBreaker,
@@ -18,12 +19,12 @@ import {
   ClientRuntimeError,
   EtcdInvalidAuthTokenError,
   isRecoverableError,
-} from './errors';
-import { IOptions } from './options';
-import { CallContext, ICallable, Services } from './rpc';
-import { resolveCallOptions } from './util';
+} from './errors.js';
+import type { IOptions } from './options.js';
+import type { CallContext, ICallable, Services } from './rpc.js';
+import { resolveCallOptions } from './util.js';
 
-const packageDefinition = loadSync(`${__dirname}/../proto/rpc.proto`, {
+const packageDefinition = loadSync(fileURLToPath(new URL('../proto/rpc.proto', import.meta.url)), {
   keepCase: true,
   longs: String,
   enums: String,

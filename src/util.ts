@@ -2,11 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { CallOptions } from '@grpc/grpc-js';
+import type { CallOptions } from '@grpc/grpc-js';
 import { EventEmitter } from 'node:events';
-import { ClientRuntimeError } from './errors';
-import { CallOptionsFactory } from './options';
-import { CallContext, Services } from './rpc';
+import { ClientRuntimeError } from './errors.js';
+import type { CallOptionsFactory } from './options.js';
+import type { CallContext, Services } from './rpc.js';
 
 export const zeroKey = Buffer.from([0]);
 export const emptyKey = Buffer.from([]);

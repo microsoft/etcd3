@@ -3,8 +3,9 @@
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Etcd3, Namespace } from '..';
-import { createTestClientAndKeys, tearDownTestClient } from './util';
+import { Etcd3 } from '../index.js';
+import type { Namespace } from '../index.js';
+import { createTestClientAndKeys, tearDownTestClient } from './util.js';
 
 describe('namespacing', () => {
   let client: Etcd3;
