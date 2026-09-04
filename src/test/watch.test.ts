@@ -87,51 +87,91 @@ describe('watch()', () => {
     });
   }
 
+  async function cleanUpNetworkInterruption(
+    watcher: Watcher | undefined,
+    proxiedClient: Etcd3 | undefined,
+  ) {
+    try {
+      try {
+        await proxy.unsuspend();
+      } finally {
+        await watcher?.cancel();
+      }
+    } finally {
+      try {
+        proxiedClient?.close();
+      } finally {
+        await proxy.deactivate();
+      }
+    }
+  }
+
   describe('network interruptions', () => {
-    it.skip('is resilient to network interruptions', async () => {
-      await proxy.activate();
-      const proxiedClient = await createTestClientAndKeys();
+    it('is resilient to network interruptions', async () => {
+      let proxiedClient: Etcd3 | undefined;
+      let watcher: Watcher | undefined;
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
-      proxy.suspend();
-      await onceEvent(watcher, 'disconnected');
-      proxy.unsuspend();
-      await onceEvent(watcher, 'connected');
-      await expectWatching(watcher, 'foo1');
+      try {
+        await proxy.activate();
+        proxiedClient = await createTestClientAndKeys();
+        watcher = await proxiedClient.watch().key('foo1').create();
+        const activeWatcher = watcher;
 
-      await watcher.cancel();
-      proxiedClient.close();
-      await proxy.deactivate();
+        const disconnected = onceEvent(activeWatcher, 'disconnected', 'error');
+        await proxy.suspend();
+        await disconnected;
+
+        const connected = onceEvent(activeWatcher, 'connected', 'error');
+        await proxy.unsuspend();
+        await connected;
+        await expectWatching(activeWatcher, 'foo1');
+      } finally {
+        await cleanUpNetworkInterruption(watcher, proxiedClient);
+      }
     });
 
-    // todo(connor4312): this is disabled pending resolution on:
-    // https://github.com/grpc/grpc-node/issues/80
-    it.skip('replays historical updates', async () => {
-      await proxy.activate();
-      const proxiedClient = await createTestClientAndKeys();
+    it('replays historical updates', async () => {
+      let proxiedClient: Etcd3 | undefined;
+      let watcher: Watcher | undefined;
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      try {
+        await proxy.activate();
+        proxiedClient = await createTestClientAndKeys();
+        watcher = await proxiedClient.watch().key('foo1').create();
+        const activeWatcher = watcher;
 
-      await Promise.all([
-        client.put('foo1').value('update 1'),
-        onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-          expect(watcher.request.start_revision).toBe(
-            (BigInt(res.header.revision) + 1n).toString(),
-          );
-        }),
-      ]);
+        const firstUpdate = onceEvent(activeWatcher, 'data', 'error').then(
+          (res: IWatchResponse) => {
+            expect(activeWatcher.request.start_revision).toBe(
+              (BigInt(res.header.revision) + 1n).toString(),
+            );
+          },
+        );
+        await Promise.all([client.put('foo1').value('update 1'), firstUpdate]);
 
-      proxy.suspend();
-      await onceEvent(watcher, 'disconnected');
-      proxy.unsuspend();
-      await onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).toBe('foo1');
-        expect(res.value.toString()).toBe('update 2');
-      });
+        const disconnected = onceEvent(activeWatcher, 'disconnected', 'error');
+        await proxy.suspend();
+        await disconnected;
 
-      await watcher.cancel();
-      proxiedClient.close();
-      await proxy.deactivate();
+        const replayedUpdate = onceEvent(activeWatcher, 'data', 'error').then(
+          (res: IWatchResponse) => {
+            expect(res.events).toHaveLength(1);
+            expect(res.events[0].kv.key.toString()).toBe('foo1');
+            expect(res.events[0].kv.value.toString()).toBe('update 2');
+            return res;
+          },
+        );
+        const missedUpdate = await client.put('foo1').value('update 2');
+
+        const connected = onceEvent(activeWatcher, 'connected', 'error');
+        await proxy.unsuspend();
+        await Promise.all([connected, replayedUpdate]);
+        expect(activeWatcher.request.start_revision).toBe(
+          (BigInt(missedUpdate.header.revision) + 1n).toString(),
+        );
+      } finally {
+        await cleanUpNetworkInterruption(watcher, proxiedClient);
+      }
     });
 
     it('caps watchers revisions', async () => {
