@@ -97,9 +97,14 @@ export class NSApplicator {
       return req;
     }
 
+    // Etcd represents the whole keyspace as [zeroKey, zeroKey). Preserve the
+    // namespace root for that sentinel range; a lone zeroKey remains a point key.
+    const isWholeKeyspaceRange =
+      req.key?.equals(zeroKey) === true && req.range_end?.equals(zeroKey) === true;
+
     // TS doesn't seem to like the spread operator on generics, so O.A it is.
     return Object.assign({}, req, {
-      key: this.applyKey(req.key),
+      key: isWholeKeyspaceRange ? Buffer.from(this.prefix) : this.applyKey(req.key),
       range_end: this.applyRangeEnd(req.range_end),
     });
   }

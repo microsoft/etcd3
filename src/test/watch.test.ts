@@ -211,6 +211,51 @@ describe('watch()', () => {
             EtcdPermissionDeniedError,
           );
         });
+
+        it('continues attaching queued watchers after a creation rejection', async () => {
+          const authedClient = new Etcd3(
+            getOptions({
+              auth: {
+                username: 'connor',
+                password: 'password',
+              },
+            }),
+          );
+          const rejectedWatcher = authedClient.watch().key('outside of range').watcher();
+          let rejectedConnected = false;
+          rejectedWatcher.on('connected', () => (rejectedConnected = true));
+          const rejected = onceEvent(rejectedWatcher, 'error');
+          const validWatcher = authedClient.watch().key('foo').watcher();
+          const connected = onceEvent(validWatcher, 'connected', 'error');
+
+          try {
+            await expect(rejected).rejects.toThrow(EtcdPermissionDeniedError);
+            expect(rejectedWatcher.id).toBeNull();
+            expect(rejectedConnected).toBe(false);
+
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(
+                () => reject(new Error('queued valid watcher did not connect')),
+                5_000,
+              );
+              connected.then(
+                () => {
+                  clearTimeout(timeout);
+                  resolve();
+                },
+                error => {
+                  clearTimeout(timeout);
+                  reject(error);
+                },
+              );
+            });
+          } finally {
+            if (validWatcher.id !== null) {
+              await validWatcher.cancel();
+            }
+            authedClient.close();
+          }
+        });
       }
     });
   });

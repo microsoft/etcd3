@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Isolation } from '../stm.js';
 import type { SoftwareTransaction } from '../stm.js';
 import { Etcd3, STMConflictError } from '../index.js';
@@ -129,6 +129,13 @@ describe('stm()', () => {
             expect(await tx.get('foo2').string()).toBeNull();
           });
         });
+
+        it('caches the existing value when touching a key', async () => {
+          return ignoreConflicts(isolation, async tx => {
+            await tx.put('foo1').touch();
+            expect(await tx.get('foo1').string()).toBe('bar1');
+          });
+        });
       };
 
       const expectReadCaching = (isolation: Isolation) => {
@@ -147,6 +154,35 @@ describe('stm()', () => {
       describe('ReadCommitted', () => {
         expectWriteCaching(Isolation.ReadCommitted);
         expectRunsCleanTransaction(Isolation.ReadCommitted);
+
+        it('touches the value committed before it reaches the server', async () => {
+          const txn = vi.spyOn(ns.kv, 'txn');
+          try {
+            await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+              await tx.put('foo1').touch();
+              await ns.put('foo1').value('concurrent');
+            });
+
+            const put = txn.mock.lastCall?.[0].success?.find(op => op.request_put);
+            expect(put?.request_put).toMatchObject({ ignore_value: true, value: undefined });
+          } finally {
+            txn.mockRestore();
+          }
+
+          expect(await ns.get('foo1')).toBe('concurrent');
+        });
+
+        it('preserves a preceding local put when touching', async () => {
+          await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+            await tx.put('foo1').value('local');
+            await tx.put('foo1').touch();
+            await ns.put('foo1').value('concurrent');
+
+            expect(await tx.get('foo1').string()).toBe('local');
+          });
+
+          expect(await ns.get('foo1')).toBe('local');
+        });
       });
 
       describe('RepeatableReads', () => {
@@ -208,6 +244,21 @@ describe('stm()', () => {
           expect(await ns.get('foo1')).toBeNull();
         });
 
+        it('commits writes to newer keys in its snapshot', async () => {
+          await ns.put('snapshot/a').value('older');
+          await ns.put('snapshot/b').value('newer');
+
+          await expect(
+            ns.stm({ isolation: Isolation.SerializableSnapshot, retries: 0 }).transact(async tx => {
+              expect(await tx.get('snapshot/a').string()).toBe('older');
+              expect(await tx.get('snapshot/b').string()).toBe('newer');
+              await tx.put('snapshot/b').value('updated');
+            }),
+          ).resolves.toBeUndefined();
+
+          expect(await ns.get('snapshot/b')).toBe('updated');
+        });
+
         it('aborts transactions on continous failure', async () => {
           await expect(
             ns
@@ -221,6 +272,81 @@ describe('stm()', () => {
                 throw new Error('expected to throw');
               }),
           ).rejects.toThrow(STMConflictError);
+        });
+      });
+
+      describe('overlapping writes', () => {
+        it('splits an earlier range deletion around a later put', async () => {
+          await ns.put('overlap/a').value('a');
+          await ns.put('overlap/b').value('b');
+          await ns.put('overlap/c').value('c');
+
+          await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+            await tx.delete().prefix('overlap/');
+            await tx.put('overlap/b').value('replacement');
+
+            expect(await tx.get('overlap/a').string()).toBeNull();
+            expect(await tx.get('overlap/b').string()).toBe('replacement');
+            expect(await tx.get('overlap/c').string()).toBeNull();
+          });
+
+          expect(await ns.get('overlap/a')).toBeNull();
+          expect(await ns.get('overlap/b')).toBe('replacement');
+          expect(await ns.get('overlap/c')).toBeNull();
+        });
+
+        it('splits an earlier range deletion around a later point deletion', async () => {
+          await ns.put('overlap/a').value('a');
+          await ns.put('overlap/b').value('b');
+          await ns.put('overlap/c').value('c');
+
+          const txn = vi.spyOn(ns.kv, 'txn');
+          try {
+            await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+              await tx.delete().prefix('overlap/');
+              await tx.delete().key('overlap/b');
+
+              expect(await tx.get('overlap/a').string()).toBeNull();
+              expect(await tx.get('overlap/b').string()).toBeNull();
+              expect(await tx.get('overlap/c').string()).toBeNull();
+            });
+
+            const key = Buffer.from(`${testcase.namespace ? 'ns/' : ''}overlap/b`);
+            const operations = txn.mock.lastCall?.[0].success;
+            expect(operations).toBeDefined();
+            expect(
+              operations!.filter(({ request_delete_range: deletion }) => {
+                const end = deletion?.range_end;
+                return (
+                  end &&
+                  end.length > 0 &&
+                  deletion!.key!.compare(key) <= 0 &&
+                  (end.equals(Buffer.from([0])) || end.compare(key) > 0)
+                );
+              }),
+            ).toHaveLength(0);
+          } finally {
+            txn.mockRestore();
+          }
+
+          expect(await ns.get('overlap/a')).toBeNull();
+          expect(await ns.get('overlap/b')).toBeNull();
+          expect(await ns.get('overlap/c')).toBeNull();
+        });
+
+        it('treats an empty inRange endpoint as a point deletion', async () => {
+          await ns.put('a').value('a');
+          await ns.put('ab').value('ab');
+
+          await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+            await tx.delete().inRange('a');
+
+            expect(await tx.get('a').string()).toBeNull();
+            expect(await tx.get('ab').string()).toBe('ab');
+          });
+
+          expect(await ns.get('a')).toBeNull();
+          expect(await ns.get('ab')).toBe('ab');
         });
       });
     }),

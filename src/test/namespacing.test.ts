@@ -41,6 +41,28 @@ describe('namespacing', () => {
     expect(await client.getAll().keys()).not.toHaveLength(0);
   });
 
+  it('includes and deletes the logical empty namespace key', async () => {
+    const zeroByteKey = Buffer.from([0]);
+
+    await ns.put('').value('empty');
+    await ns.put('ordinary').value('ordinary');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    const expected = { '': 'empty', ordinary: 'ordinary', '\0': 'zero-byte' };
+    expect(await ns.getAll().strings()).toEqual(expected);
+    expect(await ns.getAll().all().strings()).toEqual(expected);
+    expect(await ns.get(zeroByteKey)).toBe('zero-byte');
+
+    await ns.delete().all();
+
+    expect(await ns.getAll().strings()).toEqual({});
+    expect(await client.get('user1/')).toBeNull();
+    expect(await client.get('user1/ordinary')).toBeNull();
+    expect(await client.get(Buffer.concat([Buffer.from('user1/'), zeroByteKey]))).toBeNull();
+    expect(await client.get('outside')).toBe('outside');
+  });
+
   it('contains leases in the namespace', async () => {
     const lease = ns.lease(100);
     await lease.put('leased').value('');

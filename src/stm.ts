@@ -7,7 +7,7 @@ import * as Builder from './builder.js';
 import { ClientRuntimeError, STMConflictError } from './errors.js';
 import { Range } from './range.js';
 import * as RPC from './rpc.js';
-import { NSApplicator, toBuffer } from './util.js';
+import { NSApplicator, toBuffer, zeroKey } from './util.js';
 
 /**
  * Isolation level which can be passed into the ISTMOptions.
@@ -100,13 +100,13 @@ class ReadSet {
   private readonly reads: Record<string, Promise<RPC.IRangeResponse> | undefined> =
     Object.create(null);
   private readonly completedReads: CompletedReads[] = [];
-  private earliestMod: bigint | undefined;
+  private firstReadRevision: bigint | undefined;
 
   /**
-   * Returns the earliest modified revision of any key in this change set.
+   * Returns the revision at which the transaction's reads are snapshotted.
    */
-  public earliestModRevision(): bigint | undefined {
-    return this.earliestMod;
+  public snapshotRevision(): bigint | undefined {
+    return this.firstReadRevision;
   }
 
   /**
@@ -136,11 +136,8 @@ class ReadSet {
     const promise = kv.range(req).then(res => {
       this.completedReads.push({ key: req.key!, res });
 
-      if (res.kvs.length > 0) {
-        const modRevision = BigInt(res.kvs[0].mod_revision);
-        if (this.earliestMod === undefined || modRevision < this.earliestMod) {
-          this.earliestMod = modRevision;
-        }
+      if (this.firstReadRevision === undefined) {
+        this.firstReadRevision = BigInt(res.header.revision);
       }
 
       return res;
@@ -158,7 +155,7 @@ const enum WriteKind {
 }
 
 type WriteOp =
-  | { op: WriteKind.Write; req: RPC.IPutRequest }
+  | { op: WriteKind.Write; req: RPC.IPutRequest; shadowValue?: Buffer }
   | { op: WriteKind.DeleteKey; key: Buffer; req: RPC.IDeleteRangeRequest }
   | { op: WriteKind.DeleteRange; range: Range; req: RPC.IDeleteRangeRequest };
 
@@ -228,7 +225,7 @@ class WriteSet {
       switch (op.op) {
         case WriteKind.Write:
           if (op.req.key!.equals(key)) {
-            return keyValueToResponse(key, op.req.value);
+            return keyValueToResponse(key, op.shadowValue ?? op.req.value);
           }
           break;
         case WriteKind.DeleteKey:
@@ -237,7 +234,7 @@ class WriteSet {
           }
           break;
         case WriteKind.DeleteRange:
-          if (op.range.includes(key)) {
+          if (this.rangeIncludes(op.range, key)) {
             return keyValueToResponse(key);
           }
           break;
@@ -252,33 +249,111 @@ class WriteSet {
   /**
    * Inserts a put operation into the set.
    */
-  public addPut(put: RPC.IPutRequest) {
-    this.purgeExistingOperationOn(put.key!);
-    this.ops.push({ op: WriteKind.Write, req: put });
+  public addPut(put: RPC.IPutRequest, shadowValue?: Buffer) {
+    this.removeOperationsOnKey(put.key!);
+    this.ops.push({ op: WriteKind.Write, req: put, shadowValue });
   }
 
   /**
    * Inserts a delete operation.
    */
-  public addDeletion(req: RPC.IDeleteRangeRequest) {
-    if (req.range_end) {
-      this.ops.push({ req, op: WriteKind.DeleteRange, range: new Range(req.key!, req.range_end) });
-    } else {
-      this.purgeExistingOperationOn(req.key!);
+  public addDeletion(req: RPC.IDeleteRangeRequest, isPointDelete = false) {
+    if (isPointDelete || !req.range_end || req.range_end.length === 0) {
+      this.removeOperationsOnKey(req.key!);
       this.ops.push({ req, op: WriteKind.DeleteKey, key: req.key! });
+      return;
     }
+
+    let range = new Range(req.key!, req.range_end);
+    this.removePointOperationsInRange(range);
+
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const op = this.ops[i];
+      if (op.op !== WriteKind.DeleteRange || !this.rangesOverlap(op.range, range)) {
+        continue;
+      }
+
+      range = this.unionRanges(range, op.range);
+      this.ops.splice(i, 1);
+    }
+
+    this.ops.push({
+      req: { ...req, key: range.start, range_end: range.end },
+      op: WriteKind.DeleteRange,
+      range,
+    });
   }
 
-  private purgeExistingOperationOn(key: Buffer) {
-    for (let i = 0; i < this.ops.length; i++) {
-      const { op, req } = this.ops[i];
+  private removeOperationsOnKey(key: Buffer) {
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const writeOp = this.ops[i];
+      const { op, req } = writeOp;
       if (op === WriteKind.Write || op === WriteKind.DeleteKey) {
         if (req.key!.equals(key)) {
           this.ops.splice(i, 1);
-          break;
         }
+      } else if (op === WriteKind.DeleteRange && this.rangeIncludes(writeOp.range, key)) {
+        this.splitDeletionAroundKey(i, key);
       }
     }
+  }
+
+  private removePointOperationsInRange(range: Range) {
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const { op, req } = this.ops[i];
+      if (
+        (op === WriteKind.Write || op === WriteKind.DeleteKey) &&
+        this.rangeIncludes(range, req.key!)
+      ) {
+        this.ops.splice(i, 1);
+      }
+    }
+  }
+
+  private splitDeletionAroundKey(index: number, key: Buffer) {
+    const op = this.ops[index] as Extract<WriteOp, { op: WriteKind.DeleteRange }>;
+    const replacements: WriteOp[] = [];
+    if (op.range.start.compare(key) < 0) {
+      replacements.push(this.makeDeleteRange(op.req, op.range.start, key));
+    }
+
+    const nextKey = Buffer.concat([key, zeroKey]);
+    if (op.range.end.equals(zeroKey) || nextKey.compare(op.range.end) < 0) {
+      replacements.push(this.makeDeleteRange(op.req, nextKey, op.range.end));
+    }
+
+    this.ops.splice(index, 1, ...replacements);
+  }
+
+  private unionRanges(a: Range, b: Range): Range {
+    const start = a.start.compare(b.start) <= 0 ? a.start : b.start;
+    const end =
+      a.end.equals(zeroKey) || (!b.end.equals(zeroKey) && a.end.compare(b.end) >= 0)
+        ? a.end
+        : b.end;
+    return new Range(start, end);
+  }
+
+  private rangeIncludes(range: Range, key: Buffer): boolean {
+    return (
+      range.start.compare(key) <= 0 && (range.end.equals(zeroKey) || range.end.compare(key) > 0)
+    );
+  }
+
+  private rangesOverlap(a: Range, b: Range): boolean {
+    return this.rangeIncludes(a, b.start) || this.rangeIncludes(b, a.start);
+  }
+
+  private makeDeleteRange(
+    req: RPC.IDeleteRangeRequest,
+    start: Buffer,
+    end: Buffer,
+  ): Extract<WriteOp, { op: WriteKind.DeleteRange }> {
+    return {
+      req: { ...req, key: start, range_end: end },
+      op: WriteKind.DeleteRange,
+      range: new Range(start, end),
+    };
   }
 }
 
@@ -311,8 +386,22 @@ class BasicTransaction {
   /**
    * Schedules the put request in the writeSet.
    */
-  public put(req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
+  public put(kv: RPC.KVClient, req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
     this.assertNoOption('put', req, ['lease', 'prev_kv']);
+    if (req.ignore_value) {
+      const existingWrite = this.writeSet.findExistingWrite(req.key!);
+      if (existingWrite !== null) {
+        if (existingWrite.kvs.length) {
+          return Promise.resolve({} as RPC.IPutResponse);
+        }
+      } else {
+        return this.range(kv, { key: req.key! }).then(res => {
+          this.writeSet.addPut(req, res.kvs[0]?.value);
+          return {} as RPC.IPutResponse;
+        });
+      }
+    }
+
     this.writeSet.addPut(req);
     return Promise.resolve({} as any);
   }
@@ -320,9 +409,12 @@ class BasicTransaction {
   /**
    * Schedules the put request in the writeSet.
    */
-  public deleteRange(req: RPC.IDeleteRangeRequest): Promise<RPC.IDeleteRangeResponse> {
+  public deleteRange(
+    req: RPC.IDeleteRangeRequest,
+    isPointDelete = false,
+  ): Promise<RPC.IDeleteRangeResponse> {
     this.assertNoOption('delete', req, ['prev_kv']);
-    this.writeSet.addDeletion(req);
+    this.writeSet.addDeletion(req, isPointDelete);
     return Promise.resolve({
       header: undefined as any,
       deleted: '1',
@@ -440,9 +532,16 @@ export class SoftwareTransaction {
           case 'range':
             return (req: RPC.IRangeRequest) => this.getTransaction().range(target, req);
           case 'put':
-            return (req: RPC.IPutRequest) => this.getTransaction().put(req);
+            return (req: RPC.IPutRequest) => this.getTransaction().put(target, req);
           case 'deleteRange':
-            return (req: RPC.IDeleteRangeRequest) => this.getTransaction().deleteRange(req);
+            return (req: RPC.IDeleteRangeRequest) => {
+              const isPointDelete = !req.range_end || req.range_end.length === 0;
+              const namespacedReq = this.namespace.applyToRequest(req);
+              return this.getTransaction().deleteRange(
+                isPointDelete ? { ...namespacedReq, range_end: undefined } : namespacedReq,
+                isPointDelete,
+              );
+            };
           default:
             throw new ClientRuntimeError(`Unexpected kv operation in STM: ${key.toString()}`);
         }
@@ -477,7 +576,8 @@ export class SoftwareTransaction {
    * `.delete()` starts making a delete request against etcd.
    */
   public delete(): Builder.DeleteBuilder {
-    return new Builder.DeleteBuilder(this.kv, this.namespace);
+    // Apply the namespace in the proxy so an empty range_end remains identifiable as a point.
+    return new Builder.DeleteBuilder(this.kv, NSApplicator.default);
   }
 
   private transactInner<T>(retries: number, fn: (tx: this) => T | PromiseLike<T>): Promise<T> {
@@ -505,10 +605,10 @@ export class SoftwareTransaction {
     const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
-        const earliestMod = tx.readSet.earliestModRevision();
+        const snapshotRevision = tx.readSet.snapshotRevision();
         tx.writeSet.addNotChangedChecks(
           cmp,
-          earliestMod === undefined ? undefined : (earliestMod + 1n).toString(),
+          snapshotRevision === undefined ? undefined : (snapshotRevision + 1n).toString(),
         );
         tx.readSet.addCurrentChecks(cmp);
         break;
