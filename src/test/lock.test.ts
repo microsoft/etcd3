@@ -50,8 +50,66 @@ describe('lock()', () => {
     await lock.release();
   });
 
-  it('revokes the lease when acquiring fails after it is granted', async () => {
+  it('releases and reacquires a lock after its acquire deadline has expired', async () => {
+    const deadline = new Date(Date.now() + 2_000);
+    const lock = client.lock('resource').options({ deadline });
+    await lock.acquire();
+
+    await new Promise(resolve => setTimeout(resolve, deadline.getTime() - Date.now() + 100));
+    await lock.release();
+
+    await assertAbleToLock();
+  });
+
+  it('revokes the lease without an expired acquire deadline when acquiring fails', async () => {
     const transactionError = new Error('transaction failed');
+    const callOptions = { deadline: new Date(0), waitForReady: true };
+    const exec = vi.fn((service: string, method: string, _: unknown, options?: unknown) => {
+      if (service === 'Lease' && method === 'leaseGrant') {
+        return Promise.resolve({ ID: '123', TTL: '30' });
+      }
+
+      if (service === 'KV' && method === 'txn') {
+        return Promise.reject(transactionError);
+      }
+
+      if (service === 'Lease' && method === 'leaseRevoke') {
+        expect(options).toEqual({ waitForReady: true });
+        return Promise.resolve({});
+      }
+
+      throw new Error(`Unexpected call: ${service}.${method}`);
+    });
+    client.mock({ exec: exec as any });
+
+    try {
+      await expect(client.lock('resource').options(callOptions).acquire()).rejects.toBe(
+        transactionError,
+      );
+      const leaseGrantCall = exec.mock.calls.find(
+        ([service, method]) => service === 'Lease' && method === 'leaseGrant',
+      );
+      expect(leaseGrantCall?.[3]).toBe(callOptions);
+      const transactionCall = exec.mock.calls.find(
+        ([service, method]) => service === 'KV' && method === 'txn',
+      );
+      expect(transactionCall?.[3]).toBe(callOptions);
+      expect(exec).toHaveBeenCalledWith(
+        'Lease',
+        'leaseRevoke',
+        { ID: '123' },
+        {
+          waitForReady: true,
+        },
+      );
+    } finally {
+      client.unmock();
+    }
+  });
+
+  it('reports both failures when failed-acquire cleanup cannot revoke the lease', async () => {
+    const transactionError = new Error('transaction failed');
+    const cleanupError = new Error('cleanup failed');
     const exec = vi.fn((service: string, method: string) => {
       if (service === 'Lease' && method === 'leaseGrant') {
         return Promise.resolve({ ID: '123', TTL: '30' });
@@ -62,7 +120,7 @@ describe('lock()', () => {
       }
 
       if (service === 'Lease' && method === 'leaseRevoke') {
-        return Promise.resolve({});
+        return Promise.reject(cleanupError);
       }
 
       throw new Error(`Unexpected call: ${service}.${method}`);
@@ -70,8 +128,14 @@ describe('lock()', () => {
     client.mock({ exec: exec as any });
 
     try {
-      await expect(client.lock('resource').acquire()).rejects.toBe(transactionError);
-      expect(exec).toHaveBeenCalledWith('Lease', 'leaseRevoke', { ID: '123' });
+      const error = await client
+        .lock('resource')
+        .options({ deadline: new Date(0) })
+        .acquire()
+        .catch(error => error);
+
+      expect(error).toBeInstanceOf(AggregateError);
+      expect((error as AggregateError).errors).toEqual([transactionError, cleanupError]);
     } finally {
       client.unmock();
     }

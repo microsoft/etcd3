@@ -73,7 +73,13 @@ export class NSApplicator {
    * ranges, we need special logic here.
    */
   public applyRangeEnd(buf?: Buffer) {
-    if (this.prefix.length === 0 || !buf) {
+    // Etcd identifies point requests by an absent range_end. Normalize an
+    // empty endpoint so the protobuf encoder does not turn it into a range.
+    if (!buf || buf.length === 0) {
+      return undefined;
+    }
+
+    if (this.prefix.length === 0) {
       return buf;
     }
 
@@ -94,7 +100,7 @@ export class NSApplicator {
    */
   public applyToRequest<T extends { key?: Buffer; range_end?: Buffer }>(req: T): T {
     if (this.prefix.length === 0) {
-      return req;
+      return req.range_end?.length === 0 ? Object.assign({}, req, { range_end: undefined }) : req;
     }
 
     // Etcd represents the whole keyspace as [zeroKey, zeroKey). Preserve the

@@ -1,6 +1,7 @@
+import { EventEmitter } from 'node:events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Election, Etcd3 } from '../index.js';
-import { Campaign, type ElectionObserver } from '../election.js';
+import { Campaign, ElectionObserver } from '../election.js';
 import { NotCampaigningError } from '../errors.js';
 import { delay, getDeferred, onceEvent } from '../util.js';
 import { getOptions, tearDownTestClient } from './util.js';
@@ -49,6 +50,28 @@ function campaignNamespace(result: object): ConstructorParameters<typeof Campaig
       then: () => ({
         else: () => ({
           commit: async () => result,
+        }),
+      }),
+    }),
+  } as unknown as ConstructorParameters<typeof Campaign>[0];
+}
+
+function campaignNamespaceWith(
+  lease: EventEmitter,
+  commit: () => Promise<object>,
+): ConstructorParameters<typeof Campaign>[0] {
+  return {
+    lease: () => lease,
+    put: () => ({
+      value: () => ({
+        lease: () => undefined,
+      }),
+    }),
+    get: () => undefined,
+    if: () => ({
+      then: () => ({
+        else: () => ({
+          commit,
         }),
       }),
     }),
@@ -202,6 +225,45 @@ describe('election', () => {
         waitForElected.mockRestore();
       }
     });
+
+    it('makes lease loss terminal and settles waiting operations', async () => {
+      const initialCommitStarted = getDeferred<void>();
+      const initialCommit = getDeferred<object>();
+      const lease = Object.assign(new EventEmitter(), {
+        grant: vi.fn(async () => 'campaign-key'),
+        revoke: vi.fn(async () => undefined),
+      });
+      const campaign = new Campaign(
+        campaignNamespaceWith(lease, async () => {
+          initialCommitStarted.resolve();
+          return initialCommit.promise;
+        }),
+        'candidate2',
+        1,
+      );
+      const elected = vi.fn();
+      const errors = vi.fn();
+      campaign.on('elected', elected);
+      campaign.on('error', errors);
+
+      await initialCommitStarted.promise;
+      const waiting = campaign.wait();
+      const proclamation = campaign.proclaim('new-candidate');
+      const loss = new Error('lease lost');
+
+      lease.emit('lost', loss);
+      lease.emit('lost', loss);
+
+      await expect(waiting).rejects.toBe(loss);
+      await expect(proclamation).rejects.toBe(loss);
+      expect(errors).toHaveBeenCalledTimes(1);
+      expect(errors).toHaveBeenCalledWith(loss);
+
+      initialCommit.resolve({ succeeded: true, header: { revision: '10' }, responses: [] });
+      await new Promise<void>(resolve => setImmediate(resolve));
+
+      expect(elected).not.toHaveBeenCalled();
+    });
   });
 
   describe('proclaim', () => {
@@ -234,6 +296,30 @@ describe('election', () => {
       await campaign.proclaim('new-value');
       expect(await client.get(key).string()).toBe('new-value');
     });
+
+    it('rejects a pre-publication proclamation when resign wins the race', async () => {
+      const initialCommitStarted = getDeferred<void>();
+      const initialCommit = getDeferred<object>();
+      const lease = Object.assign(new EventEmitter(), {
+        grant: vi.fn(async () => 'campaign-key'),
+        revoke: vi.fn(async () => undefined),
+      });
+      const campaign = new Campaign(
+        campaignNamespaceWith(lease, async () => {
+          initialCommitStarted.resolve();
+          return initialCommit.promise;
+        }),
+        'candidate2',
+        1,
+      );
+
+      await initialCommitStarted.promise;
+      const proclamation = campaign.proclaim('new-candidate');
+      await campaign.resign();
+      initialCommit.resolve({ succeeded: true, header: { revision: '10' }, responses: [] });
+
+      await expect(proclamation).rejects.toThrow(NotCampaigningError);
+    });
   });
 
   describe('getLeader', () => {
@@ -248,6 +334,65 @@ describe('election', () => {
   });
 
   describe('observe', () => {
+    it('forwards watcher disconnects while retaining normal cancellation', async () => {
+      const emptyWatcher = Object.assign(new EventEmitter(), {
+        cancel: vi.fn(async () => undefined),
+      });
+      const leaderWatcher = Object.assign(new EventEmitter(), {
+        cancel: vi.fn(async () => undefined),
+      });
+      const watchers = [emptyWatcher, leaderWatcher];
+      const watchBuilder = {
+        startRevision: () => watchBuilder,
+        prefix: () => watchBuilder,
+        only: () => watchBuilder,
+        key: () => watchBuilder,
+        watcher: () => watchers.shift(),
+      };
+      const namespace = {
+        getAll: () => ({
+          sort: () => ({
+            limit: () => ({
+              exec: async () => ({ kvs: [], header: { revision: '7' } }),
+            }),
+          }),
+        }),
+        watch: () => watchBuilder,
+      };
+      const observer = new ElectionObserver(
+        namespace as unknown as ConstructorParameters<typeof ElectionObserver>[0],
+      );
+      const disconnected = vi.fn();
+      observer.on('disconnected', disconnected);
+
+      await vi.waitFor(() => expect(emptyWatcher.listenerCount('disconnected')).toBe(1));
+      const emptyPhaseError = new Error('empty phase disconnected');
+      emptyWatcher.emit('disconnected', emptyPhaseError);
+      expect(disconnected).toHaveBeenLastCalledWith(emptyPhaseError);
+
+      emptyWatcher.emit('data', {
+        events: [
+          {
+            type: 'Put',
+            kv: {
+              key: Buffer.from('campaign-key'),
+              value: Buffer.from('candidate2'),
+              mod_revision: '8',
+            },
+          },
+        ],
+      });
+      await vi.waitFor(() => expect(leaderWatcher.listenerCount('disconnected')).toBe(1));
+      const leaderPhaseError = new Error('leader phase disconnected');
+      leaderWatcher.emit('disconnected', leaderPhaseError);
+
+      expect(disconnected).toHaveBeenCalledTimes(2);
+      expect(disconnected).toHaveBeenLastCalledWith(leaderPhaseError);
+      await observer.cancel();
+      expect(emptyWatcher.cancel).toHaveBeenCalled();
+      expect(leaderWatcher.cancel).toHaveBeenCalled();
+    });
+
     it('emits when existing leader resigns and other in queue', async () => {
       const client2 = new Etcd3(getOptions());
       const election2 = new Election(client2, 'test-election', 1);

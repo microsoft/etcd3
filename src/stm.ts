@@ -380,6 +380,10 @@ class BasicTransaction {
     }
 
     req.serializable = true;
+    if (this.options.isolation === Isolation.ReadCommitted) {
+      return kv.range(req);
+    }
+
     return this.readSet.runRequest(kv, req);
   }
 
@@ -519,6 +523,7 @@ class SerializableTransaction extends BasicTransaction {
  */
 export class SoftwareTransaction {
   private readonly kv: RPC.KVClient;
+  private active = false;
   private tx: BasicTransaction | undefined;
 
   constructor(
@@ -552,10 +557,27 @@ export class SoftwareTransaction {
   /**
    * transact runs the function with the current configuration. It will be
    * retried until the transaction succeeds, or until the maximum number of
-   * retries has been exceeded.
+   * retries has been exceeded. A SoftwareTransaction supports only one active
+   * invocation; concurrent calls reject rather than sharing transaction state.
    */
   public transact<T>(fn: (tx: this) => T | PromiseLike<T>): Promise<T> {
-    return this.transactInner(this.options.retries, fn);
+    if (this.active) {
+      return Promise.reject(
+        new ClientRuntimeError('Cannot start transact() while another transact() call is active'),
+      );
+    }
+
+    this.active = true;
+    try {
+      return this.transactInner(this.options.retries, fn).finally(() => {
+        this.tx = undefined;
+        this.active = false;
+      });
+    } catch (err) {
+      this.tx = undefined;
+      this.active = false;
+      return Promise.reject(err);
+    }
   }
 
   /**
@@ -587,7 +609,14 @@ export class SoftwareTransaction {
         ? new SerializableTransaction(this.options, this.rawKV)
         : new BasicTransaction(this.options);
 
-    return Promise.resolve(fn(this)).then(value => {
+    let result: T | PromiseLike<T>;
+    try {
+      result = fn(this);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+
+    return Promise.resolve(result).then(value => {
       return this.commit()
         .then(() => value)
         .catch(err => {

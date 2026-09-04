@@ -344,6 +344,9 @@ export function castGrpcError<T extends Error>(err: T): Error {
   }
 
   const castError = createGrpcError(ctor, rewriteErrorName(err.message, ctor));
-  castError.stack = rewriteErrorName(String(err.stack), ctor);
+  castError.name = ctor.name;
+  const stack = String(err.stack).split('\n');
+  stack[0] = `${ctor.name}: ${castError.message}`;
+  castError.stack = stack.join('\n');
   return castError;
 }

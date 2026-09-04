@@ -152,13 +152,13 @@ class Authenticator {
     callOptions: grpc.CallOptions | undefined,
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
-    return runServiceCall(
-      new etcdserverpb.Auth(address, credentials, this.options.grpcOptions),
-      new grpc.Metadata(),
-      callOptions,
-      'authenticate',
-      { name, password },
-    ).then(res => res.token);
+    const client = new etcdserverpb.Auth(address, credentials, this.options.grpcOptions);
+    return runServiceCall(client, new grpc.Metadata(), callOptions, 'authenticate', {
+      name,
+      password,
+    })
+      .then(res => res.token)
+      .finally(() => client.close());
   }
 }
 
@@ -259,8 +259,7 @@ export class ConnectionPool implements ICallable<Host> {
   constructor(private readonly options: IOptions) {
     this.callOptionsFactory = options.defaultCallOptions;
     this.globalPolicy =
-      options.faultHandling?.global ??
-      retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
+      options.faultHandling?.global ?? retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
 
     const credentials = this.buildAuthentication();
     this.authenticator = new Authenticator(options, credentials);
@@ -310,7 +309,7 @@ export class ConnectionPool implements ICallable<Host> {
     options?: grpc.CallOptions,
   ): Promise<T> {
     if (this.mockImpl) {
-      return this.mockImpl.exec(serviceName, method, payload);
+      return this.mockImpl.exec(serviceName, method, payload, options);
     }
 
     const shuffleGen = this.shuffledHosts();
