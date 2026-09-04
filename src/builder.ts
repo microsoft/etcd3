@@ -332,6 +332,35 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   }
 
   /**
+   * Runs the built range request and yields each response chunk from the server.
+   * Chunks are not merged; `header`, `more`, and `count` are only meaningful
+   * on the final chunk.
+   */
+  public async *stream(): AsyncIterable<RPC.IRangeResponse> {
+    const stream = await this.kv.rangeStream(
+      this.namespace.applyToRequest(this.request),
+      this.callOptions,
+    );
+    let completed = false;
+
+    try {
+      for await (const response of stream) {
+        for (const kv of response.range_response.kvs) {
+          kv.key = this.namespace.unprefix(kv.key);
+        }
+
+        yield response.range_response;
+      }
+
+      completed = true;
+    } finally {
+      if (!completed) {
+        stream.cancel();
+      }
+    }
+  }
+
+  /**
    * @override
    */
   protected createPromise(): Promise<{ [key: string]: string }> {

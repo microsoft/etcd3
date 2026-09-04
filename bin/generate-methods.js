@@ -19,9 +19,12 @@ import prettier from 'prettier';
 
 const inputPath = process.argv[2] ?? fileURLToPath(new URL('../proto/rpc.proto', import.meta.url));
 const outputPath = process.argv[3] ?? fileURLToPath(new URL('../src/rpc.ts', import.meta.url));
-const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const packageJson = JSON.parse(
+  fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+);
 const contents = fs.readFileSync(inputPath).toString();
 const lines = contents.split('\n');
+const rootPackageName = contents.match(/^\s*package\s+([^.;\s]+)/m)?.[1];
 
 const singleLineCommentRe = /\/\/\s*(.+)$/;
 const singleLineCommentStandaloneRe = /^\s*\/\/\s*/;
@@ -242,16 +245,29 @@ function generateEnum(node, name) {
 }
 
 function walk(ast, iterator, path = []) {
-  _.forOwn(ast, (node, name) => {
+  const entries = Object.entries(ast);
+  if (path.length === 0) {
+    entries.sort(([first], [second]) => {
+      if (first === rootPackageName) {
+        return -1;
+      }
+      if (second === rootPackageName) {
+        return 1;
+      }
+      return first < second ? -1 : first > second ? 1 : 0;
+    });
+  }
+
+  for (const [name, node] of entries) {
     if (!node) {
-      return;
+      continue;
     }
     if (node.nested) {
       walk(node.nested, iterator, path.concat(name));
     }
 
     iterator(node, name, path);
-  });
+  }
 }
 
 function markResponsesFor(message, seen = []) {
