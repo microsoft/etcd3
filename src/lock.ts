@@ -77,7 +77,12 @@ export class Lock {
       );
     }
 
-    const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
+    const lease = (this.lease = new Lease(
+      this.pool,
+      this.namespace,
+      this.leaseTTL,
+      this.callOptions,
+    ));
     const kv = new RPC.KVClient(this.pool);
 
     let leaseID: string;
@@ -126,7 +131,7 @@ export class Lock {
       throw new Error('Attempted to release a lock which was not acquired');
     }
 
-    return lease.revoke(this.callOptions).then(() => {
+    return lease.revoke().then(() => {
       if (this.lease === lease) {
         this.lease = null;
       }
@@ -149,7 +154,7 @@ export class Lock {
 
   private async cleanupFailedAcquire(lease: Lease, error: unknown): Promise<never> {
     try {
-      await lease.revoke(this.callOptions);
+      await lease.revoke();
     } catch (cleanupError) {
       throw new AggregateError(
         [error, cleanupError],

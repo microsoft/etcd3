@@ -155,6 +155,24 @@ describe('stm()', () => {
         expectWriteCaching(Isolation.ReadCommitted);
         expectRunsCleanTransaction(Isolation.ReadCommitted);
 
+        it('reads committed updates without bypassing local writes or deletes', async () => {
+          await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+            expect(await tx.get('foo1').string()).toBe('bar1');
+            await ns.put('foo1').value('committed update');
+            expect(await tx.get('foo1').string()).toBe('committed update');
+
+            await tx.put('foo1').value('local write');
+            await ns.put('foo1').value('newer committed update');
+            expect(await tx.get('foo1').string()).toBe('local write');
+
+            await tx.delete().key('foo1');
+            await ns.put('foo1').value('another committed update');
+            expect(await tx.get('foo1').string()).toBeNull();
+          });
+
+          expect(await ns.get('foo1')).toBeNull();
+        });
+
         it('touches the value committed before it reaches the server', async () => {
           const txn = vi.spyOn(ns.kv, 'txn');
           try {
@@ -182,6 +200,75 @@ describe('stm()', () => {
           });
 
           expect(await ns.get('foo1')).toBe('local');
+        });
+      });
+
+      describe('transaction ownership', () => {
+        it('rejects concurrent calls and permits sequential reuse', async () => {
+          const stm = ns.stm({ isolation: Isolation.ReadCommitted });
+          let releaseFirst!: () => void;
+          let signalStarted!: () => void;
+          const started = new Promise<void>(resolve => {
+            signalStarted = resolve;
+          });
+          const first = stm.transact(async tx => {
+            await tx.put('first').value('first');
+            signalStarted();
+            await new Promise<void>(resolve => {
+              releaseFirst = resolve;
+            });
+          });
+          await started;
+
+          const second = vi.fn(async (tx: SoftwareTransaction) => {
+            await tx.put('second').value('second');
+          });
+          await expect(stm.transact(second)).rejects.toThrow(/another transact\(\) call is active/);
+          expect(second).not.toHaveBeenCalled();
+
+          releaseFirst();
+          await first;
+          expect(await ns.get('first')).toBe('first');
+          expect(await ns.get('second')).toBeNull();
+
+          await stm.transact(tx => tx.put('sequential').value('sequential'));
+          expect(await ns.get('sequential')).toBe('sequential');
+        });
+
+        it('releases ownership after callback and commit failures', async () => {
+          const stm = ns.stm({ isolation: Isolation.SerializableSnapshot, retries: 0 });
+
+          await expect(
+            stm.transact(() => {
+              throw new Error('callback failure');
+            }),
+          ).rejects.toThrow('callback failure');
+          await stm.transact(tx => tx.put('after-callback-failure').value('success'));
+
+          await expect(
+            stm.transact(async tx => {
+              await tx.get('foo1');
+              await ns.put('foo1').value('conflict');
+            }),
+          ).rejects.toThrow(STMConflictError);
+          await stm.transact(tx => tx.put('after-commit-failure').value('success'));
+        });
+
+        it('releases ownership after a completed retry', async () => {
+          const stm = ns.stm({ isolation: Isolation.SerializableSnapshot, retries: 1 });
+          let attempts = 0;
+
+          await stm.transact(async tx => {
+            const value = await tx.get('foo1').string();
+            if (++attempts === 1) {
+              await ns.put('foo1').value('conflict');
+            }
+            await tx.put('foo1').value(`${value}-updated`);
+          });
+
+          expect(attempts).toBe(2);
+          await stm.transact(tx => tx.put('after-retry').value('success'));
+          expect(await ns.get('after-retry')).toBe('success');
         });
       });
 

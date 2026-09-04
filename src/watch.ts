@@ -26,6 +26,17 @@ const enum QueueState {
   Attaching,
 }
 
+function emitSafely(watcher: Watcher, event: string, ...args: unknown[]) {
+  try {
+    watcher.emit(event, ...args);
+  } catch (e) {
+    // Match data handler behavior: listener failures must not break stream bookkeeping.
+    setImmediate(() => {
+      throw e;
+    });
+  }
+}
+
 /**
  * AttachQueue holds a queue of Watchers waiting to be attached to the server.
  * Etcd does not guarentee that watchers are attached in order, so to properly
@@ -69,7 +80,7 @@ class AttachQueue {
 
     if (!res.canceled) {
       (watcher as { id: string }).id = res.watch_id;
-      watcher.emit('connected', res);
+      emitSafely(watcher, 'connected', res);
     }
     this.readQueue();
     return watcher;
@@ -94,8 +105,9 @@ class AttachQueue {
 
     const watcher = this.queue[0];
     this.setState(QueueState.Attaching);
-    watcher.emit('connecting', watcher.request);
-    this.stream.write({ create_request: watcher.request });
+    const request = { create_request: watcher.request };
+    emitSafely(watcher, 'connecting', request);
+    this.stream.write(request);
   }
 
   private setState(state: QueueState) {
@@ -174,6 +186,7 @@ export class WatchManager {
   public detach(watcher: Watcher): Promise<void> {
     // If we aren't connected, just remove the watcher, easy.
     if (this.state !== State.Connected) {
+      this.expectedClosers.delete(watcher);
       this.watchers = this.watchers.filter(w => w !== watcher);
       return Promise.resolve();
     }
@@ -181,7 +194,27 @@ export class WatchManager {
     // If we're awaiting an ID to come back, wait for that to happen or for
     // us to lose connection, whichever happens first.
     if (watcher.id === null) {
-      return onceEvent(watcher, 'connected', 'disconnected').then(() => this.detach(watcher));
+      this.expectedClosers.add(watcher);
+      return new Promise((resolve, reject) => {
+        const removeListeners = () => {
+          watcher.removeListener('connected', detach);
+          watcher.removeListener('disconnected', detach);
+          watcher.removeListener('end', end);
+        };
+        const detach = () => {
+          removeListeners();
+          this.detach(watcher).then(resolve, reject);
+        };
+        const end = () => {
+          removeListeners();
+          resolve();
+        };
+        // These lifecycle handlers must run before user listeners, which may
+        // throw and stop EventEmitter from invoking later listeners.
+        watcher.prependOnceListener('connected', detach);
+        watcher.prependOnceListener('disconnected', detach);
+        watcher.prependOnceListener('end', end);
+      });
     }
 
     // If the watcher does have an ID, mark that we expect to close it and
@@ -292,7 +325,7 @@ export class WatchManager {
     this.state = State.Idle;
 
     this.watchers.forEach(watcher => {
-      watcher.emit('disconnected', err);
+      emitSafely(watcher, 'disconnected', err);
       (watcher as { id: null }).id = null;
     });
 
@@ -314,7 +347,7 @@ export class WatchManager {
 
     if (this.expectedClosers.has(watcher)) {
       this.expectedClosers.delete(watcher);
-      watcher.emit('end');
+      emitSafely(watcher, 'end');
       return;
     }
 
@@ -343,7 +376,13 @@ export class WatchManager {
     this.backoff = this.initialBackoff.next();
     const watcher = this.getQueue().handleCreate(res);
     if (res.canceled) {
-      this.handleCancelResponse(watcher, res);
+      try {
+        this.handleCancelResponse(watcher, res);
+      } finally {
+        if (this.watchers.length === 0) {
+          this.destroyStream();
+        }
+      }
     }
   }
 
@@ -362,9 +401,12 @@ export class WatchManager {
       return;
     }
 
-    this.handleCancelResponse(watcher, res);
-    if (this.watchers.length === 0) {
-      this.destroyStream();
+    try {
+      this.handleCancelResponse(watcher, res);
+    } finally {
+      if (this.watchers.length === 0) {
+        this.destroyStream();
+      }
     }
   }
 }
@@ -567,8 +609,11 @@ export class Watcher extends EventEmitter {
 
   /**
    * lastRevision returns the lossless bigint latest/resume revision for this
-   * watcher. After observing a cluster header at revision `N`, this is
-   * `N + 1`. This will be `null` until the watcher has a resume revision.
+   * watcher. After observing a complete cluster revision `N`, this is `N + 1`.
+   * While etcd is sending a fragmented revision, this remains `N` until its
+   * final response. Resuming from `N` may replay already observed events, but
+   * prevents skipping later fragments from the same revision. This will be
+   * `null` until the watcher has a resume revision.
    */
   public lastRevision(): bigint | null {
     const revision = this.request.start_revision;
@@ -586,6 +631,8 @@ export class Watcher extends EventEmitter {
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = (BigInt(req.header.revision) + 1n).toString();
+    this.request.start_revision = (
+      req.fragment ? BigInt(req.header.revision) : BigInt(req.header.revision) + 1n
+    ).toString();
   }
 }

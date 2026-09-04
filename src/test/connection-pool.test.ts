@@ -51,6 +51,104 @@ describe('connection pool', () => {
     expect(await kv.range({ key })).toBeTruthy();
   });
 
+  it('forwards call-specific options to mocked calls', async () => {
+    pool = new ConnectionPool(getOptions());
+    const exec = vi.fn().mockResolvedValue({ kvs: [] });
+    const options = { deadline: new Date(0) };
+    pool.mock({ exec } as any);
+
+    await pool.exec('KV', 'range', { key }, options);
+
+    expect(exec).toHaveBeenCalledWith('KV', 'range', { key }, options);
+  });
+
+  it('closes transient auth clients after every completed authentication attempt', async () => {
+    const clients: Array<{
+      address: string;
+      callbackCompleted: boolean;
+      closed: boolean;
+      close: () => void;
+    }> = [];
+
+    class AuthClient {
+      public callbackCompleted = false;
+      public closed = false;
+      public close = vi.fn(() => {
+        expect(this.callbackCompleted).toBe(true);
+        this.closed = true;
+      });
+
+      constructor(public readonly address: string) {
+        clients.push(this);
+      }
+
+      public authenticate(
+        _request: unknown,
+        _metadata: unknown,
+        _options: unknown,
+        callback: (error: Error | null, response?: { token: string }) => void,
+      ) {
+        if (this.address === 'failure') {
+          callback(new Error('authentication failed'));
+        } else {
+          callback(null, { token: `token-for-${this.address}` });
+        }
+        this.callbackCompleted = true;
+      }
+    }
+
+    vi.resetModules();
+    vi.doMock('@grpc/grpc-js', async importOriginal => {
+      const grpc = await importOriginal<typeof import('@grpc/grpc-js')>();
+      return {
+        ...grpc,
+        loadPackageDefinition: () => ({ etcdserverpb: { Auth: AuthClient } }),
+      };
+    });
+    vi.doMock('@grpc/proto-loader', () => ({ loadSync: vi.fn() }));
+
+    try {
+      const { ConnectionPool: TestConnectionPool } = await import('../connection-pool.js');
+      const options = (hosts: string[]): IOptions => ({
+        hosts,
+        auth: { username: 'user', password: 'password' },
+        faultHandling: {
+          global: new NoopPolicy(),
+          host: () => new NoopPolicy(),
+        },
+      });
+
+      const successfulPool = new TestConnectionPool(options(['success']));
+      const successfulAuth = (successfulPool as any).authenticator;
+      await successfulAuth.getMetadata();
+      successfulAuth.invalidateMetadata();
+      await successfulAuth.getMetadata();
+
+      const failedPool = new TestConnectionPool(options(['failure']));
+      await expect((failedPool as any).authenticator.getMetadata()).rejects.toThrow(
+        'authentication failed',
+      );
+
+      const fallbackPool = new TestConnectionPool(options(['failure', 'fallback']));
+      const fallbackMetadata = await (fallbackPool as any).authenticator.getMetadata();
+
+      expect(fallbackMetadata.get('token')).toEqual(['token-for-fallback']);
+      expect(clients).toHaveLength(5);
+      expect(clients.every(client => client.closed)).toBe(true);
+      expect(clients.map(client => client.address)).toEqual([
+        'success',
+        'success',
+        'failure',
+        'failure',
+        'fallback',
+      ]);
+    } finally {
+      vi.doUnmock('@grpc/grpc-js');
+      vi.doUnmock('@grpc/proto-loader');
+      vi.resetModules();
+    }
+  });
+
   it('rejects instantiating with a mix of secure and unsecure hosts', () => {
     expect(
       () =>

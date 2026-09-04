@@ -142,6 +142,7 @@ export class ElectionObserver extends EventEmitter {
             }
           });
           watcher.on('error', reject);
+          watcher.on('disconnected', err => this.emit('disconnected', err));
           this.disposer = resolve;
         }).finally(() => watcher.cancel());
 
@@ -166,6 +167,7 @@ export class ElectionObserver extends EventEmitter {
         watcher.on('put', kv => this.setLeader(kv));
         watcher.on('delete', () => resolve());
         watcher.on('error', reject);
+        watcher.on('disconnected', err => this.emit('disconnected', err));
         this.disposer = () => {
           resolve();
           return watcher.cancel();
@@ -187,6 +189,7 @@ export class Campaign extends EventEmitter {
   private keyRevision?: string | typeof ResignedCampaign;
   private value: Buffer;
   private pendingProclaimation?: IDeferred<void>;
+  private terminalError?: Error;
 
   constructor(
     private readonly namespace: Namespace,
@@ -196,11 +199,11 @@ export class Campaign extends EventEmitter {
     super();
     this.value = toBuffer(value);
     this.lease = this.namespace.lease(ttl);
-    this.lease.on('lost', err => this.emit('error', err));
+    this.lease.on('lost', error => this.fail(error));
     this.start().catch(error => {
-      this.resign().catch(() => undefined);
-      this.pendingProclaimation?.reject(error);
-      this.emit('error', error);
+      if (!this.hasResigned()) {
+        this.fail(error, true);
+      }
     });
   }
 
@@ -229,9 +232,26 @@ export class Campaign extends EventEmitter {
    * If an error is emitted, the promise is rejected.
    */
   public wait() {
+    if (this.terminalError) {
+      return Promise.reject(this.terminalError);
+    }
+
     return new Promise<this>((resolve, reject) => {
-      this.on('elected', () => resolve(this));
-      this.on('error', reject);
+      const cleanup = () => {
+        this.removeListener('elected', elected);
+        this.removeListener('error', failed);
+      };
+      const elected = () => {
+        cleanup();
+        resolve(this);
+      };
+      const failed = (error: Error) => {
+        cleanup();
+        reject(error);
+      };
+
+      this.on('elected', elected);
+      this.on('error', failed);
     });
   }
 
@@ -272,6 +292,7 @@ export class Campaign extends EventEmitter {
   public async resign() {
     if (this.keyRevision !== ResignedCampaign) {
       this.keyRevision = ResignedCampaign;
+      this.rejectPendingProclaimation(new NotCampaigningError());
       await this.lease.revoke();
     }
   }
@@ -296,7 +317,7 @@ export class Campaign extends EventEmitter {
     if (result.succeeded) {
       if (this.pendingProclaimation) {
         await this.proclaimInner(this.value, this.keyRevision);
-        this.pendingProclaimation.resolve();
+        this.resolvePendingProclaimation();
       }
     } else {
       const kv = result.responses[0].response_range.kvs[0];
@@ -304,8 +325,8 @@ export class Campaign extends EventEmitter {
       this.keyRevision = campaignRevision;
       if (!kv.value.equals(this.value)) {
         await this.proclaimInner(this.value, this.keyRevision);
-        this.pendingProclaimation?.resolve();
       }
+      this.resolvePendingProclaimation();
     }
 
     await this.waitForElected(campaignRevision);
@@ -330,12 +351,43 @@ export class Campaign extends EventEmitter {
       .if(leaseId, 'Create', '==', keyRevision)
       .then(this.namespace.put(leaseId).value(buf).lease(leaseId))
       .commit();
+
+    if (this.hasResigned()) {
+      throw new NotCampaigningError();
+    }
+
     this.value = buf;
 
     if (!r.succeeded) {
       this.resign().catch(() => undefined);
       throw new NotCampaigningError();
     }
+  }
+
+  private fail(error: Error, revoke = false) {
+    if (this.hasResigned() || this.terminalError) {
+      return;
+    }
+
+    this.terminalError = error;
+    this.keyRevision = ResignedCampaign;
+    this.rejectPendingProclaimation(error);
+    if (revoke) {
+      this.lease.revoke().catch(() => undefined);
+    }
+    this.emit('error', error);
+  }
+
+  private resolvePendingProclaimation() {
+    const pending = this.pendingProclaimation;
+    this.pendingProclaimation = undefined;
+    pending?.resolve();
+  }
+
+  private rejectPendingProclaimation(error: Error) {
+    const pending = this.pendingProclaimation;
+    this.pendingProclaimation = undefined;
+    pending?.reject(error);
   }
 
   private async waitForElected(revision: string) {

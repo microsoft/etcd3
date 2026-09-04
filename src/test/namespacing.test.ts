@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Etcd3 } from '../index.js';
 import type { Namespace } from '../index.js';
+import { Range } from '../range.js';
 import { createTestClientAndKeys, tearDownTestClient } from './util.js';
 
 describe('namespacing', () => {
@@ -60,6 +61,43 @@ describe('namespacing', () => {
     expect(await client.get('user1/')).toBeNull();
     expect(await client.get('user1/ordinary')).toBeNull();
     expect(await client.get(Buffer.concat([Buffer.from('user1/'), zeroByteKey]))).toBeNull();
+    expect(await client.get('outside')).toBe('outside');
+  });
+
+  it('preserves point ranges and the whole-keyspace sentinel', async () => {
+    const zeroByteKey = Buffer.from([0]);
+    await ns.put('a').value('a');
+    await ns.put('b').value('b');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    expect(await ns.getAll().inRange('a').strings()).toEqual({ a: 'a' });
+    expect(await ns.getAll().inRange(zeroByteKey).strings()).toEqual({ '\0': 'zero-byte' });
+    expect(
+      await ns
+        .getAll()
+        .inRange(Range.prefix(Buffer.alloc(0)))
+        .strings(),
+    ).toEqual({
+      '\0': 'zero-byte',
+      a: 'a',
+      b: 'b',
+    });
+  });
+
+  it('deletes only a namespaced point range', async () => {
+    const zeroByteKey = Buffer.from([0]);
+    await ns.put('a').value('a');
+    await ns.put('b').value('b');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    await ns.delete().inRange('a');
+
+    expect(await ns.getAll().strings()).toEqual({ '\0': 'zero-byte', b: 'b' });
+    await ns.delete().inRange(zeroByteKey);
+
+    expect(await ns.getAll().strings()).toEqual({ b: 'b' });
     expect(await client.get('outside')).toBe('outside');
   });
 

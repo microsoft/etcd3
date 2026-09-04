@@ -24,4 +24,16 @@ describe('gRPC error casting', () => {
       message: 'Lease 123 is expired or revoked',
     });
   });
+
+  it('keeps normalized lease errors consistent with their original stack frames', () => {
+    const original = new Error(requestedLeaseNotFound);
+    original.stack = `Error: ${requestedLeaseNotFound}\n    at originalCall (errors.test.ts:1:1)`;
+
+    const error = castGrpcError(original);
+
+    expect(error).toBeInstanceOf(EtcdLeaseInvalidError);
+    expect(error.stack).toBe(
+      `${error.name}: ${genericLeaseNotFoundMessage}\n    at originalCall (errors.test.ts:1:1)`,
+    );
+  });
 });

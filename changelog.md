@@ -16,6 +16,12 @@
 - **fix:** correct STM snapshot conflict checks, overlapping range writes, touch behavior, and point-delete tracking.
 - **fix:** include the namespace root key in namespaced whole-range reads and deletes.
 - **fix:** correctly batch role permission revocations, forward permission call options, and format missing-lease errors.
+- **fix:** make watch fragment replay, cancellation, stream cleanup, and lifecycle listener handling reliable.
+- **fix:** make election lease loss terminal, settle pending proclamations, and forward observer disconnections.
+- **fix:** prevent lock cleanup from reusing expired acquisition deadlines.
+- **fix:** keep read-committed STM reads fresh and reject concurrent transactions that would share mutable state.
+- **fix:** distinguish point, bounded, and unbounded ranges across namespaced operations.
+- **fix:** close transient authentication clients, preserve mock call options, and normalize error stack headers.
 - **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
 - **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
 - **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.
