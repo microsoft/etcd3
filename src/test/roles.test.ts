@@ -14,7 +14,7 @@ import {
   EtcdUserExistsError,
   EtcdUserNotFoundError,
   Role,
-} from '..';
+} from '../index.js';
 import {
   createTestClientAndKeys,
   expectReject,
@@ -22,8 +22,8 @@ import {
   tearDownTestClient,
   setupAuth,
   removeAuth,
-} from './util';
-import { GRPCDeadlineExceededError } from '../errors';
+} from './util.js';
+import { GRPCDeadlineExceededError } from '../errors.js';
 
 function wipeAll(things: Promise<Array<{ delete(): any }>>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));

@@ -3,9 +3,9 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { Range } from './range';
-import { AuthClient, Permission } from './rpc';
-import { toBuffer } from './util';
+import { Range } from './range.js';
+import { AuthClient, Permission } from './rpc.js';
+import { toBuffer } from './util.js';
 
 /**
  * IPermission can be used to grant a certain role in etcd access to a certain

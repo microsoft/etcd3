@@ -2,17 +2,20 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { ExponentialBackoff } from 'cockatiel';
-import * as Builder from './builder';
-import { ConnectionPool } from './connection-pool';
-import { Election } from './election';
-import { ILeaseOptions, Lease } from './lease';
-import { Lock } from './lock';
-import { IOptions } from './options';
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
-import { NSApplicator, toBuffer } from './util';
-import { WatchBuilder, WatchManager } from './watch';
+import * as Builder from './builder.js';
+import { ConnectionPool } from './connection-pool.js';
+import { Election } from './election.js';
+import { Lease } from './lease.js';
+import type { ILeaseOptions } from './lease.js';
+import { Lock } from './lock.js';
+import type { IOptions } from './options.js';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { Isolation, SoftwareTransaction } from './stm.js';
+import type { ISTMOptions } from './stm.js';
+import { NSApplicator, toBuffer } from './util.js';
+import { WatchBuilder, WatchManager } from './watch.js';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default

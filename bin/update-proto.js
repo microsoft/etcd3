@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * This script downloads the latest protobuf files from the etcd repo.
  *
@@ -9,9 +7,9 @@
  *
  */
 
-const path = require('path');
-const fs = require('node:fs/promises');
-const _ = require('lodash');
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import _ from 'lodash';
 
 /**
  * Files to fetch and concatenate.

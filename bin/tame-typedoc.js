@@ -1,9 +1,9 @@
-'use strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import _ from 'lodash';
 
-const path = require('path');
-const root = path.resolve(__dirname, '..', 'docs');
-const fs = require('fs');
-const _ = require('lodash');
+const root = fileURLToPath(new URL('../docs', import.meta.url));
 
 const files = [];
 function gatherFiles(dir = root) {

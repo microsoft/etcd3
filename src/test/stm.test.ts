@@ -2,10 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Isolation, SoftwareTransaction } from '../stm';
-
-import { Etcd3, Namespace, STMConflictError } from '..';
-import { createTestClient, createTestKeys, tearDownTestClient } from './util';
+import { Isolation } from '../stm.js';
+import type { SoftwareTransaction } from '../stm.js';
+import { Etcd3, STMConflictError } from '../index.js';
+import type { Namespace } from '../index.js';
+import { createTestClient, createTestKeys, tearDownTestClient } from './util.js';
 
 describe('stm()', () => {
   [

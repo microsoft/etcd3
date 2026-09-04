@@ -4,7 +4,7 @@
 
 import type { CallOptions, ChannelOptions } from '@grpc/grpc-js';
 import type { IBackoff, IDefaultPolicyContext, IPolicy } from 'cockatiel';
-import type { CallContext } from './rpc';
+import type { CallContext } from './rpc.js';
 
 export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOptions);
 

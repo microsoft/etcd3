@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { describe, expect, it } from 'vitest';
-import { Range } from '../range';
+import { Range } from '../range.js';
 
 describe('Range', () => {
   describe('prefix', () => {

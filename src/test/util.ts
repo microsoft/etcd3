@@ -2,15 +2,16 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { expect } from 'vitest';
-import * as fs from 'fs';
-import * as tls from 'tls';
+import * as fs from 'node:fs';
+import * as tls from 'node:tls';
+import { fileURLToPath } from 'node:url';
 
 import { NoopPolicy } from 'cockatiel';
-import { AddressInfo } from 'net';
-import { resolve } from 'path';
-import { Etcd3, IOptions, Namespace } from '..';
+import type { AddressInfo } from 'node:net';
+import { Etcd3 } from '../index.js';
+import type { IOptions, Namespace } from '../index.js';
 
-const rootPath = resolve(__dirname, '..', '..');
+const rootPath = fileURLToPath(new URL('../..', import.meta.url));
 const rootCertificate = fs.readFileSync(`${rootPath}/src/test/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${rootPath}/src/test/certs/certs/etcd0.localhost.crt`);
 const tlsKey = fs.readFileSync(`${rootPath}/src/test/certs/private/etcd0.localhost.key`);
