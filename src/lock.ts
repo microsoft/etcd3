@@ -70,28 +70,43 @@ export class Lock {
   /**
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
-  public acquire(): Promise<this> {
+  public async acquire(): Promise<this> {
+    if (this.lease) {
+      throw new EtcdLockFailedError(
+        `Failed to acquire a lock on ${this.key}: lock is already acquired`,
+      );
+    }
+
     const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
     const kv = new RPC.KVClient(this.pool);
 
-    return lease.grant().then(leaseID => {
-      return new ComparatorBuilder(kv, this.namespace)
+    let leaseID: string;
+    try {
+      leaseID = await lease.grant();
+    } catch (error) {
+      this.lease = null;
+      throw error;
+    }
+
+    let res: RPC.ITxnResponse;
+    try {
+      res = await new ComparatorBuilder(kv, this.namespace)
         .and(this.key, 'Create', '==', 0)
         .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
         .options(this.callOptions)
-        .commit()
-        .then<this>(res => {
-          if (res.succeeded) {
-            return this;
-          }
+        .commit();
+    } catch (error) {
+      return this.cleanupFailedAcquire(lease, error);
+    }
 
-          return this.release()
-            .catch(() => undefined)
-            .then(() => {
-              throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
-            });
-        });
-    });
+    if (res.succeeded) {
+      return this;
+    }
+
+    return this.cleanupFailedAcquire(
+      lease,
+      new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`),
+    );
   }
 
   /**
@@ -106,11 +121,16 @@ export class Lock {
    * Release frees the lock.
    */
   public release(): Promise<void> {
-    if (!this.lease) {
+    const lease = this.lease;
+    if (!lease) {
       throw new Error('Attempted to release a lock which was not acquired');
     }
 
-    return this.lease.revoke(this.callOptions);
+    return lease.revoke(this.callOptions).then(() => {
+      if (this.lease === lease) {
+        this.lease = null;
+      }
+    });
   }
 
   /**
@@ -118,14 +138,29 @@ export class Lock {
    * the function, and releases the lock after any promise the function
    * returns resolves or throws.
    */
-  public do<T>(fn: () => T | Promise<T>): Promise<T> {
-    return this.acquire()
-      .then(fn)
-      .then(value => this.release().then(() => value))
-      .catch(err =>
-        this.release().then(() => {
-          throw err;
-        }),
+  public async do<T>(fn: () => T | Promise<T>): Promise<T> {
+    await this.acquire();
+    try {
+      return await fn();
+    } finally {
+      await this.release();
+    }
+  }
+
+  private async cleanupFailedAcquire(lease: Lease, error: unknown): Promise<never> {
+    try {
+      await lease.revoke(this.callOptions);
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        'Failed to acquire a lock and release its lease',
       );
+    }
+
+    if (this.lease === lease) {
+      this.lease = null;
+    }
+
+    throw error;
   }
 }
