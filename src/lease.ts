@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import * as grpc from '@grpc/grpc-js';
 
 import { PutBuilder } from './builder';
@@ -27,15 +27,17 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  * put requests before executing them.
  */
 class LeaseClientWrapper implements RPC.ICallable<Host> {
-  public readonly callOptionsFactory = this.pool.callOptionsFactory;
+  public readonly callOptionsFactory: RPC.ICallable<Host>['callOptionsFactory'];
 
   constructor(
-    private pool: ConnectionPool,
+    private readonly pool: ConnectionPool,
     private readonly lease: {
       leaseID: Promise<string | Error>;
       emitLoss(err: EtcdError): void;
     },
-  ) {}
+  ) {
+    this.callOptionsFactory = pool.callOptionsFactory;
+  }
 
   public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
     return this.pool.exec(service, method, payload).catch(err => {
@@ -107,7 +109,7 @@ export class Lease extends EventEmitter {
   private leaseID: Promise<string | Error>;
   private innerState = LeaseState.Pending;
 
-  private client = new RPC.LeaseClient(this.pool);
+  private readonly client: RPC.LeaseClient;
   private lastKeepAlive: number;
   private defaultOptions: grpc.CallOptions;
 
@@ -122,6 +124,8 @@ export class Lease extends EventEmitter {
     options: ILeaseOptions = {},
   ) {
     super();
+    this.client = new RPC.LeaseClient(pool);
+    this.lastKeepAlive = Date.now();
 
     const { autoKeepAlive, deadline, ...rest } = options;
     this.defaultOptions = rest;

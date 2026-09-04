@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import * as fs from 'fs';
 import * as tls from 'tls';
 
@@ -14,7 +14,8 @@ const rootPath = resolve(__dirname, '..', '..');
 const rootCertificate = fs.readFileSync(`${rootPath}/src/test/certs/certs/ca.crt`);
 const tlsCert = fs.readFileSync(`${rootPath}/src/test/certs/certs/etcd0.localhost.crt`);
 const tlsKey = fs.readFileSync(`${rootPath}/src/test/certs/private/etcd0.localhost.key`);
-const etcdSourceAddress = process.env.ETCD_ADDR || '127.0.0.1:2379';
+const defaultEtcdAddress = '127.0.0.1:2379';
+const etcdSourceAddress = process.env.ETCD_ADDR || defaultEtcdAddress;
 const [etcdSourceHost, etcdSourcePort] = etcdSourceAddress.split(':');
 
 export const enum TrafficDirection {
@@ -32,9 +33,9 @@ export const etcdVersion = process.env.ETCD_VERSION || '3.3.9';
 export class Proxy {
   public isActive = false;
   public connections: Array<{ end(): void }> = [];
-  private server: tls.Server;
-  private host: string;
-  private port: number;
+  private server!: tls.Server;
+  private host!: string;
+  private port!: number;
   private enabledDataFlows = new Set([TrafficDirection.FromEtcd, TrafficDirection.ToEtcd]);
 
   /**
@@ -109,7 +110,7 @@ export class Proxy {
    * Returns the address the server is listening on.
    */
   public address() {
-    return `${this.host}:${this.port}`;
+    return `127.0.0.1:${this.port}`;
   }
 
   private handleIncoming(clientCnx: tls.TLSSocket) {
@@ -121,6 +122,7 @@ export class Proxy {
       {
         secureContext: tls.createSecureContext({ ca: rootCertificate }),
         ALPNProtocols: ['h2'],
+        servername: 'etcd0.localhost',
       },
       () => {
         if (serverBuffer.length > 0 && !ended) {
@@ -181,7 +183,7 @@ export function getHost(): string {
     return proxy.address();
   }
 
-  return process.env.ETCD_ADDR || '127.0.0.1:2379';
+  return process.env.ETCD_ADDR || defaultEtcdAddress;
 }
 
 /**
@@ -191,6 +193,9 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
   return {
     hosts: getHost(),
     credentials: { rootCertificate },
+    grpcOptions: {
+      'grpc.ssl_target_name_override': 'etcd0.localhost',
+    },
     faultHandling: {
       global: new NoopPolicy(),
       host: () => new NoopPolicy(),
@@ -204,17 +209,7 @@ export function getOptions(defaults: Partial<IOptions> = {}): IOptions {
  * something other than the provided constructor
  */
 export function expectReject(promise: Promise<any>, err: new (message: string) => Error) {
-  return promise
-    .then(() => {
-      throw new Error('expected to reject');
-    })
-    .catch(actualErr => {
-      if (!(actualErr instanceof err)) {
-        // tslint:disable-next-line
-        console.error(actualErr.stack);
-        expect(actualErr).to.be.an.instanceof(err);
-      }
-    });
+  return expect(promise).rejects.toBeInstanceOf(err);
 }
 
 /**

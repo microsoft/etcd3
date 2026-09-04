@@ -1,9 +1,8 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import BigNumber from 'bignumber.js';
-import { IBackoff, IBackoffFactory } from 'cockatiel';
-import { EventEmitter } from 'events';
+import type { IBackoff, IBackoffFactory } from 'cockatiel';
+import { EventEmitter } from 'node:events';
 import {
   castGrpcErrorMessage,
   ClientRuntimeError,
@@ -116,7 +115,7 @@ export class WatchManager {
   /**
    * The current GRPC stream, if any.
    */
-  private stream: null | RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>;
+  private stream: RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse> | null = null;
 
   /**
    * List of attached watchers.
@@ -131,7 +130,7 @@ export class WatchManager {
   /**
    * Queue for attaching watchers. Unique and re-created per stream.
    */
-  private queue: null | AttachQueue;
+  private queue: AttachQueue | null = null;
 
   /**
    * Current backoff value.
@@ -158,7 +157,7 @@ export class WatchManager {
       case State.Connecting:
         break;
       case State.Connected:
-        this.queue!.attach(watcher);
+        this.getQueue().attach(watcher);
         break;
       default:
         throw new ClientRuntimeError(`Unknown watcher state ${this.state}`);
@@ -210,6 +209,14 @@ export class WatchManager {
     return this.stream;
   }
 
+  private getQueue() {
+    if (this.state !== State.Connected || !this.queue) {
+      throw new ClientRuntimeError('Expected the watcher queue to exist while state == Connected');
+    }
+
+    return this.queue;
+  }
+
   /**
    * Establishes a GRPC watcher stream, if there are any active watcher.
    */
@@ -249,7 +256,7 @@ export class WatchManager {
           return this.destroyStream();
         }
 
-        this.queue!.attach(this.watchers);
+        this.getQueue().attach(this.watchers);
       })
       .catch(err => this.handleError(err));
   }
@@ -266,7 +273,7 @@ export class WatchManager {
     }
 
     this.getStream().cancel();
-    this.queue!.destroy();
+    this.getQueue().destroy();
   }
 
   /**
@@ -275,7 +282,7 @@ export class WatchManager {
    */
   private handleError(err: Error) {
     if (this.state === State.Connected) {
-      this.queue!.destroy();
+      this.getQueue().destroy();
       this.getStream().cancel();
     }
     this.state = State.Idle;
@@ -331,7 +338,7 @@ export class WatchManager {
   private handleCreatedResponse(res: RPC.IWatchResponse) {
     this.backoff = this.initialBackoff.next();
     if (!res.canceled) {
-      this.queue!.handleCreate(res);
+      this.getQueue().handleCreate(res);
       return;
     }
 
@@ -426,13 +433,6 @@ export class WatchBuilder {
   }
 
   /**
-   * @deprecated this does the opposite of what it says -- use `only` instead
-   */
-  public ignore(...operations: (keyof typeof operationNames)[]): this {
-    return this.only(...operations);
-  }
-
-  /**
    * Requests only changes for the given kinds of operations.
    */
   public only(...operations: (keyof typeof operationNames)[]): this {
@@ -452,7 +452,7 @@ export class WatchBuilder {
    * Watch starting from a specific revision.
    */
   public startRevision(revision: string): this {
-    this.request.start_revision = Number(revision);
+    this.request.start_revision = revision;
     return this;
   }
 
@@ -522,7 +522,7 @@ export class Watcher extends EventEmitter {
   public on(event: 'connecting', handler: (req: RPC.IWatchRequest) => void): this;
 
   /**
-   * connected is fired after etcd knowledges the watcher is connected.
+   * connected is fired after etcd acknowledges the watcher is connected.
    * When this event is fired, `id` will already be populated.
    */
   public on(event: 'connected', handler: (res: RPC.IWatchResponse) => void): this;
@@ -573,12 +573,13 @@ export class Watcher extends EventEmitter {
   }
 
   /**
-   * lastRevision returns the latest etcd cluster revision that this
-   * watcher observed. This will be `null` if the watcher has not yet
-   * connected.
+   * lastRevision returns the lossless bigint latest/resume revision for this
+   * watcher. After observing a cluster header at revision `N`, this is
+   * `N + 1`. This will be `null` until the watcher has a resume revision.
    */
-  public lastRevision(): number | null {
-    return this.request.start_revision as number;
+  public lastRevision(): bigint | null {
+    const revision = this.request.start_revision;
+    return revision === undefined ? null : BigInt(revision);
   }
 
   /**
@@ -592,6 +593,6 @@ export class Watcher extends EventEmitter {
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = new BigNumber(req.header.revision).plus(1).toString();
+    this.request.start_revision = (BigInt(req.header.revision) + 1n).toString();
   }
 }

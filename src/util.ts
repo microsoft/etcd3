@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import { CallOptions } from '@grpc/grpc-js';
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import { ClientRuntimeError } from './errors';
 import { CallOptionsFactory } from './options';
 import { CallContext, Services } from './rpc';
@@ -53,7 +53,7 @@ export class NSApplicator {
   public static readonly default = new NSApplicator(emptyKey);
 
   // A little caching, maybe a microoptimization :P
-  private endRange: Buffer | null;
+  private endRange: Buffer | null = null;
 
   constructor(private readonly prefix: Buffer) {}
 

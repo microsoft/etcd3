@@ -2,8 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import BigNumber from 'bignumber.js';
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import { ClientRuntimeError, NotCampaigningError } from './errors';
 import { Lease } from './lease';
 import { Namespace } from './namespace';
@@ -13,7 +12,7 @@ import { IDeferred, getDeferred, toBuffer } from './util';
 const UnsetCurrent = Symbol('unset');
 
 /**
- * Object returned from election.observer() that exposees information about
+ * Object returned from election.observer() that exposes information about
  * the current election.
  * @noInheritDoc
  */
@@ -158,14 +157,14 @@ export class ElectionObserver extends EventEmitter {
 
       const watcher = this.namespace
         .watch()
-        .startRevision(new BigNumber(revision).plus(1).toString())
+        .startRevision((BigInt(revision) + 1n).toString())
         .key(leader.key)
         .watcher();
 
       await new Promise<void>((resolve, reject) => {
-        watcher!.on('put', kv => this.setLeader(kv));
-        watcher!.on('delete', () => resolve());
-        watcher!.on('error', reject);
+        watcher.on('put', kv => this.setLeader(kv));
+        watcher.on('delete', () => resolve());
+        watcher.on('error', reject);
         this.disposer = () => {
           resolve();
           return watcher.cancel();
@@ -333,7 +332,7 @@ export class Campaign extends EventEmitter {
   private async waitForElected(revision: string) {
     while (this.keyRevision !== ResignedCampaign) {
       // find last created before this one
-      const lastRevision = new BigNumber(revision).minus(1).toString();
+      const lastRevision = (BigInt(revision) - 1n).toString();
       const result = await this.namespace
         .getAll()
         .maxCreateRevision(lastRevision)

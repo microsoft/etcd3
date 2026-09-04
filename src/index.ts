@@ -4,7 +4,7 @@
 import { Role, User } from './auth';
 import { ConnectionPool } from './connection-pool';
 import { Namespace } from './namespace';
-import { IOptions } from './options';
+import type { IOptions } from './options';
 import * as RPC from './rpc';
 
 export * from './auth';
@@ -101,16 +101,26 @@ export class Etcd3 extends Namespace {
    * For example:
    *
    * ```
-   * const sinon = require('sinon');
-   * const { expect } = require('chai');
-   *
    * const { Etcd3 } = require('etcd3');
    * const client = new Etcd3();
    *
-   * const mock = client.mock({ exec: sinon.stub() });
-   * mock.exec.resolves({ kvs: [{ key: 'foo', value: 'bar' }]});
-   * const output = client.get('foo').string();
-   * expect(output).to.equal('bar');
+   * client.mock({
+   *   exec: async (service, method) => {
+   *     if (service === 'KV' && method === 'range') {
+   *       return {
+   *         header: { cluster_id: '0', member_id: '0', revision: '0', raft_term: '0' },
+   *         kvs: [{ key: Buffer.from('foo'), value: Buffer.from('bar') }],
+   *         more: false,
+   *         count: '1',
+   *       };
+   *     }
+   *
+   *     throw new Error(`Unexpected call: ${service}.${method}`);
+   *   },
+   * });
+   *
+   * const output = await client.get('foo').string();
+   * console.log(output); // 'bar'
    * client.unmock();
    * ```
    */

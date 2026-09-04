@@ -22,8 +22,17 @@ export type Rangable =
   | { start: string | Buffer; end: string | Buffer }
   | { prefix: string | Buffer };
 
-function rangableIsPrefix(r: Rangable): r is { prefix: string | Buffer } {
-  return r.hasOwnProperty('prefix');
+function rangableIsPrefix(r: unknown): r is { prefix: string | Buffer } {
+  return typeof r === 'object' && r !== null && Object.hasOwn(r, 'prefix');
+}
+
+function rangableHasEndpoints(r: unknown): r is { start: string | Buffer; end: string | Buffer } {
+  return (
+    typeof r === 'object' &&
+    r !== null &&
+    Object.hasOwn(r, 'start') &&
+    Object.hasOwn(r, 'end')
+  );
 }
 
 /**
@@ -48,7 +57,7 @@ export class Range {
    * Converts a rangable into a qualified Range.
    */
   public static from(v: Rangable): Range {
-    if (typeof v === 'string' || v instanceof Buffer) {
+    if (typeof v === 'string' || Buffer.isBuffer(v)) {
       return new Range(toBuffer(v));
     }
 
@@ -60,7 +69,11 @@ export class Range {
       return Range.prefix(v.prefix);
     }
 
-    return new Range(v.start, v.end);
+    if (rangableHasEndpoints(v)) {
+      return new Range(v.start, v.end);
+    }
+
+    throw new TypeError('Invalid range');
   }
   public readonly start: Buffer;
   public readonly end: Buffer;
