@@ -10,6 +10,12 @@
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
 - **fix:** correct grpc-js request, metadata, and options ordering for server response streams.
+- **fix:** recover the watch attach queue after etcd rejects a watch during creation.
+- **fix:** prevent resigned election campaigns from being elected and use their persisted creation revision when recovering campaign transactions.
+- **fix:** prevent repeated or failed lock acquisition from orphaning renewable leases.
+- **fix:** correct STM snapshot conflict checks, overlapping range writes, touch behavior, and point-delete tracking.
+- **fix:** include the namespace root key in namespaced whole-range reads and deletes.
+- **fix:** correctly batch role permission revocations, forward permission call options, and format missing-lease errors.
 - **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
 - **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
 - **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.

@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Election, Etcd3 } from '../index.js';
-import type { Campaign, ElectionObserver } from '../election.js';
+import { Campaign, type ElectionObserver } from '../election.js';
 import { NotCampaigningError } from '../errors.js';
 import { delay, getDeferred, onceEvent } from '../util.js';
 import { getOptions, tearDownTestClient } from './util.js';
@@ -31,6 +31,33 @@ async function cleanUpElectionResources(
     }
   }
 }
+
+function campaignNamespace(result: object): ConstructorParameters<typeof Campaign>[0] {
+  return {
+    lease: () => ({
+      grant: async () => 'campaign-key',
+      on: () => undefined,
+      revoke: async () => undefined,
+    }),
+    put: () => ({
+      value: () => ({
+        lease: () => undefined,
+      }),
+    }),
+    get: () => undefined,
+    if: () => ({
+      then: () => ({
+        else: () => ({
+          commit: async () => result,
+        }),
+      }),
+    }),
+  } as unknown as ConstructorParameters<typeof Campaign>[0];
+}
+
+const campaignInternals = Campaign.prototype as unknown as {
+  waitForElected(revision: string): Promise<void>;
+};
 
 describe('election', () => {
   let client: Etcd3;
@@ -112,6 +139,68 @@ describe('election', () => {
       const key = await campaign.getCampaignKey();
       const oldValue = await client.get(key);
       expect(oldValue).toBe('candidate');
+    });
+
+    it('does not elect a queued campaign that resigns before its predecessor', async () => {
+      const predecessorDeleted = getDeferred<void>();
+      const waiting = getDeferred<void>();
+      const waitForElected = vi
+        .spyOn(campaignInternals, 'waitForElected')
+        .mockImplementation(() => {
+          waiting.resolve();
+          return predecessorDeleted.promise;
+        });
+
+      try {
+        const queuedCampaign = new Campaign(
+          campaignNamespace({ succeeded: true, header: { revision: '10' }, responses: [] }),
+          'candidate2',
+          1,
+        );
+        const elected = vi.fn();
+        queuedCampaign.on('elected', elected);
+
+        await waiting.promise;
+        await queuedCampaign.resign();
+        predecessorDeleted.resolve();
+        await Promise.resolve();
+
+        expect(elected).not.toHaveBeenCalled();
+      } finally {
+        waitForElected.mockRestore();
+      }
+    });
+
+    it('waits using the existing campaign key create revision after a transaction retry', async () => {
+      const waitedRevision = getDeferred<string>();
+      const waitForElected = vi
+        .spyOn(campaignInternals, 'waitForElected')
+        .mockImplementation(revision => {
+          waitedRevision.resolve(revision);
+          return Promise.resolve();
+        });
+
+      try {
+        new Campaign(
+          campaignNamespace({
+            succeeded: false,
+            header: { revision: '10' },
+            responses: [
+              {
+                response_range: {
+                  kvs: [{ create_revision: '5', value: Buffer.from('candidate2') }],
+                },
+              },
+            ],
+          }),
+          'candidate2',
+          1,
+        );
+
+        await expect(waitedRevision.promise).resolves.toBe('5');
+      } finally {
+        waitForElected.mockRestore();
+      }
     });
   });
 

@@ -158,12 +158,18 @@ export class GRPCUnauthenticatedError extends GRPCGenericError {}
 export class EtcdError extends Error {}
 
 /**
- * EtcdLeaseInvalidError is thrown when trying to renew a lease that's
- * expired.
+ * EtcdLeaseInvalidError is thrown when a known lease is expired or revoked,
+ * or when etcd reports that a requested lease was not found.
  */
 export class EtcdLeaseInvalidError extends Error {
-  constructor(leaseID: string) {
-    super(`Lease ${leaseID} is expired or revoked`);
+  constructor();
+  constructor(leaseID: string);
+  constructor(leaseID?: string) {
+    super(
+      leaseID === undefined
+        ? 'The requested lease was not found'
+        : `Lease ${leaseID} is expired or revoked`,
+    );
   }
 }
 
@@ -307,12 +313,16 @@ function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): str
   return str.replace(/^Error:/, `${ctor.name}:`);
 }
 
+function createGrpcError(ctor: IErrorCtor, message: string): Error {
+  return ctor === EtcdLeaseInvalidError ? new EtcdLeaseInvalidError() : new ctor(message);
+}
+
 /**
  * Tries to convert an Etcd error string to an etcd error.
  */
 export function castGrpcErrorMessage(message: string): Error {
   const ctor = getMatchingGrpcError(message) || EtcdError;
-  return new ctor(message);
+  return createGrpcError(ctor, message);
 }
 
 /**
@@ -333,7 +343,7 @@ export function castGrpcError<T extends Error>(err: T): Error {
     ctor = err.message.includes('etcdserver:') ? EtcdError : GRPCGenericError;
   }
 
-  const castError = new ctor(rewriteErrorName(err.message, ctor));
+  const castError = createGrpcError(ctor, rewriteErrorName(err.message, ctor));
   castError.stack = rewriteErrorName(String(err.stack), ctor);
   return castError;
 }

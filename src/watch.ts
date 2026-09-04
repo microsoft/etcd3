@@ -61,15 +61,18 @@ class AttachQueue {
    * Dispatches the "create" response to the waiting watcher and fires the
    * next one as necessary.
    */
-  public handleCreate(res: RPC.IWatchResponse) {
+  public handleCreate(res: RPC.IWatchResponse): Watcher {
     const watcher = this.queue.shift();
     if (!watcher) {
       throw new ClientRuntimeError('Could not find watcher corresponding to create response');
     }
 
-    (watcher as { id: string }).id = res.watch_id;
-    watcher.emit('connected', res);
+    if (!res.canceled) {
+      (watcher as { id: string }).id = res.watch_id;
+      watcher.emit('connected', res);
+    }
     this.readQueue();
+    return watcher;
   }
 
   /**
@@ -338,21 +341,10 @@ export class WatchManager {
    */
   private handleCreatedResponse(res: RPC.IWatchResponse) {
     this.backoff = this.initialBackoff.next();
-    if (!res.canceled) {
-      this.getQueue().handleCreate(res);
-      return;
+    const watcher = this.getQueue().handleCreate(res);
+    if (res.canceled) {
+      this.handleCancelResponse(watcher, res);
     }
-
-    // etcd can return both "canceled" and "created" in some cases, see #114.
-    // In this case watch_id won't have been assigned yet, so pull the first
-    // watcher that doesn't currently have an ID and assume it's the one
-    // that caused this error.
-    const watcher = this.watchers.find(w => w.id === null);
-    if (!watcher) {
-      throw new ClientRuntimeError('Got a watch creation error, but found no pending watchers');
-    }
-
-    this.handleCancelResponse(watcher, res);
   }
 
   /**

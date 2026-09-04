@@ -65,16 +65,19 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
+      return Promise.all(req.map(r => this.revoke(r, options))).then(() => this);
     }
 
     const range = getRange(req);
     return this.client
-      .roleRevokePermission({
-        role: this.name,
-        key: range.start,
-        range_end: range.end,
-      })
+      .roleRevokePermission(
+        {
+          role: this.name,
+          key: range.start,
+          range_end: range.end,
+        },
+        options,
+      )
       .then(() => this);
   }
 
@@ -86,7 +89,7 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r))).then(() => this);
+      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
     }
 
     const range = getRange(req);

@@ -290,7 +290,8 @@ export class Campaign extends EventEmitter {
       return; // torn down in the meantime
     }
 
-    this.keyRevision = result.header.revision;
+    let campaignRevision = result.header.revision;
+    this.keyRevision = campaignRevision;
 
     if (result.succeeded) {
       if (this.pendingProclaimation) {
@@ -299,15 +300,22 @@ export class Campaign extends EventEmitter {
       }
     } else {
       const kv = result.responses[0].response_range.kvs[0];
-      this.keyRevision = kv.create_revision;
+      campaignRevision = kv.create_revision;
+      this.keyRevision = campaignRevision;
       if (!kv.value.equals(this.value)) {
         await this.proclaimInner(this.value, this.keyRevision);
         this.pendingProclaimation?.resolve();
       }
     }
 
-    await this.waitForElected(result.header.revision);
-    this.emit('elected');
+    await this.waitForElected(campaignRevision);
+    if (!this.hasResigned()) {
+      this.emit('elected');
+    }
+  }
+
+  private hasResigned() {
+    return this.keyRevision === ResignedCampaign;
   }
 
   private async proclaimInner(buf: Buffer, keyRevision: string | undefined) {
