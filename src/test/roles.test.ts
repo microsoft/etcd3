@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as grpc from '@grpc/grpc-js';
 
 import {
@@ -40,7 +40,7 @@ describe('roles and auth', () => {
 
     const expectRoles = async (expected: string[]) => {
       const list = await client.getRoles();
-      expect(list.map(r => r.name)).to.deep.equal(expected);
+      expect(list.map(r => r.name)).toEqual(expected);
     };
 
     it('create and deletes', async () => {
@@ -77,7 +77,7 @@ describe('roles and auth', () => {
       });
 
       const perms = await fooRole.permissions();
-      expect(perms).to.containSubset([
+      expect(perms).toMatchObject([
         {
           permission: 'Read',
           range: client.range({ prefix: '111' }),
@@ -85,7 +85,7 @@ describe('roles and auth', () => {
       ]);
 
       await fooRole.revoke(perms[0]);
-      expect(await fooRole.permissions()).to.have.length(0);
+      expect(await fooRole.permissions()).toHaveLength(0);
     });
   });
 
@@ -102,9 +102,9 @@ describe('roles and auth', () => {
     });
 
     it('creates users', async () => {
-      expect(await client.getUsers()).to.have.lengthOf(0);
+      expect(await client.getUsers()).toHaveLength(0);
       await client.user('connor').create('password');
-      expect(await client.getUsers()).to.containSubset([{ name: 'connor' }]);
+      expect(await client.getUsers()).toMatchObject([{ name: 'connor' }]);
     });
 
     it('throws on existing users', async () => {
@@ -129,9 +129,9 @@ describe('roles and auth', () => {
     it('round trips roles', async () => {
       const user = await client.user('connor').create('password');
       await user.addRole(fooRole);
-      expect(await user.roles()).to.containSubset([{ name: 'foo' }]);
+      expect(await user.roles()).toMatchObject([{ name: 'foo' }]);
       await user.removeRole(fooRole);
-      expect(await user.roles()).to.have.lengthOf(0);
+      expect(await user.roles()).toHaveLength(0);
     });
   });
 
@@ -169,9 +169,7 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expect(authedClient.put('foo').value('bar')).to.be.rejectedWith(
-        GRPCDeadlineExceededError,
-      );
+      await expect(authedClient.put('foo').value('bar')).rejects.toThrow(GRPCDeadlineExceededError);
       authedClient.close();
     });
 
@@ -226,7 +224,7 @@ describe('roles and auth', () => {
       authedClient.close();
 
       const updatedMeta: grpc.Metadata = await auth.awaitingMetadata;
-      expect(updatedMeta.get('token')).to.not.deep.equal(badMeta.get('token'));
+      expect(updatedMeta.get('token')).not.toEqual(badMeta.get('token'));
     });
   });
 });

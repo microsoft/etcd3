@@ -1,9 +1,8 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NoopPolicy, handleAll, retry } from 'cockatiel';
-import { stub } from 'sinon';
 import { IOptions, KVClient } from '..';
 import { ConnectionPool } from '../connection-pool';
 import { GRPCDeadlineExceededError, GRPCUnavailableError } from '../errors';
@@ -33,23 +32,22 @@ describe('connection pool', () => {
     const kv = new KVClient(pool);
     await kv.put({ key, value });
     const res = await kv.range({ key });
-    expect(res.kvs).to.containSubset([{ key, value }]);
+    expect(res.kvs).toMatchObject([{ key, value }]);
 
     await kv.deleteRange({ key });
   });
 
   it('applies call options', async () => {
-    const optsStub = stub()
-      .onFirstCall()
-      .returns({ deadline: new Date(0) })
-      .onSecondCall()
-      .returns({ deadline: new Date(Date.now() + 30_000) });
+    const optsStub = vi
+      .fn()
+      .mockReturnValueOnce({ deadline: new Date(0) })
+      .mockReturnValueOnce({ deadline: new Date(Date.now() + 30_000) });
 
     const pool = new ConnectionPool({ ...getOptions(), defaultCallOptions: optsStub });
 
     const kv = new KVClient(pool);
-    await expect(kv.range({ key })).to.be.rejectedWith(GRPCDeadlineExceededError);
-    expect(await kv.range({ key })).be.ok;
+    await expect(kv.range({ key })).rejects.toThrow(GRPCDeadlineExceededError);
+    expect(await kv.range({ key })).toBeTruthy();
   });
 
   it('rejects instantiating with a mix of secure and unsecure hosts', () => {
@@ -61,7 +59,7 @@ describe('connection pool', () => {
             credentials: undefined,
           }),
         ),
-    ).to.throw(/mix of secure and insecure hosts/);
+    ).toThrow(/mix of secure and insecure hosts/);
   });
 
   it('rejects hitting invalid hosts', () => {
@@ -72,7 +70,7 @@ describe('connection pool', () => {
       .then(() => {
         throw new Error('expected to reject');
       })
-      .catch(err => expect(err).to.be.an.instanceof(GRPCUnavailableError));
+      .catch(err => expect(err).toBeInstanceOf(GRPCUnavailableError));
   });
 
   it('should retry through policy', async () => {
@@ -85,6 +83,6 @@ describe('connection pool', () => {
       }),
     );
     const kv = new KVClient(pool);
-    expect((await kv.range({ key })).kvs).to.deep.equal([]);
+    expect((await kv.range({ key })).kvs).toEqual([]);
   });
 });

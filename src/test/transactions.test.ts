@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Etcd3 } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
@@ -15,7 +15,7 @@ describe('transactions', () => {
   it('runs a simple if', async () => {
     await client.if('foo1', 'Value', '==', 'bar1').then(client.put('foo1').value('bar2')).commit();
 
-    expect(await client.get('foo1').string()).to.equal('bar2');
+    expect(await client.get('foo1').string()).toBe('bar2');
   });
 
   it('runs consequents', async () => {
@@ -25,7 +25,7 @@ describe('transactions', () => {
       .else(client.put('foo1').value('bar3'))
       .commit();
 
-    expect(await client.get('foo1').string()).to.equal('bar2');
+    expect(await client.get('foo1').string()).toBe('bar2');
   });
 
   it('runs multiple clauses and consequents', async () => {
@@ -36,7 +36,7 @@ describe('transactions', () => {
       .else(client.put('foo1').value('bar3'), client.get('foo2'))
       .commit();
 
-    expect(result.responses[1].response_range.kvs[0].value.toString()).to.equal('bar2');
-    expect(await client.get('foo1').string()).to.equal('bar3');
+    expect(result.responses[1].response_range.kvs[0].value.toString()).toBe('bar2');
+    expect(await client.get('foo1').string()).toBe('bar3');
   });
 });

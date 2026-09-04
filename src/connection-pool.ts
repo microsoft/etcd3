@@ -2,17 +2,16 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
-import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
+import type { ChannelOptions } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import {
   circuitBreaker,
   ConsecutiveBreaker,
   handleWhen,
-  IDefaultPolicyContext,
-  IPolicy,
   isBrokenCircuitError,
   retry,
 } from 'cockatiel';
+import type { IDefaultPolicyContext, IPolicy } from 'cockatiel';
 import {
   castGrpcError,
   ClientClosedError,
@@ -42,6 +41,10 @@ const secureProtocolPrefix = 'https:';
  */
 function removeProtocolPrefix(name: string) {
   return name.replace(/^https?:\/\//, '');
+}
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
 }
 
 /**
@@ -149,7 +152,7 @@ class Authenticator {
     credentials: grpc.ChannelCredentials,
   ): Promise<string> {
     return runServiceCall(
-      new etcdserverpb.Auth(address, credentials),
+      new etcdserverpb.Auth(address, credentials, this.options.grpcOptions),
       new grpc.Metadata(),
       callOptions,
       'authenticate',
@@ -215,7 +218,7 @@ export class Host {
         // workaround: https://github.com/grpc/grpc-node/issues/1487
         const state = service.getChannel().getConnectivityState(false);
         if (state === grpc.connectivityState.CONNECTING) {
-          service.waitForReady(Date.now() + 10_00, () => setImmediate(() => service.close()));
+          service.waitForReady(Date.now() + 10_000, () => setImmediate(() => service.close()));
         } else {
           service.close();
         }
@@ -246,16 +249,20 @@ export class ConnectionPool implements ICallable<Host> {
    */
   public static deterministicOrder = false;
 
-  public readonly callOptionsFactory = this.options.defaultCallOptions;
-
+  public readonly callOptionsFactory: IOptions['defaultCallOptions'];
   private readonly hosts: Host[];
-  private readonly globalPolicy: IPolicy<IDefaultPolicyContext> =
-    this.options.faultHandling?.global ?? retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
-  private mockImpl: ICallable<Host> | null;
-  private authenticator: Authenticator;
+  private readonly globalPolicy: IPolicy<IDefaultPolicyContext>;
+  private mockImpl: ICallable<Host> | null = null;
+  private readonly authenticator: Authenticator;
 
   constructor(private readonly options: IOptions) {
+    this.callOptionsFactory = options.defaultCallOptions;
+    this.globalPolicy =
+      options.faultHandling?.global ??
+      retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
+
     const credentials = this.buildAuthentication();
+    this.authenticator = new Authenticator(options, credentials);
     const { hosts = '127.0.0.1:2379', grpcOptions } = this.options;
 
     if (typeof hosts === 'string') {
@@ -322,7 +329,8 @@ export class ConnectionPool implements ICallable<Host> {
 
             try {
               return await runServiceCall(client, metadata, resolvedOpts, method, payload);
-            } catch (err) {
+            } catch (error) {
+              const err = toError(error);
               if (err instanceof EtcdInvalidAuthTokenError) {
                 this.authenticator.invalidateMetadata();
                 return this.exec(serviceName, method, payload, options);
@@ -335,14 +343,14 @@ export class ConnectionPool implements ICallable<Host> {
           shuffleGen,
         ),
       );
-    } catch (e) {
+    } catch (error) {
       // If we ran into an error that caused the a circuit to open, but we had
       // an error before that happened, throw the original error rather than
       // the broken circuit error.
-      if (isBrokenCircuitError(e) && lastError && !isBrokenCircuitError(lastError)) {
+      if (isBrokenCircuitError(error) && lastError && !isBrokenCircuitError(lastError)) {
         throw lastError;
       } else {
-        throw e;
+        throw error;
       }
     }
   }
@@ -369,17 +377,18 @@ export class ConnectionPool implements ICallable<Host> {
           didCallThrough = true;
           return fn({ resource: host, client: host.getServiceClient(service), metadata });
         });
-      } catch (e) {
-        if (isRecoverableError(e)) {
+      } catch (error) {
+        const err = toError(error);
+        if (isRecoverableError(err)) {
           host.resetAllServices();
         }
 
         // Check if the call was blocked by some circuit breaker/bulkhead policy
         if (didCallThrough) {
-          throw castGrpcError(e);
+          throw castGrpcError(err);
         }
 
-        lastError = e;
+        lastError = err;
       }
     }
 
@@ -444,7 +453,6 @@ export class ConnectionPool implements ICallable<Host> {
       protocolCredentials = grpc.credentials.createSsl();
     }
 
-    this.authenticator = new Authenticator(this.options, protocolCredentials);
     return protocolCredentials;
   }
 

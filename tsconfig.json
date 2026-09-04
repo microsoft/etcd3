@@ -2,24 +2,18 @@
   "compilerOptions": {
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strictNullChecks": true,
+    "strict": true,
     "experimentalDecorators": true,
     "module": "commonjs",
-    "target": "ES2018",
+    "target": "ES2024",
+    "rootDir": "src",
     "outDir": "lib",
-    "lib": ["ES2018"],
-    "types": [
-      "chai-as-promised",
-      "chai-subset",
-      "mocha",
-      "node"
-    ],
-    "baseUrl": ".",
+    "lib": ["ES2024"],
+    "types": ["node"]
   },
   "include": ["src"],
+  "exclude": ["src/test"]
 }

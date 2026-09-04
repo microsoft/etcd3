@@ -37,7 +37,7 @@ import { NSApplicator } from './util';
  */
 export class Lock {
   private leaseTTL = 30;
-  private lease: Lease | null;
+  private lease: Lease | null = null;
   private callOptions: grpc.CallOptions | undefined;
 
   constructor(

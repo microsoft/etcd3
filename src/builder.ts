@@ -148,7 +148,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * or returns `null` if it isn't found.
    */
   public json(): Promise<unknown> {
-    return this.string().then(JSON.parse);
+    return this.string().then(value => (value === null ? null : JSON.parse(value)));
   }
 
   /**

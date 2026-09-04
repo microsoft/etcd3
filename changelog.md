@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0 (Unreleased)
+
+- **breaking:** Node.js 24 or newer is now required.
+- **breaking:** remove the deprecated `WatchBuilder.ignore()` method; use `WatchBuilder.only()` to filter watch events.
+- **breaking:** `Watcher.lastRevision()` now returns a lossless `bigint | null`.
+- **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
+- **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
+- **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
+- **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
+- **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.
+- **chore:** modernize package, build, documentation, and protobuf tooling.
+
 # 1.1.2 2023-07-30
 
 - **fix:** elections sometimes electing >1 leader (see [#176](https://github.com/microsoft/etcd3/issues/176))

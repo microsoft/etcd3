@@ -38,22 +38,19 @@ export class Namespace {
   /**
    * @internal
    */
-  public readonly kv = new RPC.KVClient(this.pool);
+  public readonly kv: RPC.KVClient;
 
   /**
    * @internal
    */
-  public readonly leaseClient = new RPC.LeaseClient(this.pool);
+  public readonly leaseClient: RPC.LeaseClient;
 
   /**
    * @internal
    */
-  public readonly watchClient = new RPC.WatchClient(this.pool);
-  private readonly nsApplicator = new NSApplicator(this.prefix);
-  private readonly watchManager = new WatchManager(
-    this.watchClient,
-    this.options.faultHandling?.watchBackoff ?? new ExponentialBackoff(),
-  );
+  public readonly watchClient: RPC.WatchClient;
+  private readonly nsApplicator: NSApplicator;
+  private readonly watchManager: WatchManager;
 
   protected constructor(
     /** @internal */
@@ -62,7 +59,16 @@ export class Namespace {
     protected readonly pool: ConnectionPool,
     /** @internal */
     protected readonly options: IOptions,
-  ) {}
+  ) {
+    this.kv = new RPC.KVClient(pool);
+    this.leaseClient = new RPC.LeaseClient(pool);
+    this.watchClient = new RPC.WatchClient(pool);
+    this.nsApplicator = new NSApplicator(prefix);
+    this.watchManager = new WatchManager(
+      this.watchClient,
+      options.faultHandling?.watchBackoff ?? new ExponentialBackoff(),
+    );
+  }
 
   /**
    * `.get()` starts a query to look up a single key from etcd.

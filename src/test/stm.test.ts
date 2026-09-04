@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Isolation, SoftwareTransaction } from '../stm';
 
 import { Etcd3, Namespace, STMConflictError } from '..';
@@ -31,7 +31,7 @@ describe('stm()', () => {
       afterEach(async () => await tearDownTestClient(client));
 
       it('executes empty transactions', async () => {
-        expect(await ns.stm().transact(() => 'foo')).to.equal('foo');
+        expect(await ns.stm().transact(() => 'foo')).toBe('foo');
       });
 
       const expectRetry = async (
@@ -41,7 +41,7 @@ describe('stm()', () => {
       ) => {
         let tries = 0;
         await ns.stm({ isolation }).transact(async tx => fn(tx, ++tries));
-        expect(tries).to.equal(retries);
+        expect(tries).toBe(retries);
       };
 
       const expectRunsCleanTransaction = (isolation: Isolation) => {
@@ -49,10 +49,10 @@ describe('stm()', () => {
           await ns.stm({ isolation }).transact(async tx => {
             const value = await tx.get('foo1');
             await tx.put('foo1').value(value!.repeat(3));
-            expect(await ns.get('foo1')).to.equal('bar1'); // should not have changed yet
+            expect(await ns.get('foo1')).toBe('bar1'); // should not have changed yet
           });
 
-          expect(await ns.get('foo1')).to.equal('bar1bar1bar1');
+          expect(await ns.get('foo1')).toBe('bar1bar1bar1');
         });
       };
 
@@ -96,16 +96,16 @@ describe('stm()', () => {
           return ignoreConflicts(isolation, async tx => {
             // putting and value and getting it should returned the value to be written
             await tx.put('foo').value('some value');
-            expect(await tx.get('foo').string()).to.equal('some value');
+            expect(await tx.get('foo').string()).toBe('some value');
           });
         });
 
         it('caches writes in memory (#2)', async () => {
           return ignoreConflicts(isolation, async tx => {
             // getting a value, then overwriting it, should return the overwritten value
-            expect(await tx.get('foo1').string()).to.equal('bar1');
+            expect(await tx.get('foo1').string()).toBe('bar1');
             await tx.put('foo1').value('lol');
-            expect(await tx.get('foo1').string()).to.equal('lol');
+            expect(await tx.get('foo1').string()).toBe('lol');
           });
         });
 
@@ -113,11 +113,11 @@ describe('stm()', () => {
           return ignoreConflicts(isolation, async tx => {
             // deleting a value should null it
             await tx.delete().key('foo1');
-            expect(await tx.get('foo1').string()).to.be.null;
+            expect(await tx.get('foo1').string()).toBeNull();
 
             // subsequently writing a key should put it back
             await tx.put('foo1').value('lol');
-            expect(await tx.get('foo1').string()).to.equal('lol');
+            expect(await tx.get('foo1').string()).toBe('lol');
           });
         });
 
@@ -125,7 +125,7 @@ describe('stm()', () => {
           return ignoreConflicts(isolation, async tx => {
             // deleting a range should null all keys in that range
             await tx.delete().prefix('foo');
-            expect(await tx.get('foo2').string()).to.be.null;
+            expect(await tx.get('foo2').string()).toBeNull();
           });
         });
       };
@@ -135,9 +135,9 @@ describe('stm()', () => {
           return ns
             .stm({ retries: 0, isolation })
             .transact(async tx => {
-              expect(await tx.get('foo1').string()).to.equal('bar1');
+              expect(await tx.get('foo1').string()).toBe('bar1');
               await ns.put('foo1').value('changed!');
-              expect(await tx.get('foo1').string()).to.equal('bar1');
+              expect(await tx.get('foo1').string()).toBe('bar1');
             })
             .catch(() => undefined);
         });
@@ -173,7 +173,7 @@ describe('stm()', () => {
               await tx.get('foo1').string();
               await tx.delete().prefix('foo');
             }),
-          ).to.eventually.be.rejectedWith(/You cannot delete ranges/);
+          ).rejects.toThrow(/You cannot delete ranges/);
         });
 
         // the blueprint for the next two is:
@@ -192,7 +192,7 @@ describe('stm()', () => {
             await tx.put('foo1').value(value!.repeat(3));
           });
 
-          expect(await ns.get('foo1')).to.equal('lollollol');
+          expect(await ns.get('foo1')).toBe('lollollol');
         });
 
         it('retries deletes on conflicts', async () => {
@@ -204,7 +204,7 @@ describe('stm()', () => {
             await tx.delete().key('foo1');
           });
 
-          expect(await ns.get('foo1')).to.null;
+          expect(await ns.get('foo1')).toBeNull();
         });
 
         it('aborts transactions on continous failure', async () => {
@@ -219,7 +219,7 @@ describe('stm()', () => {
               .then(() => {
                 throw new Error('expected to throw');
               }),
-          ).to.eventually.be.rejectedWith(STMConflictError);
+          ).rejects.toThrow(STMConflictError);
         });
       });
     }),

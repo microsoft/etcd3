@@ -27,7 +27,10 @@ export const RecoverableError = Symbol('RecoverableError');
  * Returns whether the error is a network or server error that should trigger
  * fault-handling policies.
  */
-export const isRecoverableError = (error: Error) => RecoverableError in error;
+export const isRecoverableError = (
+  error: unknown,
+): error is Error & Record<typeof RecoverableError, unknown> =>
+  error instanceof Error && RecoverableError in error;
 
 /**
  * A GRPCGenericError is rejected via the connection when some error occurs
@@ -234,7 +237,7 @@ export class EtcdWatchStreamEnded extends Error {
 }
 
 /**
- * Thrown from methods of {@link ElectionCampaign} if the campaign has ceased.
+ * Thrown from methods of {@link Campaign} if the campaign has ceased.
  */
 export class NotCampaigningError extends Error {}
 

@@ -6,7 +6,7 @@
  *
  * Usage:
  *
- *  > node bin/generate-methods proto/rpc.proto > src/rpc.ts
+ *  > node bin/generate-methods [proto/rpc.proto] [output-file]
  *
  * protobufjs does have a TypeScript generator but its output isn't very useful
  * for grpc, much less this client. Rather than reprocessing it, let's just
@@ -16,9 +16,12 @@
 const prettier = require('prettier');
 const pbjs = require('protobufjs');
 const fs = require('fs');
+const path = require('path');
 const _ = require('lodash');
 
-const contents = fs.readFileSync(process.argv[2]).toString();
+const inputPath = process.argv[2] || path.resolve(__dirname, '../proto/rpc.proto');
+const outputPath = process.argv[3] || path.resolve(__dirname, '../src/rpc.ts');
+const contents = fs.readFileSync(inputPath).toString();
 const lines = contents.split('\n');
 
 const singleLineCommentRe = /\/\/\s*(.+)$/;
@@ -77,10 +80,10 @@ function emit(string) {
   return emit;
 }
 
-function writeOut() {
+async function writeOut() {
   fs.writeFileSync(
-    `${__dirname}/../src/rpc.ts`,
-    prettier.format(result, {
+    outputPath,
+    await prettier.format(result, {
       ...require('../package.json').prettier,
       parser: 'typescript',
     }),
@@ -309,11 +312,14 @@ function codeGen(ast) {
 }
 
 new pbjs.Root()
-  .load(process.argv[2], { keepCase: true })
+  .load(inputPath, { keepCase: true })
   .then(ast => {
     prepareForGeneration(ast.nested);
     template('rpc-prefix');
     codeGen(ast.nested);
-    writeOut();
+    return writeOut();
   })
-  .catch(err => console.error(err.stack));
+  .catch(err => {
+    console.error(err.stack);
+    process.exitCode = 1;
+  });
