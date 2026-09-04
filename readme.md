@@ -2,15 +2,15 @@
 
 etcd3 is a high-quality, production-ready client for the Protocol Buffer-based [etcd](https://etcd.io/) v3 API. It includes:
 
-- [load balancing](https://microsoft.github.io/etcd3/interfaces/ioptions.html)
-- [fault handling and reconnections](https://microsoft.github.io/etcd3/interfaces/ioptions.html#faulthandling)
-- [transactions](https://microsoft.github.io/etcd3/classes/comparatorbuilder.html)
-- [software transactional memory](https://microsoft.github.io/etcd3/classes/softwaretransaction.html)
-- [high-level query builders](https://microsoft.github.io/etcd3/classes/etcd3.html)
-- [lease management](https://microsoft.github.io/etcd3/classes/lease.html)
-- [watchers](https://microsoft.github.io/etcd3/classes/watchbuilder.html)
-- [user](https://microsoft.github.io/etcd3/classes/etcd3.html#user) and [role](https://microsoft.github.io/etcd3/classes/etcd3.html#role) [mocking](https://microsoft.github.io/etcd3/classes/etcd3.html#mock) management
-- [elections](https://microsoft.github.io/etcd3/classes/election.html)
+- [load balancing](https://microsoft.github.io/etcd3/interfaces/IOptions.html)
+- [fault handling and reconnections](https://microsoft.github.io/etcd3/interfaces/IOptions.html#faulthandling)
+- [transactions](https://microsoft.github.io/etcd3/classes/ComparatorBuilder.html)
+- [software transactional memory](https://microsoft.github.io/etcd3/classes/SoftwareTransaction.html)
+- [high-level query builders](https://microsoft.github.io/etcd3/classes/Etcd3.html)
+- [lease management](https://microsoft.github.io/etcd3/classes/Lease.html)
+- [watchers](https://microsoft.github.io/etcd3/classes/WatchBuilder.html)
+- [user](https://microsoft.github.io/etcd3/classes/Etcd3.html#user) and [role](https://microsoft.github.io/etcd3/classes/Etcd3.html#role) [mocking](https://microsoft.github.io/etcd3/classes/Etcd3.html#mock) management
+- [elections](https://microsoft.github.io/etcd3/classes/Election.html)
 
 and is type-safe for TypeScript consumers.
 
@@ -44,7 +44,7 @@ const client = new Etcd3();
 
 ### API Documentation
 
-Our [TypeDoc docs are available here](https://microsoft.github.io/etcd3/classes/etcd3.html).
+Browse the [TypeDoc API reference](https://microsoft.github.io/etcd3/classes/Etcd3.html).
 
 Our [test cases](https://github.com/microsoft/etcd3/tree/master/src/test/) are also readable.
 

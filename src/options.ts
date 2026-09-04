@@ -15,10 +15,9 @@ export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOp
  */
 export interface IOptions {
   /**
-   * Optional client cert credentials for talking to etcd. Describe more
-   * {@link https://coreos.com/etcd/docs/latest/op-guide/security.html here},
-   * passed into the createSsl function in GRPC
-   * {@link https://grpc.io/grpc/node/grpc.credentials.html#.createSsl__anchor here}.
+   * Optional client certificate credentials for talking to etcd. See the
+   * {@link https://etcd.io/docs/v3.6/op-guide/security/ etcd security guide}.
+   * They are passed to {@link https://grpc.github.io/grpc/node/grpc.credentials.html#.createSsl__anchor createSsl}.
    *
    * For example:
    *
@@ -37,7 +36,7 @@ export interface IOptions {
   };
 
   /**
-   * Internal options to configure the GRPC client. These are channel options
+   * Options to configure the gRPC client. These are channel options
    * as enumerated in their [C++ documentation](https://grpc.io/grpc/cpp/group__grpc__arg__keys.html).
    * For example:
    *
@@ -74,7 +73,7 @@ export interface IOptions {
    * {
    *   service: 'KV',   // etcd service name
    *   method: 'range', // etcd method name
-   *   isStream: false, // whether the call create a stream
+   *   isStream: false, // whether the call creates a stream
    *   params: { ... }, // arguments given to the call
    * }
    * ```
