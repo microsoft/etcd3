@@ -28,7 +28,8 @@ export interface ICallable<T> {
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
-export interface IResponseStream<T> {
+export interface IResponseStream<T> extends AsyncIterable<T> {
+  cancel(): void;
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
   on(event: 'status', fn: (status: grpc.StatusObject) => void): this;
@@ -49,6 +50,31 @@ export class KVClient {
    */
   public range(req: IRangeRequest, options?: grpc.CallOptions): Promise<IRangeResponse> {
     return this.client.exec('KV', 'range', req, options);
+  }
+  /**
+   * RangeStream gets the keys in the range from the key-value store.
+   *
+   * This RPC is intentionally gRPC-only and does not provide a
+   * grpc-gateway REST mapping, because streaming chunked responses
+   * are not a good fit for standard JSON/REST semantics.
+   */
+  public rangeStream(
+    req: IRangeRequest,
+    options?: grpc.CallOptions,
+  ): Promise<IResponseStream<IRangeStreamResponse>> {
+    return this.client.withConnection('KV', ({ resource, client, metadata }) => {
+      const resolved = resolveCallOptions(options, this.client.callOptionsFactory, {
+        service: 'KV',
+        method: 'rangeStream',
+        params: req,
+        isStream: true,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const stream = (<any>client).rangeStream(req, metadata, resolved);
+      stream.on('error', (err: Error) => this.client.markFailed(resource, err));
+      return stream;
+    });
   }
   /**
    * Put puts the given key into the key-value store.
@@ -274,7 +300,7 @@ export class MaintenanceClient {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stream = (<any>client).snapshot(metadata, resolved, {});
+      const stream = (<any>client).snapshot({}, metadata, resolved);
       stream.on('error', (err: Error) => this.client.markFailed(resource, err));
       return stream;
     });
@@ -289,7 +315,9 @@ export class MaintenanceClient {
     return this.client.exec('Maintenance', 'moveLeader', req, options);
   }
   /**
-   * Downgrade requests downgrade, cancel downgrade on the cluster version.
+   * Downgrade requests downgrades, verifies feasibility or cancels downgrade
+   * on the cluster version.
+   * Supported since etcd 3.5.
    */
   public downgrade(
     req: IDowngradeRequest,
@@ -371,7 +399,7 @@ export class AuthClient {
     return this.client.exec('Auth', 'userChangePassword', req, options);
   }
   /**
-   * UserGrant grants a role to a specified user.
+   * UserGrantRole grants a role to a specified user.
    */
   public userGrantRole(
     req: IAuthUserGrantRoleRequest,
@@ -451,9 +479,10 @@ export interface IResponseHeader {
    */
   member_id: string;
   /**
-   * revision is the key-value store revision when the request was applied.
+   * revision is the key-value store revision when the request was applied, and it's
+   * unset (so 0) in case of calls not interacting with key-value store.
    * For watch progress responses, the header.revision indicates progress. All future events
-   * recieved in this stream are guaranteed to have a higher revision number than the
+   * received in this stream are guaranteed to have a higher revision number than the
    * header.revision number.
    */
   revision: string;
@@ -565,7 +594,9 @@ export interface IRangeResponse {
    */
   more: boolean;
   /**
-   * count is set to the number of keys within the range when requested.
+   * count is set to the actual number of keys within the range when requested.
+   * Unlike Kvs, it is unaffected by limits and filters (e.g., Min/Max, Create/Modify, Revisions)
+   * and reflects the full count within the specified range.
    */
   count: string;
 }
@@ -762,6 +793,10 @@ export interface IHashKVResponse {
    * compact_revision is the compacted revision of key-value store when hash begins.
    */
   compact_revision: string;
+  /**
+   * hash_revision is the revision up to which the hash is calculated.
+   */
+  hash_revision: string;
 }
 export interface IHashResponse {
   header: IResponseHeader;
@@ -785,6 +820,12 @@ export interface ISnapshotResponse {
    * blob contains the next chunk of the snapshot in the snapshot stream.
    */
   blob: Buffer;
+  /**
+   * local version of server that created the snapshot.
+   * In cluster with binaries with different version, each cluster can return different result.
+   * Informs which etcd server version should be used when restoring the snapshot.
+   */
+  version: string;
 }
 export interface IWatchRequest {
   create_request?: IWatchCreateRequest;
@@ -868,7 +909,8 @@ export interface IWatchResponse {
    */
   created: boolean;
   /**
-   * canceled is set to true if the response is for a cancel watch request.
+   * canceled is set to true if the response is for a cancel watch request
+   * or if the start_revision has already been compacted.
    * No further events will be sent to the canceled watcher.
    */
   canceled: boolean;
@@ -1180,6 +1222,9 @@ export interface IDowngradeResponse {
    */
   version: string;
 }
+export interface IDowngradeVersionTestRequest {
+  ver?: string;
+}
 export interface IStatusRequest {}
 export interface IStatusResponse {
   header: IResponseHeader;
@@ -1219,6 +1264,28 @@ export interface IStatusResponse {
    * isLearner indicates if the member is raft learner.
    */
   isLearner: boolean;
+  /**
+   * storageVersion is the version of the db file. It might be updated with delay in relationship to the target cluster version.
+   */
+  storageVersion: string;
+  /**
+   * dbSizeQuota is the configured etcd storage quota in bytes (the value passed to etcd instance by flag --quota-backend-bytes)
+   */
+  dbSizeQuota: string;
+  /**
+   * downgradeInfo indicates if there is downgrade process.
+   */
+  downgradeInfo: IDowngradeInfo;
+}
+export interface IDowngradeInfo {
+  /**
+   * enabled indicates whether the cluster is enabled to downgrade.
+   */
+  enabled: boolean;
+  /**
+   * targetVersion is the target downgrade version.
+   */
+  targetVersion: string;
 }
 export interface IAuthEnableRequest {}
 export interface IAuthDisableRequest {}
@@ -1231,6 +1298,7 @@ export interface IAuthUserAddRequest {
   name?: string;
   password?: string;
   options?: IUserAddOptions;
+  hashedPassword?: string;
 }
 export interface IAuthUserGetRequest {
   name?: string;
@@ -1247,9 +1315,13 @@ export interface IAuthUserChangePasswordRequest {
    */
   name?: string;
   /**
-   * password is the new password for the user.
+   * password is the new password for the user. Note that this field will be removed in the API layer.
    */
   password?: string;
+  /**
+   * hashedPassword is the new password for the user. Note that this field will be initialized in the API layer.
+   */
+  hashedPassword?: string;
 }
 export interface IAuthUserGrantRoleRequest {
   /**
@@ -1358,6 +1430,45 @@ export interface IAuthRoleGrantPermissionResponse {
 export interface IAuthRoleRevokePermissionResponse {
   header: IResponseHeader;
 }
+export interface IRangeStreamResponse {
+  /**
+   * range_response is a partial response for the KV.RangeStream RPC.
+   * The result of proto.Merge() applied on all responses should result in the
+   * same RangeResponse response as to the Range() method.
+   *
+   * Field population across chunks:
+   * - kvs: each chunk carries a disjoint slice of the result. Concatenating
+   * them in order yields the full key set.
+   * - header, more, count: set only on the final chunk. Non-merge clients
+   * can rely on io.EOF (end of stream) to detect completion. These
+   * fields are provided for clients that merge all responses into a
+   * single RangeResponse.
+   */
+  range_response: IRangeResponse;
+}
+export interface IUserAddOptions {
+  no_password?: boolean;
+}
+export interface IUser {
+  name?: Buffer;
+  password?: Buffer;
+  roles?: string[];
+  options?: IUserAddOptions;
+}
+export enum Permission {
+  Read = 0,
+  Write = 1,
+  Readwrite = 2,
+}
+export interface IPermission {
+  permType: keyof typeof Permission;
+  key: Buffer;
+  range_end: Buffer;
+}
+export interface IRole {
+  name?: Buffer;
+  keyPermission?: IPermission[];
+}
 export interface IKeyValue {
   /**
    * key is the first key for the range. If range_end is not given, the request only looks up key.
@@ -1396,29 +1507,6 @@ export interface IEvent {
    */
   prev_kv: IKeyValue;
 }
-export interface IUserAddOptions {
-  no_password?: boolean;
-}
-export interface IUser {
-  name?: Buffer;
-  password?: Buffer;
-  roles?: string[];
-  options?: IUserAddOptions;
-}
-export enum Permission {
-  Read = 0,
-  Write = 1,
-  Readwrite = 2,
-}
-export interface IPermission {
-  permType: keyof typeof Permission;
-  key: Buffer;
-  range_end: Buffer;
-}
-export interface IRole {
-  name?: Buffer;
-  keyPermission?: IPermission[];
-}
 export const Services = {
   KV: KVClient,
   Watch: WatchClient,
@@ -1429,6 +1517,7 @@ export const Services = {
 };
 export type CallContext =
   | { service: 'KV'; method: 'range'; isStream: false; params: IRangeRequest }
+  | { service: 'KV'; method: 'rangeStream'; isStream: true; params: IRangeRequest }
   | { service: 'KV'; method: 'put'; isStream: false; params: IPutRequest }
   | { service: 'KV'; method: 'deleteRange'; isStream: false; params: IDeleteRangeRequest }
   | { service: 'KV'; method: 'txn'; isStream: false; params: ITxnRequest }

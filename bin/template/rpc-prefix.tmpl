@@ -28,7 +28,8 @@ export interface ICallable<T> {
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
-export interface IResponseStream<T> {
+export interface IResponseStream<T> extends AsyncIterable<T> {
+  cancel(): void;
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
   on(event: 'status', fn: (status: grpc.StatusObject) => void): this;

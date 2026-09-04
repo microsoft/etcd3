@@ -8,6 +8,8 @@
 - **breaking:** `Watcher.lastRevision()` now returns a lossless `bigint | null`.
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
+- **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **fix:** correct grpc-js request, metadata, and options ordering for server response streams.
 - **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
 - **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
 - **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.
