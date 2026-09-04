@@ -1,7 +1,16 @@
 {
   "$schema": "https://typedoc.org/schema.json",
+  "name": "etcd3 API",
+  "includeVersion": true,
   "entryPoints": ["src/index.ts"],
   "out": "docs",
+  "navigation": {
+    "includeGroups": true
+  },
+  "navigationLinks": {
+    "GitHub": "https://github.com/microsoft/etcd3",
+    "npm": "https://www.npmjs.com/package/etcd3"
+  },
   "exclude": ["src/test/**"],
   "excludePrivate": true,
   "excludeInternal": true,

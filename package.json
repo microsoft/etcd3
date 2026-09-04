@@ -22,7 +22,7 @@
     "test:lint": "eslint \"src/**/*.ts\"",
     "watch": "tsc --watch",
     "build:proto": "node ./bin/update-proto ./proto && node bin/generate-methods.js ./proto/rpc.proto",
-    "build:doc": "rimraf docs && typedoc --options typedoc.json && node bin/tame-typedoc",
+    "build:doc": "typedoc --options typedoc.json",
     "build:ts": "rimraf lib && tsc",
     "fmt": "prettier --write \"src/**/*.{ts,js}\" && npm run -s test:lint -- --fix",
     "prepare": "npm run -s build:ts"
