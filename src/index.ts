@@ -32,7 +32,7 @@ export { WatchBuilder, Watcher } from './watch.js';
  * console.log('foo is:', await client.get('foo').string());
  *
  * const keys = await client.getAll().prefix('f').strings();
- * console.log('all keys starting with "f"': keys);
+ * console.log('all keys starting with "f":', keys);
  *
  * await client.delete().all();
  * ```
