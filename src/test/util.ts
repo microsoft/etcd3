@@ -33,56 +33,84 @@ export const etcdVersion = process.env.ETCD_VERSION || '3.3.9';
  */
 export class Proxy {
   public isActive = false;
-  public connections: Array<{ end(): void }> = [];
-  private server!: tls.Server;
-  private host!: string;
-  private port!: number;
+  public connections: Array<{ destroy(): void }> = [];
+  private server: tls.Server | undefined;
+  private host: string | undefined;
+  private port: number | undefined;
+  private isListening = false;
   private enabledDataFlows = new Set([TrafficDirection.FromEtcd, TrafficDirection.ToEtcd]);
 
   /**
    * activate creates the proxy server.
    */
   public activate(): Promise<void> {
+    if (this.isActive) {
+      return Promise.reject(new Error('Proxy is already active'));
+    }
+
     this.enabledDataFlows.add(TrafficDirection.FromEtcd);
     this.enabledDataFlows.add(TrafficDirection.ToEtcd);
 
     return new Promise<void>((resolve, reject) => {
-      this.server = tls.createServer(
+      const server = tls.createServer(
         { cert: tlsCert, key: tlsKey, ALPNProtocols: ['h2'] },
         clientCnx => this.handleIncoming(clientCnx),
       );
+      this.server = server;
 
-      this.server.listen(0, '127.0.0.1');
-      this.server.on('listening', () => {
-        const addr = this.server.address() as AddressInfo;
+      const onError = (err: Error) => {
+        this.server = undefined;
+        this.isListening = false;
+        reject(err);
+      };
+      server.once('error', onError);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', onError);
+        const addr = server.address() as AddressInfo;
         this.host = addr.address;
         this.port = addr.port;
+        this.isListening = true;
         this.isActive = true;
         resolve();
-      });
-
-      this.server.on('error', err => {
-        reject(err);
-        console.error('error setting up server', err);
       });
     });
   }
 
   /**
-   * suspend temporarily shuts down the server, but does not 'deactivate' the
+   * suspend temporarily shuts down the server, but does not deactivate the
    * proxy; new connections will still try to hit it. Can be restored with
-   * resume().
+   * unsuspend().
    */
-  public suspend() {
-    this.connections.forEach(cnx => cnx.end());
-    this.server.close();
+  public async suspend() {
+    if (!this.server || !this.isListening) {
+      return;
+    }
+
+    this.connections.slice().forEach(cnx => cnx.destroy());
+    await this.closeServer();
   }
 
   /**
    * Starts up a previously stopped server.
    */
-  public unsuspend() {
-    this.server.listen(this.port, this.host);
+  public async unsuspend() {
+    if (!this.server || this.isListening) {
+      return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const server = this.server!;
+      const onError = (err: Error) => {
+        server.off('error', onError);
+        reject(err);
+      };
+      server.once('error', onError);
+      server.listen(this.port, this.host, () => {
+        server.off('error', onError);
+        this.isListening = true;
+        resolve();
+      });
+    });
   }
 
   /**
@@ -104,13 +132,24 @@ export class Proxy {
    */
   public async deactivate() {
     this.isActive = false;
-    await new Promise(r => this.server.close(r));
+    this.connections.slice().forEach(cnx => cnx.destroy());
+    try {
+      await this.closeServer();
+    } finally {
+      this.server = undefined;
+      this.host = undefined;
+      this.port = undefined;
+    }
   }
 
   /**
    * Returns the address the server is listening on.
    */
   public address() {
+    if (this.port === undefined) {
+      throw new Error('Proxy is not active');
+    }
+
     return `127.0.0.1:${this.port}`;
   }
 
@@ -135,16 +174,17 @@ export class Proxy {
     );
 
     let ended = false;
-    const end = (err?: Error) => {
-      ended = true;
-      if (err instanceof Error) {
-        throw err;
+    const end = (source?: tls.TLSSocket, err?: Error) => {
+      if (ended) {
+        return;
       }
 
-      clientCnx.end();
-      serverCnx.end();
-      this.connections = this.connections.filter(c => c.end !== end);
+      ended = true;
+      this.connections = this.connections.filter(c => c.destroy !== destroy);
+      clientCnx.destroy(source === clientCnx ? undefined : err);
+      serverCnx.destroy(source === serverCnx ? undefined : err);
     };
+    const destroy = () => end();
 
     serverCnx.on('data', (data: Buffer) => {
       if (ended || !this.enabledDataFlows.has(TrafficDirection.FromEtcd)) {
@@ -153,8 +193,9 @@ export class Proxy {
 
       clientCnx.write(data);
     });
-    serverCnx.on('end', end);
-    serverCnx.on('error', end);
+    serverCnx.on('end', () => end());
+    serverCnx.on('error', err => end(serverCnx, err));
+    serverCnx.on('close', () => end());
 
     clientCnx.on('data', (data: Buffer) => {
       if (ended || !this.enabledDataFlows.has(TrafficDirection.ToEtcd)) {
@@ -167,10 +208,28 @@ export class Proxy {
         serverBuffer.push(data);
       }
     });
-    clientCnx.on('end', end);
-    clientCnx.on('error', end);
+    clientCnx.on('end', () => end());
+    clientCnx.on('error', err => end(clientCnx, err));
+    clientCnx.on('close', () => end());
 
-    this.connections.push({ end });
+    this.connections.push({ destroy });
+  }
+
+  private closeServer(): Promise<void> {
+    if (!this.server || !this.isListening) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      this.server!.close(err => {
+        this.isListening = false;
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }
 
