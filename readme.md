@@ -25,7 +25,8 @@ npm install --save etcd3
 Start building!
 
 ```js
-const { Etcd3 } = require('etcd3');
+import { Etcd3 } from 'etcd3';
+
 const client = new Etcd3();
 
 (async () => {

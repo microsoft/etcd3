@@ -3,11 +3,12 @@
  *--------------------------------------------------------*/
 
 import { EventEmitter } from 'node:events';
-import { ClientRuntimeError, NotCampaigningError } from './errors';
-import { Lease } from './lease';
-import { Namespace } from './namespace';
-import { IKeyValue } from './rpc';
-import { IDeferred, getDeferred, toBuffer } from './util';
+import { ClientRuntimeError, NotCampaigningError } from './errors.js';
+import { Lease } from './lease.js';
+import { Namespace } from './namespace.js';
+import type { IKeyValue } from './rpc.js';
+import { getDeferred, toBuffer } from './util.js';
+import type { IDeferred } from './util.js';
 
 const UnsetCurrent = Symbol('unset');
 
@@ -369,7 +370,7 @@ export class Campaign extends EventEmitter {
  * @example
  *
  * ```js
- * const os = require('os');
+ * import * as os from 'node:os';
  * const client = new Etcd3();
  * const election = client.election('singleton-job');
  *

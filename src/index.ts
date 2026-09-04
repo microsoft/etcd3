@@ -1,31 +1,31 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { Role, User } from './auth';
-import { ConnectionPool } from './connection-pool';
-import { Namespace } from './namespace';
-import type { IOptions } from './options';
-import * as RPC from './rpc';
+import { Role, User } from './auth.js';
+import { ConnectionPool } from './connection-pool.js';
+import { Namespace } from './namespace.js';
+import type { IOptions } from './options.js';
+import * as RPC from './rpc.js';
 
-export * from './auth';
-export * from './builder';
-export * from './errors';
-export * from './lease';
-export * from './lock';
-export * from './namespace';
-export * from './options';
-export * from './range';
-export * from './rpc';
-export * from './stm';
-export * from './election';
-export { WatchBuilder, Watcher } from './watch';
+export * from './auth.js';
+export * from './builder.js';
+export * from './errors.js';
+export * from './lease.js';
+export * from './lock.js';
+export * from './namespace.js';
+export * from './options.js';
+export * from './range.js';
+export * from './rpc.js';
+export * from './stm.js';
+export * from './election.js';
+export { WatchBuilder, Watcher } from './watch.js';
 
 /**
  * Etcd3 is a high-level interface for interacting and calling etcd endpoints.
  * It also provides several lower-level clients for directly calling methods.
  *
  * ```
- * const { Etcd3 } = require('etcd3');
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * await client.put('foo').value('bar');
@@ -101,7 +101,7 @@ export class Etcd3 extends Namespace {
    * For example:
    *
    * ```
-   * const { Etcd3 } = require('etcd3');
+   * import { Etcd3 } from 'etcd3';
    * const client = new Etcd3();
    *
    * client.mock({

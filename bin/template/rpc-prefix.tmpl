@@ -7,8 +7,8 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import * as grpc from '@grpc/grpc-js';
-import type { CallOptionsFactory } from './options';
-import { resolveCallOptions } from './util';
+import type { CallOptionsFactory } from './options.js';
+import { resolveCallOptions } from './util.js';
 
 export interface ICallable<T> {
   exec<T>(

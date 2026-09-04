@@ -3,6 +3,7 @@
 ## 2.0.0 (Unreleased)
 
 - **breaking:** Node.js 24 or newer is now required.
+- **breaking:** the package is now ESM-only; CommonJS `require('etcd3')` is no longer supported.
 - **breaking:** remove the deprecated `WatchBuilder.ignore()` method; use `WatchBuilder.only()` to filter watch events.
 - **breaking:** `Watcher.lastRevision()` now returns a lossless `bigint | null`.
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.

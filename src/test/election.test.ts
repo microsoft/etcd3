@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Election, Etcd3 } from '../';
-import { Campaign, ElectionObserver } from '../election';
-import { NotCampaigningError } from '../errors';
-import { delay, getDeferred, onceEvent } from '../util';
-import { getOptions, tearDownTestClient } from './util';
+import { Election, Etcd3 } from '../index.js';
+import type { Campaign, ElectionObserver } from '../election.js';
+import { NotCampaigningError } from '../errors.js';
+import { delay, getDeferred, onceEvent } from '../util.js';
+import { getOptions, tearDownTestClient } from './util.js';
 
 const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t));
 

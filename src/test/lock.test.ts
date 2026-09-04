@@ -3,8 +3,8 @@
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Etcd3, EtcdLockFailedError } from '..';
-import { createTestClientAndKeys, tearDownTestClient } from './util';
+import { Etcd3, EtcdLockFailedError } from '../index.js';
+import { createTestClientAndKeys, tearDownTestClient } from './util.js';
 
 describe('lock()', () => {
   let client: Etcd3;

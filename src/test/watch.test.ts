@@ -3,9 +3,10 @@
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Etcd3, IKeyValue, IWatchCreateRequest, IWatchResponse, Watcher } from '..';
-import type { WatchManager } from '../watch';
-import { NSApplicator, onceEvent } from '../util';
+import { Etcd3, Watcher } from '../index.js';
+import type { IKeyValue, IWatchCreateRequest, IWatchResponse } from '../index.js';
+import type { WatchManager } from '../watch.js';
+import { NSApplicator, onceEvent } from '../util.js';
 import {
   createTestClientAndKeys,
   getOptions,
@@ -14,8 +15,8 @@ import {
   setupAuth,
   removeAuth,
   isAtLeastVersion,
-} from './util';
-import { EtcdPermissionDeniedError } from '../errors';
+} from './util.js';
+import { EtcdPermissionDeniedError } from '../errors.js';
 
 describe('Watcher.lastRevision()', () => {
   const createWatcher = (request: IWatchCreateRequest = {}) =>

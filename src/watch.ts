@@ -8,10 +8,11 @@ import {
   ClientRuntimeError,
   EtcdError,
   EtcdWatchStreamEnded,
-} from './errors';
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, delay, onceEvent, toBuffer } from './util';
+} from './errors.js';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, delay, onceEvent, toBuffer } from './util.js';
 
 const enum State {
   Idle,
