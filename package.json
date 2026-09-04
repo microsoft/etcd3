@@ -54,7 +54,6 @@
     "@typescript-eslint/parser": "^8.69.0",
     "@vitest/coverage-v8": "^5.0.0",
     "eslint": "^10.10.0",
-    "lodash": "^4.18.1",
     "prettier": "^3.9.6",
     "protobufjs": "^8.8.0",
     "rimraf": "^6.1.3",

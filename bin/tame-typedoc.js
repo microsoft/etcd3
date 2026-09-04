@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import _ from 'lodash';
 
 const root = fileURLToPath(new URL('../docs', import.meta.url));
+const regExpSpecialCharacters = /[\\^$.*+?()[\]{}|]/g;
 
 const files = [];
 function gatherFiles(dir = root) {
@@ -18,7 +18,7 @@ function gatherFiles(dir = root) {
 }
 
 function replaceAll(haystack, needle, replacement) {
-  return haystack.replace(new RegExp(_.escapeRegExp(needle), 'g'), replacement);
+  return haystack.replace(new RegExp(needle.replace(regExpSpecialCharacters, '\\$&'), 'g'), replacement);
 }
 
 function ununderscore() {

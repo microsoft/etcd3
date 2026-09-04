@@ -9,7 +9,6 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import _ from 'lodash';
 
 const rootFiles = ['api/authpb/auth.proto', 'api/mvccpb/kv.proto', 'api/etcdserverpb/rpc.proto'];
 const outputNames = new Map([
@@ -33,7 +32,12 @@ const uppercaseEnumFieldRe = /^(\s*)([A-Z_]+)(\s*=\s*[0-9]+;.*)$/;
  */
 function lowerCaseEnumFields(line) {
   return line.replace(uppercaseEnumFieldRe, (_match, indentation, name, value) => {
-    return `${indentation}${_.upperFirst(_.camelCase(name))}${value}`;
+    const upperCamelCaseName = name
+      .split('_')
+      .filter(Boolean)
+      .map(part => part[0] + part.slice(1).toLowerCase())
+      .join('');
+    return `${indentation}${upperCamelCaseName}${value}`;
   });
 }
 
