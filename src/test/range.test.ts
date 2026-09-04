@@ -54,5 +54,45 @@ describe('Range', () => {
       expect(r.includes(prefix[2])).toBe(true);
       expect(r.includes(prefix[5])).toBe(false);
     });
+
+    it('models empty ends as point ranges', () => {
+      const point = new Range(Buffer.from([0x61, 0x80]));
+
+      expect(point.includes(Buffer.from([0x61, 0x80]))).toBe(true);
+      expect(point.includes(Buffer.from([0x61, 0x7f]))).toBe(false);
+      expect(point.includes(Buffer.from([0x61, 0x80, 0x00]))).toBe(false);
+      expect(point.compare(new Range(Buffer.from([0x61, 0x80])))).toBe(0);
+      expect(point.compare(new Range(Buffer.from([0x61, 0x81])))).toBe(-1);
+      expect(point.compare(new Range(Buffer.from([0x61, 0x7f])))).toBe(1);
+    });
+
+    it('compares points and bounded half-open ranges at arbitrary byte boundaries', () => {
+      const range = new Range(Buffer.from([0x61, 0x80]), Buffer.from([0x61, 0xff]));
+
+      expect(range.includes(Buffer.from([0x61, 0x80]))).toBe(true);
+      expect(range.includes(Buffer.from([0x61, 0xfe, 0xff]))).toBe(true);
+      expect(range.includes(Buffer.from([0x61, 0xff]))).toBe(false);
+      expect(new Range(Buffer.from([0x61, 0x7f])).compare(range)).toBe(-1);
+      expect(new Range(Buffer.from([0x61, 0x80])).compare(range)).toBe(0);
+      expect(new Range(Buffer.from([0x61, 0xff])).compare(range)).toBe(1);
+      expect(range.compare(new Range(Buffer.from([0x61, 0x7f])))).toBe(1);
+      expect(range.compare(new Range(Buffer.from([0x61, 0x80])))).toBe(0);
+      expect(range.compare(new Range(Buffer.from([0x61, 0xfe, 0xff])))).toBe(0);
+      expect(range.compare(new Range(Buffer.from([0x61, 0xff])))).toBe(-1);
+      expect(range.compare(new Range(Buffer.from([0x61, 0xff]), Buffer.from([0x62])))).toBe(-1);
+    });
+
+    it('uses a zero-byte end as the unbounded etcd sentinel', () => {
+      const unbounded = new Range(Buffer.from([0x80]), Buffer.from([0]));
+      const wholeKeyspace = Range.prefix(Buffer.alloc(0));
+
+      expect(unbounded.includes(Buffer.from([0x80]))).toBe(true);
+      expect(unbounded.includes(Buffer.from([0xff, 0xff]))).toBe(true);
+      expect(unbounded.includes(Buffer.from([0x7f, 0xff]))).toBe(false);
+      expect(unbounded.compare(new Range(Buffer.from([0xff, 0xff])))).toBe(0);
+      expect(unbounded.compare(new Range(Buffer.from([0x7f]), Buffer.from([0x80])))).toBe(1);
+      expect(wholeKeyspace.includes(Buffer.from([0]))).toBe(true);
+      expect(wholeKeyspace.includes(Buffer.from([0xff, 0xff]))).toBe(true);
+    });
   });
 });
