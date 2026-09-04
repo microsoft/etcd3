@@ -51,13 +51,13 @@ Our [test cases](https://github.com/microsoft/etcd3/tree/master/src/test/) are a
 
 ```sh
 $ npm install
-$ cd src/test/containers/3.2 && docker-compose up # in a separate shell
+$ cd src/test/containers/3.2 && docker compose up # in a separate shell
 $ npm test
-$ docker-compose down
+$ docker compose down
 ```
 
 ### Contributing
 
-Running tests for this module requires running an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the `ETCD_ADDR` environment variable, like `export ETCD_ADDR=localhost:12345`.
+Running tests for this module requires Node.js 24 or later and an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the `ETCD_ADDR` environment variable, like `export ETCD_ADDR=localhost:12345`.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Etcd3, Namespace } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
@@ -18,14 +18,14 @@ describe('namespacing', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   const assertEqualInNamespace = async (key: string, value: string) => {
-    expect(await ns.get(key)).to.equal(value);
-    expect(await client.get(`user1/${key}`)).to.equal(value);
+    expect(await ns.get(key)).toBe(value);
+    expect(await client.get(`user1/${key}`)).toBe(value);
   };
 
   it('puts and gets values in the namespace', async () => {
     await ns.put('foo').value('');
     await assertEqualInNamespace('foo', '');
-    expect(await ns.getAll().strings()).to.deep.equal({ foo: '' });
+    expect(await ns.getAll().strings()).toEqual({ foo: '' });
   });
 
   it('deletes values in the namespace', async () => {
@@ -33,11 +33,11 @@ describe('namespacing', () => {
     await ns.put('foo2').value('');
 
     await ns.delete().key('foo1');
-    expect(await ns.getAll().strings()).to.deep.equal({ foo2: '' });
+    expect(await ns.getAll().strings()).toEqual({ foo2: '' });
     await ns.delete().all();
 
-    expect(await ns.getAll().strings()).to.deep.equal({});
-    expect(await client.getAll().keys()).to.have.length.greaterThan(0);
+    expect(await ns.getAll().strings()).toEqual({});
+    expect(await client.getAll().keys()).not.toHaveLength(0);
   });
 
   it('contains leases in the namespace', async () => {
@@ -50,8 +50,8 @@ describe('namespacing', () => {
   it('contains locks in the namespace', async () => {
     const lock = ns.lock('mylock');
     await lock.acquire();
-    expect(await ns.get('mylock')).to.not.be.null;
-    expect(await client.get('user1/mylock')).to.not.be.null;
+    expect(await ns.get('mylock')).not.toBeNull();
+    expect(await client.get('user1/mylock')).not.toBeNull();
     await lock.release();
   });
 

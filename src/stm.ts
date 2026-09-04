@@ -2,7 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
-import BigNumber from 'bignumber.js';
 
 import * as Builder from './builder';
 import { ClientRuntimeError, STMConflictError } from './errors';
@@ -101,12 +100,12 @@ class ReadSet {
   private readonly reads: Record<string, Promise<RPC.IRangeResponse> | undefined> =
     Object.create(null);
   private readonly completedReads: CompletedReads[] = [];
-  private earliestMod = new BigNumber(Infinity);
+  private earliestMod: bigint | undefined;
 
   /**
    * Returns the earliest modified revision of any key in this change set.
    */
-  public earliestModRevision(): BigNumber {
+  public earliestModRevision(): bigint | undefined {
     return this.earliestMod;
   }
 
@@ -138,7 +137,10 @@ class ReadSet {
       this.completedReads.push({ key: req.key!, res });
 
       if (res.kvs.length > 0) {
-        this.earliestMod = BigNumber.min(new BigNumber(res.kvs[0].mod_revision), this.earliestMod);
+        const modRevision = BigInt(res.kvs[0].mod_revision);
+        if (this.earliestMod === undefined || modRevision < this.earliestMod) {
+          this.earliestMod = modRevision;
+        }
       }
 
       return res;
@@ -170,8 +172,8 @@ class WriteSet {
    * Add checks to make sure that none of the write tagets have changed since
    * the given revision.
    */
-  public addNotChangedChecks(cmp: Builder.ComparatorBuilder, sinceBeforeMod: string) {
-    if (sinceBeforeMod === 'Infinity') {
+  public addNotChangedChecks(cmp: Builder.ComparatorBuilder, sinceBeforeMod: string | undefined) {
+    if (sinceBeforeMod === undefined) {
       return; // no reads were made
     }
 
@@ -356,7 +358,7 @@ class BasicTransaction {
  * and Serializable isolation levels.
  */
 class SerializableTransaction extends BasicTransaction {
-  private firstRead: Promise<RPC.IRangeResponse> | null;
+  private firstRead: Promise<RPC.IRangeResponse> | null = null;
 
   constructor(options: ISTMOptions, kv: RPC.KVClient) {
     super(options);
@@ -425,7 +427,7 @@ class SerializableTransaction extends BasicTransaction {
  */
 export class SoftwareTransaction {
   private readonly kv: RPC.KVClient;
-  private tx: BasicTransaction;
+  private tx: BasicTransaction | undefined;
 
   constructor(
     private readonly options: ISTMOptions,
@@ -436,11 +438,11 @@ export class SoftwareTransaction {
       get: (target, key) => {
         switch (key) {
           case 'range':
-            return (req: RPC.IRangeRequest) => this.tx.range(target, req);
+            return (req: RPC.IRangeRequest) => this.getTransaction().range(target, req);
           case 'put':
-            return (req: RPC.IPutRequest) => this.tx.put(req);
+            return (req: RPC.IPutRequest) => this.getTransaction().put(req);
           case 'deleteRange':
-            return (req: RPC.IDeleteRangeRequest) => this.tx.deleteRange(req);
+            return (req: RPC.IDeleteRangeRequest) => this.getTransaction().deleteRange(req);
           default:
             throw new ClientRuntimeError(`Unexpected kv operation in STM: ${key.toString()}`);
         }
@@ -499,18 +501,22 @@ export class SoftwareTransaction {
   }
 
   private commit(): Promise<void> {
+    const tx = this.getTransaction();
     const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
-        const earliestMod = this.tx.readSet.earliestModRevision().plus(1).toString();
-        this.tx.writeSet.addNotChangedChecks(cmp, earliestMod);
-        this.tx.readSet.addCurrentChecks(cmp);
+        const earliestMod = tx.readSet.earliestModRevision();
+        tx.writeSet.addNotChangedChecks(
+          cmp,
+          earliestMod === undefined ? undefined : (earliestMod + 1n).toString(),
+        );
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.Serializable:
-        this.tx.readSet.addCurrentChecks(cmp);
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.RepeatableReads:
-        this.tx.readSet.addCurrentChecks(cmp);
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.ReadCommitted:
         break; // none
@@ -518,7 +524,7 @@ export class SoftwareTransaction {
         throw new Error(`Unknown isolation level "${this.options.isolation}"`);
     }
 
-    this.tx.writeSet.addChanges(cmp);
+    tx.writeSet.addChanges(cmp);
 
     return cmp
       .options(this.options.callOptions)
@@ -528,5 +534,13 @@ export class SoftwareTransaction {
           throw new STMConflictError();
         }
       });
+  }
+
+  private getTransaction(): BasicTransaction {
+    if (!this.tx) {
+      throw new ClientRuntimeError('STM operations must run inside transact()');
+    }
+
+    return this.tx;
   }
 }

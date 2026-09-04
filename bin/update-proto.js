@@ -9,9 +9,8 @@
  *
  */
 
-const fetch = require('node-fetch');
 const path = require('path');
-const fs = require('fs');
+const fs = require('node:fs/promises');
 const _ = require('lodash');
 
 /**
@@ -20,15 +19,15 @@ const _ = require('lodash');
  */
 const files = [
   {
-    path: 'auth/authpb/auth.proto',
+    path: 'api/authpb/auth.proto',
     prefix: 'package authpb;\n',
   },
   {
-    path: 'mvcc/mvccpb/kv.proto',
+    path: 'api/mvccpb/kv.proto',
     prefix: 'package mvccpb;\n',
   },
   {
-    path: 'etcdserver/etcdserverpb/rpc.proto',
+    path: 'api/etcdserverpb/rpc.proto',
     prefix: 'package etcdserverpb;\nimport "./kv.proto";\nimport "./auth.proto";\n',
   },
 ];
@@ -56,12 +55,17 @@ function lowerCaseEnumFields(line) {
   });
 }
 
-const baseUrl = 'https://raw.githubusercontent.com/coreos/etcd/master';
+const baseUrl = 'https://raw.githubusercontent.com/etcd-io/etcd/main';
 
 Promise.all(
   files.map(f => {
     return fetch(`${baseUrl}/${f.path}`)
-      .then(res => res.text())
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error(`Failed to download ${f.path}: ${res.status} ${res.statusText}`);
+        }
+        return res.text();
+      })
       .then(contents => {
         return (
           'syntax = "proto3";\n' +
@@ -75,7 +79,10 @@ Promise.all(
         );
       })
       .then(contents => {
-        fs.writeFileSync(path.join(process.argv[2], path.basename(f.path)), contents);
+        return fs.writeFile(path.join(process.argv[2], path.basename(f.path)), contents);
       });
-  })
-).then(() => process.exit(0));
+  }),
+).catch(err => {
+  console.error(err.stack);
+  process.exitCode = 1;
+});

@@ -6,20 +6,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [^16, ^18, ^20]
-        etcd-version: [v3.1.5, v3.2.4, v3.3.9]
+        node-version: [24]
+        etcd-version: [3.1.5, 3.2.4, 3.3.9, 3.5.33, 3.6.14]
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-    - run: curl -L https://github.com/coreos/etcd/releases/download/${{ matrix.etcd-version }}/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz -o /tmp/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz
-    - run: mkdir -p /tmp/etcd
-    - run: tar xzvf /tmp/etcd-${{ matrix.etcd-version }}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
-    - run: /tmp/etcd/etcd --advertise-client-urls https://127.0.0.1:2379 --listen-client-urls https://127.0.0.1:2379 --cert-file ${{ github.workspace }}/src/test/certs/certs/etcd0.localhost.crt --key-file ${{ github.workspace }}/src/test/certs/private/etcd0.localhost.key > /dev/null &
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          curl --fail --location https://github.com/etcd-io/etcd/releases/download/v${{ matrix.etcd-version }}/etcd-v${{ matrix.etcd-version }}-linux-amd64.tar.gz --output "$RUNNER_TEMP/etcd.tar.gz"
+          mkdir -p "$RUNNER_TEMP/etcd"
+          tar xzf "$RUNNER_TEMP/etcd.tar.gz" --directory "$RUNNER_TEMP/etcd" --strip-components=1
+          "$RUNNER_TEMP/etcd/etcd" --advertise-client-urls https://127.0.0.1:2379 --listen-client-urls https://127.0.0.1:2379 --cert-file ${{ github.workspace }}/src/test/certs/certs/etcd0.localhost.crt --key-file ${{ github.workspace }}/src/test/certs/private/etcd0.localhost.key > /dev/null &
 
-    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm run build:ts
-    - run: npm test
-      env:
-        ETCD_VERSION: ${{ matrix.etcd-version }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build:ts
+      - run: npm test
+        env:
+          ETCD_VERSION: ${{ matrix.etcd-version }}

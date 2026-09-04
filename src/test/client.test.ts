@@ -1,8 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
-import * as sinon from 'sinon';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Etcd3 } from '..';
 import { createTestClientAndKeys, tearDownTestClient } from './util';
@@ -14,14 +13,16 @@ describe('client', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   it('allows mocking', async () => {
-    const mock = client.mock({
-      exec: sinon.stub() as any,
+    const exec = vi.fn().mockResolvedValue({ kvs: [] });
+    client.mock({
+      exec: exec as any,
     });
 
-    mock.exec.resolves({ kvs: [] });
-    expect(await client.get('foo1').string()).to.be.null;
-    expect(mock.exec.calledWith('KV', 'range')).to.be.true;
+    expect(await client.get('foo1').string()).toBeNull();
+    expect(
+      exec.mock.calls.some(([service, method]) => service === 'KV' && method === 'range'),
+    ).toBe(true);
     client.unmock();
-    expect(await client.get('foo1').string()).to.equal('bar1');
+    expect(await client.get('foo1').string()).toBe('bar1');
   });
 });

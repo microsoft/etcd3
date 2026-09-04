@@ -2,10 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
-import { CallOptions } from '@grpc/grpc-js';
-import { IPolicy, IBackoff, IDefaultPolicyContext } from 'cockatiel';
-import { CallContext } from './rpc';
+import type { CallOptions, ChannelOptions } from '@grpc/grpc-js';
+import type { IBackoff, IDefaultPolicyContext, IPolicy } from 'cockatiel';
+import type { CallContext } from './rpc';
 
 export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOptions);
 
@@ -111,7 +110,7 @@ export interface IOptions {
 
   /**
    * Defines the fault-handling policies for the client via
-   * [Cockatiel](https://github.com/connor4312/cockatiel/blob/master/readme.md).
+   * [Cockatiel](https://github.com/connor4312/cockatiel#readme).
    * There are two policies: per-host, and global. Calls will call through the
    * global policy, and then to a host policy. Each time the global policy
    * retries, it will pick a new host to run the call on.
@@ -131,13 +130,22 @@ export interface IOptions {
    *
    * ```ts
    * import { Etcd3, isRecoverableError } from 'etcd3';
-   * import { Policy, ConsecutiveBreaker, ExponentialBackoff } from 'cockatiel';
+   * import {
+   *   circuitBreaker,
+   *   ConsecutiveBreaker,
+   *   ExponentialBackoff,
+   *   handleWhen,
+   *   retry,
+   * } from 'cockatiel';
    *
    * const etcd = new Etcd3({
    *   faultHandling: {
    *     host: () =>
-   *       Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3)),
-   *     global: Policy.handleWhen(isRecoverableError).retry(3),
+   *       circuitBreaker(handleWhen(isRecoverableError), {
+   *         halfOpenAfter: 5_000,
+   *         breaker: new ConsecutiveBreaker(3),
+   *       }),
+   *     global: retry(handleWhen(isRecoverableError), { maxAttempts: 3 }),
    *     watchBackoff: new ExponentialBackoff(),
    *   },
    * });
@@ -147,12 +155,12 @@ export interface IOptions {
    *
    * ```ts
    * import { Etcd3 } from 'etcd3';
-   * import { Policy } from 'cockatiel';
+   * import { NoopPolicy } from 'cockatiel';
    *
    * const etcd = new Etcd3({
    *   faultHandling: {
-   *     host: () => Policy.noop,
-   *     global: Policy.noop,
+   *     host: () => new NoopPolicy(),
+   *     global: new NoopPolicy(),
    *   },
    * });
    * ```

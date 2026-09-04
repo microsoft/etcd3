@@ -1,11 +1,11 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import BigNumber from 'bignumber.js';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '..';
-import { onceEvent } from '../util';
+import { Etcd3, IKeyValue, IWatchCreateRequest, IWatchResponse, Watcher } from '..';
+import type { WatchManager } from '../watch';
+import { NSApplicator, onceEvent } from '../util';
 import {
   createTestClientAndKeys,
   getOptions,
@@ -16,6 +16,28 @@ import {
   isAtLeastVersion,
 } from './util';
 import { EtcdPermissionDeniedError } from '../errors';
+
+describe('Watcher.lastRevision()', () => {
+  const createWatcher = (request: IWatchCreateRequest = {}) =>
+    new Watcher(
+      { attach: () => undefined } as unknown as WatchManager,
+      NSApplicator.default,
+      request,
+    );
+
+  it('returns null before connection', () => {
+    expect(createWatcher().lastRevision()).toBeNull();
+  });
+
+  it('returns a lossless bigint resume revision', () => {
+    const revision = '9007199254740993';
+    const watcher = createWatcher({ start_revision: revision });
+
+    expect(watcher.lastRevision()).toBe(BigInt(revision));
+    expect(typeof watcher.lastRevision()).toBe('bigint');
+    expect(watcher.request.start_revision).toBe(revision);
+  });
+});
 
 describe('watch()', () => {
   let client: Etcd3;
@@ -41,8 +63,8 @@ describe('watch()', () => {
     return Promise.all([
       client.put(key).value('updated!'),
       onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).to.equal(key);
-        expect(res.value.toString()).to.equal('updated!');
+        expect(res.key.toString()).toBe(key);
+        expect(res.value.toString()).toBe('updated!');
       }),
     ]).then(() => watcher);
   }
@@ -58,7 +80,7 @@ describe('watch()', () => {
 
     return new Promise<Watcher>(resolve => {
       setTimeout(() => {
-        expect(watching).to.equal(false, `expected not to be watching ${key}`);
+        expect(watching, `expected not to be watching ${key}`).toBe(false);
         resolve(watcher);
       }, 200);
     });
@@ -92,8 +114,8 @@ describe('watch()', () => {
       await Promise.all([
         client.put('foo1').value('update 1'),
         onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-          expect(watcher.request.start_revision).to.equal(
-            new BigNumber(res.header.revision).plus(1).toString(),
+          expect(watcher.request.start_revision).toBe(
+            (BigInt(res.header.revision) + 1n).toString(),
           );
         }),
       ]);
@@ -102,8 +124,8 @@ describe('watch()', () => {
       await onceEvent(watcher, 'disconnected');
       proxy.unsuspend();
       await onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).to.equal('foo1');
-        expect(res.value.toString()).to.equal('update 2');
+        expect(res.key.toString()).toBe('foo1');
+        expect(res.value.toString()).toBe('update 2');
       });
 
       await watcher.cancel();
@@ -122,7 +144,7 @@ describe('watch()', () => {
       watcher.request.start_revision = 999999;
       proxy.unsuspend();
       await onceEvent(watcher, 'connected');
-      expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+      expect(Number(watcher.request.start_revision)).toBe(actualRevision);
 
       await watcher.cancel();
       proxiedClient.close();
@@ -130,8 +152,8 @@ describe('watch()', () => {
     });
 
     describe('emits an error if a watcher is cancelled upon creation (#114)', () => {
-      beforeEach(() => setupAuth(client));
-      afterEach(() => removeAuth(client));
+      beforeEach(async () => await setupAuth(client));
+      afterEach(async () => await removeAuth(client));
 
       if (isAtLeastVersion('3.2.0')) {
         it('is fixed', async () => {
@@ -144,7 +166,7 @@ describe('watch()', () => {
             }),
           );
 
-          await expect(authedClient.watch().key('outside of range').create()).to.be.rejectedWith(
+          await expect(authedClient.watch().key('outside of range').create()).rejects.toThrow(
             EtcdPermissionDeniedError,
           );
         });
@@ -156,7 +178,7 @@ describe('watch()', () => {
     it('subscribes before the connection is established', async () => {
       const watcher = await client.watch().key('foo1').create();
       await expectWatching(watcher, 'foo1');
-      expect(getWatchers()).to.deep.equal([watcher]);
+      expect(getWatchers()).toEqual([watcher]);
       await watcher.cancel();
     });
 
@@ -169,7 +191,7 @@ describe('watch()', () => {
         watcher2.then(w => expectWatching(w, 'bar')),
       ]);
 
-      expect(getWatchers()).to.deep.equal(watchers);
+      expect(getWatchers()).toEqual(watchers);
       await (await watcher1).cancel();
       await (await watcher2).cancel();
     });
@@ -186,7 +208,7 @@ describe('watch()', () => {
 
       await onceEvent(watcher2, 'connected');
 
-      expect(events).to.deep.equal(['connecting1', 'connected1', 'connecting2', 'connected2']);
+      expect(events).toEqual(['connecting1', 'connected1', 'connecting2', 'connected2']);
       await watcher1.cancel();
       await watcher2.cancel();
     });
@@ -196,7 +218,7 @@ describe('watch()', () => {
       await expectWatching(watcher1, 'foo1');
       const watcher2 = await client.watch().key('bar').create();
       await expectWatching(watcher2, 'bar');
-      expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
+      expect(getWatchers()).toEqual([watcher1, watcher2]);
       await watcher1.cancel();
       await watcher2.cancel();
     });
@@ -217,7 +239,7 @@ describe('watch()', () => {
       const watcher = await client.watch().key('foo1').create();
       await watcher.cancel();
       await expectNotWatching(watcher, 'foo1');
-      expect(getWatchers()).to.deep.equal([]);
+      expect(getWatchers()).toEqual([]);
     });
 
     it('unsubscribes while the connection is being reestablished', async () => {
@@ -229,7 +251,7 @@ describe('watch()', () => {
       await watcher.cancel();
 
       proxy.unsuspend();
-      expect(getWatchers()).to.deep.equal([]);
+      expect(getWatchers()).toEqual([]);
 
       proxiedClient.close();
 
