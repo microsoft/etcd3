@@ -40,8 +40,13 @@ class LeaseClientWrapper implements RPC.ICallable<Host> {
     this.callOptionsFactory = pool.callOptionsFactory;
   }
 
-  public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
-    return this.pool.exec(service, method, payload).catch(err => {
+  public exec(
+    service: keyof typeof RPC.Services,
+    method: string,
+    payload: any,
+    options?: grpc.CallOptions,
+  ): Promise<any> {
+    return this.pool.exec(service, method, payload, options).catch(err => {
       if (err instanceof EtcdLeaseInvalidError) {
         this.lease.emitLoss(err);
       }
@@ -216,26 +221,29 @@ export class Lease extends EventEmitter {
   /**
    * keepaliveOnce fires an immediate keepalive for the lease.
    */
-  public keepaliveOnce(
+  public async keepaliveOnce(
     options: grpc.CallOptions | undefined = this.defaultOptions,
   ): Promise<RPC.ILeaseKeepAliveResponse> {
-    return Promise.all([this.client.leaseKeepAlive(options), this.grant()]).then(([stream, id]) => {
-      return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
+    const stream = await this.client.leaseKeepAlive(options);
+    try {
+      const id = await this.grant();
+      const res = await new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
         stream.on('data', resolve);
         stream.on('error', err => reject(castGrpcError(err)));
         stream.write({ ID: id });
-      }).then(res => {
-        stream.end();
-        if (leaseExpired(res)) {
-          const err = new EtcdLeaseInvalidError(res.ID);
-          this.emitLoss(err);
-          throw err;
-        }
-
-        this.lastKeepAlive = Date.now();
-        return res;
       });
-    });
+
+      if (leaseExpired(res)) {
+        const err = new EtcdLeaseInvalidError(res.ID);
+        this.emitLoss(err);
+        throw err;
+      }
+
+      this.lastKeepAlive = Date.now();
+      return res;
+    } finally {
+      stream.end();
+    }
   }
 
   /**
@@ -293,12 +301,17 @@ export class Lease extends EventEmitter {
   private teardown: () => void = () => {
     /* noop */
   };
+  private keepaliveRetryTimer: ReturnType<typeof setTimeout> | undefined;
 
   /**
    * Tears down resources associated with the lease.
    */
   private close() {
     this.innerState = LeaseState.Revoked;
+    if (this.keepaliveRetryTimer !== undefined) {
+      clearTimeout(this.keepaliveRetryTimer);
+      this.keepaliveRetryTimer = undefined;
+    }
     this.teardown();
   }
 
@@ -315,6 +328,10 @@ export class Lease extends EventEmitter {
    * keepalive starts a loop keeping the lease alive.
    */
   private keepalive() {
+    if (this.innerState === LeaseState.Revoked) {
+      return;
+    }
+
     // When the cluster goes down, we keep trying to reconnect. But if we're
     // far past the end of our key's TTL, there's no way we're going to be
     // able to renew it. Fire a "lost".
@@ -385,8 +402,14 @@ export class Lease extends EventEmitter {
 
     if (err instanceof EtcdLeaseInvalidError) {
       this.emitLoss(err);
-    } else {
-      setTimeout(() => this.keepalive(), 100);
+    } else if (!this.revoked()) {
+      if (this.keepaliveRetryTimer !== undefined) {
+        clearTimeout(this.keepaliveRetryTimer);
+      }
+      this.keepaliveRetryTimer = setTimeout(() => {
+        this.keepaliveRetryTimer = undefined;
+        this.keepalive();
+      }, 100);
     }
   }
 }

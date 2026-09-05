@@ -25,6 +25,8 @@ export interface ICallable<T> {
 
   markFailed(resource: T, error: Error): void;
 
+  reportStreamError?(resource: T, error: Error, locallyCancelled: boolean): void;
+
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
@@ -43,6 +45,29 @@ export interface IRequestStream<T> {
 }
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
+
+function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
+  client: ICallable<R>,
+  resource: R,
+  stream: TStream,
+): TStream {
+  let locallyCancelled = false;
+  const cancel = stream.cancel.bind(stream);
+  const reportedCancel = () => {
+    locallyCancelled = true;
+    cancel();
+  };
+  Object.assign(reportedCancel, stream.cancel);
+  stream.cancel = reportedCancel;
+  stream.on('error', error => {
+    if (client.reportStreamError) {
+      client.reportStreamError(resource, error, locallyCancelled);
+    } else {
+      client.markFailed(resource, error);
+    }
+  });
+  return stream;
+}
 export class KVClient {
   constructor(private readonly client: ICallable<unknown>) {}
   /**
@@ -72,8 +97,7 @@ export class KVClient {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stream = (<any>client).rangeStream(req, metadata, resolved);
-      stream.on('error', (err: Error) => this.client.markFailed(resource, err));
-      return stream;
+      return monitorResponseStream(this.client, resource, stream);
     });
   }
   /**
@@ -134,10 +158,8 @@ export class WatchClient {
         method: 'watch',
         isStream: true,
       });
-
       const stream = (<any>client).watch(metadata, resolved);
-      stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
-      return stream;
+      return monitorResponseStream(this.client, resource, stream);
     });
   }
 }
@@ -178,10 +200,8 @@ export class LeaseClient {
         method: 'leaseKeepAlive',
         isStream: true,
       });
-
       const stream = (<any>client).leaseKeepAlive(metadata, resolved);
-      stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
-      return stream;
+      return monitorResponseStream(this.client, resource, stream);
     });
   }
   /**
@@ -301,8 +321,7 @@ export class MaintenanceClient {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stream = (<any>client).snapshot({}, metadata, resolved);
-      stream.on('error', (err: Error) => this.client.markFailed(resource, err));
-      return stream;
+      return monitorResponseStream(this.client, resource, stream);
     });
   }
   /**

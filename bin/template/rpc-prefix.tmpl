@@ -25,6 +25,8 @@ export interface ICallable<T> {
 
   markFailed(resource: T, error: Error): void;
 
+  reportStreamError?(resource: T, error: Error, locallyCancelled: boolean): void;
+
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
@@ -43,3 +45,26 @@ export interface IRequestStream<T> {
 }
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
+
+function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
+  client: ICallable<R>,
+  resource: R,
+  stream: TStream,
+): TStream {
+  let locallyCancelled = false;
+  const cancel = stream.cancel.bind(stream);
+  const reportedCancel = () => {
+    locallyCancelled = true;
+    cancel();
+  };
+  Object.assign(reportedCancel, stream.cancel);
+  stream.cancel = reportedCancel;
+  stream.on('error', error => {
+    if (client.reportStreamError) {
+      client.reportStreamError(resource, error, locallyCancelled);
+    } else {
+      client.markFailed(resource, error);
+    }
+  });
+  return stream;
+}

@@ -133,7 +133,10 @@ class ReadSet {
       return previous;
     }
 
-    const promise = kv.range(req).then(res => {
+    // STM needs values for later reads and mod revisions for conflict checks, so
+    // a keys-only request is satisfied by a value-complete cached read instead.
+    const valueRequest = req.keys_only ? { ...req, keys_only: undefined } : req;
+    const promise = kv.range(valueRequest).then(res => {
       this.completedReads.push({ key: req.key!, res });
 
       if (this.firstReadRevision === undefined) {
@@ -395,15 +398,15 @@ class BasicTransaction {
     if (req.ignore_value) {
       const existingWrite = this.writeSet.findExistingWrite(req.key!);
       if (existingWrite !== null) {
-        if (existingWrite.kvs.length) {
-          return Promise.resolve({} as RPC.IPutResponse);
-        }
-      } else {
-        return this.range(kv, { key: req.key! }).then(res => {
-          this.writeSet.addPut(req, res.kvs[0]?.value);
-          return {} as RPC.IPutResponse;
-        });
+        // A touch does not supersede an earlier transaction-local write or delete.
+        // In particular, touching a locally deleted key preserves that deletion.
+        return Promise.resolve({} as RPC.IPutResponse);
       }
+
+      return this.range(kv, { key: req.key! }).then(res => {
+        this.writeSet.addPut(req, res.kvs[0]?.value);
+        return {} as RPC.IPutResponse;
+      });
     }
 
     this.writeSet.addPut(req);
@@ -456,10 +459,10 @@ class BasicTransaction {
 class SerializableTransaction extends BasicTransaction {
   private firstRead: Promise<RPC.IRangeResponse> | null = null;
 
-  constructor(options: ISTMOptions, kv: RPC.KVClient) {
+  constructor(options: ISTMOptions, kv: RPC.KVClient, namespace: NSApplicator) {
     super(options);
     options.prefetch.forEach(key => {
-      this.range(kv, { key: toBuffer(key) }).catch(() => undefined);
+      this.range(kv, namespace.applyToRequest({ key: toBuffer(key) })).catch(() => undefined);
     });
   }
 
@@ -606,7 +609,7 @@ export class SoftwareTransaction {
     this.tx =
       this.options.isolation === Isolation.Serializable ||
       this.options.isolation === Isolation.SerializableSnapshot
-        ? new SerializableTransaction(this.options, this.rawKV)
+        ? new SerializableTransaction(this.options, this.rawKV, this.namespace)
         : new BasicTransaction(this.options);
 
     let result: T | PromiseLike<T>;

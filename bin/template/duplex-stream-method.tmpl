@@ -7,9 +7,7 @@
           method: '<%= lowerFirst(name) %>',
           isStream: true,
         });
-
         const stream = (<any> client).<%= lowerFirst(name) %>(metadata, resolved);
-        stream.on('error', (err: Error) => stream.writable && this.client.markFailed(resource, err));
-        return stream;
+        return monitorResponseStream(this.client, resource, stream);
       });
   }

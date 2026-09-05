@@ -10,18 +10,24 @@
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
 - **fix:** correct grpc-js request, metadata, and options ordering for server response streams.
-- **fix:** recover the watch attach queue after etcd rejects a watch during creation.
-- **fix:** prevent resigned election campaigns from being elected and use their persisted creation revision when recovering campaign transactions.
-- **fix:** prevent repeated or failed lock acquisition from orphaning renewable leases.
-- **fix:** correct STM snapshot conflict checks, overlapping range writes, touch behavior, and point-delete tracking.
-- **fix:** include the namespace root key in namespaced whole-range reads and deletes.
-- **fix:** correctly batch role permission revocations, forward permission call options, and format missing-lease errors.
-- **fix:** make watch fragment replay, cancellation, stream cleanup, and lifecycle listener handling reliable.
-- **fix:** make election lease loss terminal, settle pending proclamations, and forward observer disconnections.
-- **fix:** prevent lock cleanup from reusing expired acquisition deadlines.
-- **fix:** keep read-committed STM reads fresh and reject concurrent transactions that would share mutable state.
-- **fix:** distinguish point, bounded, and unbounded ranges across namespaced operations.
-- **fix:** close transient authentication clients, preserve mock call options, and normalize error stack headers.
+- **fix:** continue attaching queued watches after etcd rejects one during its create request, instead of leaving every later `watcher()` call waiting indefinitely.
+- **fix:** stop a campaign that resigns while waiting from later emitting `elected`, and recover existing campaign keys using their creation revision rather than the transaction header revision.
+- **fix:** revoke renewable leases when lock acquisition fails, and reject repeated `acquire()` calls without replacing the lease needed by the original lock.
+- **fix:** make STM commits compare every snapshot read, preserve the latest operation across overlapping range deletes and writes, touch the value read by the transaction, and track point deletes in conflict checks.
+- **fix:** include a namespace's root key when `getAll()` or `delete().all()` applies the namespace prefix to an otherwise unbounded range.
+- **fix:** send one role-permission revoke request per key range, propagate gRPC call options through permission operations, and report the requested lease ID when keepalive or revoke targets a missing lease.
+- **fix:** resume interrupted fragmented watches from the incomplete revision, settle cancellation while creation is pending, close streams after rejected sole watches, and keep attach bookkeeping running when lifecycle listeners throw.
+- **fix:** make lease loss permanently fail an active campaign, reject `wait()` and pending `proclaim()` calls, prevent a later `elected` event, and forward watcher disconnections from both phases of `observe()`.
+- **fix:** apply lock acquisition options when creating the lease, but remove absolute deadlines before later `release()` or failed-acquisition cleanup revokes that lease.
+- **fix:** fetch each remote read again under read-committed STM isolation while still honoring buffered writes and deletes, and reject overlapping `transact()` calls before they can share mutable transaction state.
+- **fix:** preserve exact-key operations when an empty range end passes through a namespace, while continuing to treat the zero-byte etcd sentinel as an unbounded range.
+- **fix:** close the temporary Auth client after credential exchange, pass call options through mocked RPC execution, and keep normalized error stack headers consistent with the resulting error name and message.
+- **fix:** keep a watch's earlier replay revision until catch-up events arrive, and make `cancel()` idempotent after either client- or server-initiated termination without disturbing sibling watches.
+- **fix:** select the first candidate from an election catch-up batch, let `wait()` resolve after election has already completed, and cancel predecessor watches when queued campaigns resign or lose their lease.
+- **fix:** suppress delayed keepalive retries after manual lease revocation, always close one-shot keepalive streams, and forward call options from `lease.put()`.
+- **fix:** retain full STM values when `exists()` populates the read cache, and preserve transaction-local point or range deletes when the same key is subsequently touched.
+- **fix:** authenticate separately with each selected etcd member, refresh expired tokens for both unary and streaming calls, bound invalid-token retries, and avoid penalizing a host when callers intentionally cancel response streams.
+- **fix:** allow transaction comparator builders to be awaited or promise-assimilated without overwriting their `.then()` operations or hanging.
 - **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
 - **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
 - **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.

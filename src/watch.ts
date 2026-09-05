@@ -188,6 +188,7 @@ export class WatchManager {
     if (this.state !== State.Connected) {
       this.expectedClosers.delete(watcher);
       this.watchers = this.watchers.filter(w => w !== watcher);
+      watcher.markTerminal();
       return Promise.resolve();
     }
 
@@ -270,7 +271,8 @@ export class WatchManager {
     // clear anyone who is in the process of closing, we won't re-add them
     this.expectedClosers.forEach(watcher => {
       this.watchers = this.watchers.filter(w => w !== watcher);
-      watcher.emit('end');
+      watcher.markTerminal();
+      emitSafely(watcher, 'end');
     });
     this.expectedClosers.clear();
 
@@ -344,6 +346,7 @@ export class WatchManager {
    */
   private handleCancelResponse(watcher: Watcher, res: RPC.IWatchResponse) {
     this.watchers = this.watchers.filter(w => w !== watcher);
+    watcher.markTerminal();
 
     if (this.expectedClosers.has(watcher)) {
       this.expectedClosers.delete(watcher);
@@ -351,7 +354,7 @@ export class WatchManager {
       return;
     }
 
-    watcher.emit('error', castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`));
+    emitSafely(watcher, 'error', castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`));
   }
 
   /**
@@ -393,6 +396,9 @@ export class WatchManager {
     this.backoff = this.initialBackoff.next();
     const watcher = this.watchers.find(w => w.id === res.watch_id);
     if (!watcher) {
+      if (res.canceled) {
+        return;
+      }
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');
     }
 
@@ -524,6 +530,10 @@ export class Watcher extends EventEmitter {
    */
   public readonly id: string | null = null;
 
+  private terminal = false;
+  private cancelPromise: Promise<void> | undefined;
+  private resumeRevision: string | undefined;
+
   /**
    * @internal
    */
@@ -533,6 +543,9 @@ export class Watcher extends EventEmitter {
     public readonly request: RPC.IWatchCreateRequest,
   ) {
     super();
+    if (request.start_revision !== undefined && BigInt(request.start_revision) !== 0n) {
+      this.resumeRevision = String(request.start_revision);
+    }
     this.manager.attach(this);
 
     this.on('data', changes => {
@@ -548,7 +561,13 @@ export class Watcher extends EventEmitter {
       this.updateRevision(changes);
     });
 
-    this.on('connected', changes => this.updateRevision(changes));
+    this.on('connected', changes => {
+      if (this.resumeRevision === undefined) {
+        this.updateRevision(changes);
+      } else {
+        this.request.start_revision = this.resumeRevision;
+      }
+    });
   }
 
   /**
@@ -616,7 +635,7 @@ export class Watcher extends EventEmitter {
    * `null` until the watcher has a resume revision.
    */
   public lastRevision(): bigint | null {
-    const revision = this.request.start_revision;
+    const revision = this.resumeRevision;
     return revision === undefined ? null : BigInt(revision);
   }
 
@@ -624,15 +643,27 @@ export class Watcher extends EventEmitter {
    * Cancels the watcher.
    */
   public cancel(): Promise<void> {
-    return this.manager.detach(this);
+    if (this.terminal) {
+      return Promise.resolve();
+    }
+
+    return (this.cancelPromise ??= this.manager.detach(this));
+  }
+
+  /**
+   * @internal
+   */
+  public markTerminal() {
+    this.terminal = true;
   }
 
   /**
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = (
+    this.resumeRevision = (
       req.fragment ? BigInt(req.header.revision) : BigInt(req.header.revision) + 1n
     ).toString();
+    this.request.start_revision = this.resumeRevision;
   }
 }
