@@ -17,7 +17,7 @@ import {
   removeAuth,
   isAtLeastVersion,
 } from './util.js';
-import { EtcdPermissionDeniedError } from '../errors.js';
+import { ClientRuntimeError, EtcdPermissionDeniedError } from '../errors.js';
 
 class FakeWatchStream {
   public readonly writes: RPC.IWatchRequest[] = [];
@@ -120,6 +120,72 @@ describe('WatchManager protocol handling', () => {
     stream.emitData(watchResponse({ header: { ...watchResponse().header, revision: '20' } }));
 
     expect(watcher.lastRevision()).toBe(21n);
+  });
+
+  it('preserves a replay revision when its create response has a newer header', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, { start_revision: '5' });
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(
+      watchResponse({
+        created: true,
+        watch_id: '1',
+        header: { ...watchResponse().header, revision: '20' },
+      }),
+    );
+
+    expect(watcher.lastRevision()).toBe(5n);
+    expect(watcher.request.start_revision).toBe('5');
+
+    stream.emitData(
+      watchResponse({ header: { ...watchResponse().header, revision: '5' }, fragment: true }),
+    );
+    expect(watcher.lastRevision()).toBe(5n);
+
+    stream.emitData(watchResponse({ header: { ...watchResponse().header, revision: '5' } }));
+    expect(watcher.lastRevision()).toBe(6n);
+  });
+
+  it('makes terminal cancellation idempotent and ignores stale responses without disrupting siblings', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const normallyCanceled = new Watcher(manager, NSApplicator.default, {});
+    const unexpectedlyCanceled = new Watcher(manager, NSApplicator.default, {});
+    const sibling = new Watcher(manager, NSApplicator.default, {});
+    const errors: Error[] = [];
+    const siblingData = vi.fn();
+    unexpectedlyCanceled.on('error', error => errors.push(error));
+    sibling.on('data', siblingData);
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+    stream.emitData(watchResponse({ created: true, watch_id: '2' }));
+    stream.emitData(watchResponse({ created: true, watch_id: '3' }));
+
+    const normalCancel = normallyCanceled.cancel();
+    const duplicateNormalCancel = normallyCanceled.cancel();
+    expect(stream.writes).toHaveLength(4);
+    stream.emitData(watchResponse({ canceled: true, watch_id: '1' }));
+    await expect(Promise.all([normalCancel, duplicateNormalCancel])).resolves.toEqual([
+      undefined,
+      undefined,
+    ]);
+    await expect(normallyCanceled.cancel()).resolves.toBeUndefined();
+    expect(stream.writes).toHaveLength(4);
+
+    stream.emitData(
+      watchResponse({ canceled: true, watch_id: '2', cancel_reason: 'server canceled' }),
+    );
+    expect(errors).toHaveLength(1);
+    await expect(unexpectedlyCanceled.cancel()).resolves.toBeUndefined();
+    expect(stream.writes).toHaveLength(4);
+
+    expect(() => stream.emitData(watchResponse({ canceled: true, watch_id: '2' }))).not.toThrow();
+    expect(() => stream.emitData(watchResponse({ watch_id: 'unknown' }))).toThrow(
+      ClientRuntimeError,
+    );
+    stream.emitData(watchResponse({ watch_id: '3' }));
+    expect(siblingData).toHaveBeenCalledOnce();
   });
 
   it('tears down a stream after its sole watcher is canceled during creation', async () => {

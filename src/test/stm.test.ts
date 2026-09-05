@@ -151,9 +151,67 @@ describe('stm()', () => {
         });
       };
 
+      const expectValueReadsAfterExists = (isolation: Isolation) => {
+        it('keeps cached values after an existence read', async () => {
+          await ns.put('value-read').value('42');
+
+          await ns.stm({ retries: 0, isolation }).transact(async tx => {
+            expect(await tx.get('value-read').exists()).toBe(true);
+            expect(await tx.get('value-read').string()).toBe('42');
+            expect((await tx.get('value-read').buffer())?.toString()).toBe('42');
+            expect(await tx.get('value-read').number()).toBe(42);
+          });
+        });
+      };
+
+      const expectPrefetchValueReads = (isolation: Isolation) => {
+        it('uses a prefetched value for existence and value reads', async () => {
+          const range = vi.spyOn(ns.kv, 'range');
+          try {
+            await ns.stm({ retries: 0, isolation, prefetch: ['foo1'] }).transact(async tx => {
+              expect(await tx.get('foo1').exists()).toBe(true);
+              expect(await tx.get('foo1').string()).toBe('bar1');
+            });
+
+            expect(range).toHaveBeenCalledTimes(1);
+          } finally {
+            range.mockRestore();
+          }
+        });
+      };
+
+      const expectDeleteThenTouch = (isolation: Isolation) => {
+        it('preserves a point deletion when its key is touched', async () => {
+          await ns.stm({ retries: 0, isolation }).transact(async tx => {
+            await tx.delete().key('foo1');
+            await tx.put('foo1').touch();
+
+            expect(await tx.get('foo1').string()).toBeNull();
+          });
+
+          expect(await ns.get('foo1')).toBeNull();
+        });
+
+        it('preserves a range deletion when one of its keys is touched', async () => {
+          await ns.put('touch/a').value('a');
+          await ns.put('touch/b').value('b');
+
+          await ns.stm({ retries: 0, isolation }).transact(async tx => {
+            await tx.delete().prefix('touch/');
+            await tx.put('touch/a').touch();
+
+            expect(await tx.get('touch/a').string()).toBeNull();
+          });
+
+          expect(await ns.get('touch/a')).toBeNull();
+          expect(await ns.get('touch/b')).toBeNull();
+        });
+      };
+
       describe('ReadCommitted', () => {
         expectWriteCaching(Isolation.ReadCommitted);
         expectRunsCleanTransaction(Isolation.ReadCommitted);
+        expectDeleteThenTouch(Isolation.ReadCommitted);
 
         it('reads committed updates without bypassing local writes or deletes', async () => {
           await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
@@ -276,6 +334,8 @@ describe('stm()', () => {
         expectWriteCaching(Isolation.RepeatableReads);
         expectRunsCleanTransaction(Isolation.RepeatableReads);
         expectRepeatableReads(Isolation.RepeatableReads);
+        expectValueReadsAfterExists(Isolation.RepeatableReads);
+        expectDeleteThenTouch(Isolation.RepeatableReads);
       });
 
       describe('Serializable', () => {
@@ -283,6 +343,9 @@ describe('stm()', () => {
         expectRunsCleanTransaction(Isolation.Serializable);
         expectRepeatableReads(Isolation.Serializable);
         expectReadCaching(Isolation.Serializable);
+        expectValueReadsAfterExists(Isolation.Serializable);
+        expectPrefetchValueReads(Isolation.Serializable);
+        expectDeleteThenTouch(Isolation.Serializable);
       });
 
       describe('SerializableSnapshot', () => {
@@ -290,6 +353,9 @@ describe('stm()', () => {
         expectRunsCleanTransaction(Isolation.SerializableSnapshot);
         expectRepeatableReads(Isolation.SerializableSnapshot);
         expectReadCaching(Isolation.SerializableSnapshot);
+        expectValueReadsAfterExists(Isolation.SerializableSnapshot);
+        expectPrefetchValueReads(Isolation.SerializableSnapshot);
+        expectDeleteThenTouch(Isolation.SerializableSnapshot);
 
         it('should deny writing ranges if keys are read', () => {
           return expect(

@@ -609,7 +609,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * }
  * ```
  */
-export class ComparatorBuilder {
+export class ComparatorBuilder implements PromiseLike<RPC.ITxnResponse> {
   private request: {
     compare: Promise<RPC.ICompare>[];
     success: Promise<RPC.IRequestOp>[];
@@ -659,10 +659,28 @@ export class ComparatorBuilder {
 
   /**
    * Adds one or more consequent clauses to be executed if the comparison
-   * is truthy.
+   * is truthy. When called by promise assimilation, it commits the
+   * transaction and settles with the transaction response.
    */
-  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
-    this.request.success = this.mapOperations(clauses);
+  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this;
+  public then<TResult1 = RPC.ITxnResponse, TResult2 = never>(
+    onfulfilled?: ((value: RPC.ITxnResponse) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+  public then(...args: unknown[]): this | Promise<unknown> {
+    const [onfulfilled, onrejected] = args;
+    if (
+      args.length > 0 &&
+      (typeof onfulfilled === 'function' || onfulfilled == null) &&
+      (typeof onrejected === 'function' || onrejected == null)
+    ) {
+      return this.commit().then(
+        onfulfilled as ((value: RPC.ITxnResponse) => unknown) | null | undefined,
+        onrejected as ((reason: unknown) => unknown) | null | undefined,
+      );
+    }
+
+    this.request.success = this.mapOperations(args as (RPC.IRequestOp | IOperation)[]);
     return this;
   }
 

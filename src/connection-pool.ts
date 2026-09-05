@@ -18,6 +18,7 @@ import {
   ClientClosedError,
   ClientRuntimeError,
   EtcdInvalidAuthTokenError,
+  GRPCCancelledError,
   isRecoverableError,
 } from './errors.js';
 import type { IOptions } from './options.js';
@@ -75,7 +76,7 @@ function runServiceCall(
  * based on the algorithm in {@link https://git.io/vHzwh}.
  */
 class Authenticator {
-  private awaitingMetadata: Promise<grpc.Metadata> | null = null;
+  private readonly awaitingMetadata = new Map<string, Promise<grpc.Metadata>>();
 
   constructor(
     private readonly options: IOptions,
@@ -86,60 +87,59 @@ class Authenticator {
    * Invalides the cached metadata. Clients should call this if they detect
    * that the authentication is no longer valid.
    */
-  public invalidateMetadata(): void {
-    this.awaitingMetadata = null;
+  public invalidateMetadata(host?: string): void {
+    if (host === undefined) {
+      this.awaitingMetadata.clear();
+    } else {
+      this.awaitingMetadata.delete(host);
+    }
   }
 
   /**
-   * Returns metadata used to make a call to etcd.
+   * Returns metadata used to make a call to a specific etcd member.
    */
-  public getMetadata(): Promise<grpc.Metadata> {
-    if (this.awaitingMetadata !== null) {
-      return this.awaitingMetadata;
+  public getMetadata(host: string): Promise<grpc.Metadata> {
+    const existing = this.awaitingMetadata.get(host);
+    if (existing) {
+      return existing;
     }
 
-    const hosts =
-      typeof this.options.hosts === 'string' ? [this.options.hosts] : this.options.hosts;
     const auth = this.options.auth;
-
     if (!auth) {
       return Promise.resolve(new grpc.Metadata());
     }
 
-    const attempt = (index: number, previousRejection?: Error): Promise<grpc.Metadata> => {
-      if (index >= hosts.length) {
-        this.awaitingMetadata = null;
-        return Promise.reject(previousRejection);
-      }
-
-      const meta = new grpc.Metadata();
-      const host = removeProtocolPrefix(hosts[index]);
-      const context: CallContext = {
-        method: 'authenticate',
-        params: { name: auth.username, password: auth.password },
-        service: 'Auth',
-        isStream: false,
-      };
-
-      return this.getCredentialsFromHost(
-        host,
-        auth.username,
-        auth.password,
-        resolveCallOptions(
-          resolveCallOptions(undefined, auth.callOptions, context),
-          resolveCallOptions(undefined, this.options.defaultCallOptions, context),
-          context,
-        ),
-        this.credentials,
-      )
-        .then(token => {
-          meta.set('token', token);
-          return meta;
-        })
-        .catch(err => attempt(index + 1, err));
+    const context: CallContext = {
+      method: 'authenticate',
+      params: { name: auth.username, password: auth.password },
+      service: 'Auth',
+      isStream: false,
     };
-
-    return (this.awaitingMetadata = attempt(0));
+    let pending: Promise<grpc.Metadata>;
+    pending = this.getCredentialsFromHost(
+      host,
+      auth.username,
+      auth.password,
+      resolveCallOptions(
+        resolveCallOptions(undefined, auth.callOptions, context),
+        resolveCallOptions(undefined, this.options.defaultCallOptions, context),
+        context,
+      ),
+      this.credentials,
+    )
+      .then(token => {
+        const metadata = new grpc.Metadata();
+        metadata.set('token', token);
+        return metadata;
+      })
+      .catch(error => {
+        if (this.awaitingMetadata.get(host) === pending) {
+          this.awaitingMetadata.delete(host);
+        }
+        throw error;
+      });
+    this.awaitingMetadata.set(host, pending);
+    return pending;
   }
 
   /**
@@ -174,7 +174,7 @@ const defaultCircuitBreaker = () =>
  * be removed from the connection pool upon server failures.
  */
 export class Host {
-  private readonly host: string;
+  public readonly address: string;
   private closed = false;
   private cachedServices: { [name in keyof typeof Services]?: grpc.Client } = Object.create(null);
 
@@ -184,7 +184,7 @@ export class Host {
     private readonly channelOptions?: ChannelOptions,
     public readonly faultHandling: IPolicy<IDefaultPolicyContext> = defaultCircuitBreaker(),
   ) {
-    this.host = removeProtocolPrefix(host);
+    this.address = removeProtocolPrefix(host);
   }
 
   /**
@@ -201,7 +201,7 @@ export class Host {
     }
 
     const newService = new etcdserverpb[name](
-      this.host,
+      this.address,
       this.channelCredentials,
       this.channelOptions,
     );
@@ -314,43 +314,68 @@ export class ConnectionPool implements ICallable<Host> {
 
     const shuffleGen = this.shuffledHosts();
     let lastError: Error | undefined;
+    let invalidTokenHost: Host | undefined;
 
-    try {
-      return await this.globalPolicy.execute(() =>
-        this.withConnection(
-          serviceName,
-          async ({ client, metadata }) => {
-            const resolvedOpts = resolveCallOptions(options, this.callOptionsFactory, {
-              service: serviceName,
-              method,
-              params: payload,
-              isStream: false,
-            } as CallContext);
+    for (let authAttempts = 0; authAttempts < 2; authAttempts++) {
+      try {
+        return await this.globalPolicy.execute(() =>
+          this.withConnection(
+            serviceName,
+            async ({ resource, client, metadata }) => {
+              const resolvedOpts = resolveCallOptions(options, this.callOptionsFactory, {
+                service: serviceName,
+                method,
+                params: payload,
+                isStream: false,
+              } as CallContext);
 
-            try {
-              return await runServiceCall(client, metadata, resolvedOpts, method, payload);
-            } catch (error) {
-              const err = toError(error);
-              if (err instanceof EtcdInvalidAuthTokenError) {
-                this.authenticator.invalidateMetadata();
-                return this.exec(serviceName, method, payload, options);
+              try {
+                return await runServiceCall(client, metadata, resolvedOpts, method, payload);
+              } catch (error) {
+                const err = toError(error);
+                if (err instanceof EtcdInvalidAuthTokenError) {
+                  this.authenticator.invalidateMetadata(resource.address);
+                  invalidTokenHost = resource;
+                }
+
+                lastError = err;
+                throw err;
               }
+            },
+            invalidTokenHost ? this.hostsStartingWith(invalidTokenHost, shuffleGen) : shuffleGen,
+          ),
+        );
+      } catch (error) {
+        const err = toError(error);
+        if (err instanceof EtcdInvalidAuthTokenError && authAttempts === 0 && invalidTokenHost) {
+          continue;
+        }
 
-              lastError = err;
-              throw err;
-            }
-          },
-          shuffleGen,
-        ),
-      );
-    } catch (error) {
-      // If we ran into an error that caused the a circuit to open, but we had
-      // an error before that happened, throw the original error rather than
-      // the broken circuit error.
-      if (isBrokenCircuitError(error) && lastError && !isBrokenCircuitError(lastError)) {
-        throw lastError;
-      } else {
+        // If we ran into an error that caused the a circuit to open, but we had
+        // an error before that happened, throw the original error rather than
+        // the broken circuit error.
+        if (isBrokenCircuitError(err) && lastError && !isBrokenCircuitError(lastError)) {
+          throw lastError;
+        }
+
         throw error;
+      }
+    }
+
+    throw new ClientRuntimeError('Authentication retry did not complete');
+  }
+
+  /**
+   * Produces each host once, starting with the host whose token must be refreshed.
+   */
+  private *hostsStartingWith(first: Host, fallback: Generator<Host>): Generator<Host> {
+    yield first;
+    const yielded = new Set([first]);
+    while (yielded.size < this.hosts.length) {
+      const host = fallback.next().value as Host;
+      if (!yielded.has(host)) {
+        yielded.add(host);
+        yield host;
       }
     }
   }
@@ -367,12 +392,12 @@ export class ConnectionPool implements ICallable<Host> {
       return this.mockImpl.withConnection(service, fn);
     }
 
-    const metadata = await this.authenticator.getMetadata();
     let lastError: Error | undefined;
     for (let i = 0; i < this.hosts.length; i++) {
       const host = shuffleGenerator.next().value as Host;
       let didCallThrough = false;
       try {
+        const metadata = await this.authenticator.getMetadata(host.address);
         return await host.faultHandling.execute(() => {
           didCallThrough = true;
           return fn({ resource: host, client: host.getServiceClient(service), metadata });
@@ -418,6 +443,22 @@ export class ConnectionPool implements ICallable<Host> {
         }
       })
       .catch(() => undefined);
+  }
+
+  /**
+   * Records a stream error after translating it to the library's error type.
+   */
+  public reportStreamError(resource: Host, error: Error, locallyCancelled: boolean): void {
+    const typedError = castGrpcError(error);
+    if (typedError instanceof EtcdInvalidAuthTokenError) {
+      this.authenticator.invalidateMetadata(resource.address);
+    }
+
+    if (locallyCancelled && typedError instanceof GRPCCancelledError) {
+      return;
+    }
+
+    this.markFailed(resource, typedError);
   }
 
   /**

@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EventEmitter } from 'node:events';
 
 import { Etcd3, EtcdLeaseInvalidError } from '../index.js';
 import type { Lease } from '../index.js';
@@ -39,6 +40,43 @@ describe('lease()', () => {
     });
 
     return output;
+  };
+
+  const createKeepaliveStream = () =>
+    Object.assign(new EventEmitter(), {
+      writable: false,
+      write: vi.fn(),
+      end: vi.fn(),
+      cancel: vi.fn(),
+    });
+
+  const mockLeaseTransport = (stream?: EventEmitter) => {
+    const exec = vi.fn(async (_service: string, method: string) => {
+      if (method === 'leaseGrant') {
+        return { ID: '1' };
+      }
+
+      return {};
+    });
+
+    client.mock({
+      exec,
+      withConnection: stream
+        ? async (_service: unknown, fn: (args: unknown) => unknown) =>
+            fn({
+              client: { leaseKeepAlive: () => stream },
+              metadata: undefined,
+              resource: {
+                faultHandling: {
+                  execute: (callback: () => unknown) => Promise.resolve().then(callback),
+                },
+                resetAllServices: vi.fn(),
+              },
+            } as any)
+        : undefined,
+    } as any);
+
+    return exec;
   };
 
   it('throws if trying to use too short of a ttl, or an undefined ttl', () => {
@@ -89,6 +127,75 @@ describe('lease()', () => {
       TTL: '100',
     });
     await lease.keepaliveOnce();
+  });
+
+  it('does not report a loss from a retry scheduled before revocation', async () => {
+    mockLeaseTransport();
+    lease = client.lease(1, { autoKeepAlive: false });
+    await lease.grant();
+    vi.useFakeTimers();
+
+    const lost = vi.fn();
+    lease.on('lost', lost);
+    (lease as any).handleKeepaliveError(new Error('connection lost'));
+    (lease as any).lastKeepAlive = Date.now() - 2001;
+
+    await lease.revoke();
+    vi.advanceTimersByTime(100);
+
+    expect(lost).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('ends a keepalive-once stream when granting the lease fails', async () => {
+    const stream = createKeepaliveStream();
+    mockLeaseTransport(stream);
+    lease = client.lease(60, { autoKeepAlive: false });
+    await lease.grant();
+    const grantError = new Error('grant failed');
+    (lease as any).leaseID = Promise.resolve(grantError);
+
+    await expect(lease.keepaliveOnce()).rejects.toBe(grantError);
+    expect(stream.end).toHaveBeenCalledOnce();
+  });
+
+  it('ends a keepalive-once stream when it errors', async () => {
+    const stream = createKeepaliveStream();
+    const streamError = new Error('stream failed');
+    stream.write.mockImplementation(() => stream.emit('error', streamError));
+    mockLeaseTransport(stream);
+    lease = client.lease(60, { autoKeepAlive: false });
+    await lease.grant();
+
+    await expect(lease.keepaliveOnce()).rejects.toThrow('stream failed');
+    expect(stream.end).toHaveBeenCalledOnce();
+  });
+
+  it('ends a keepalive-once stream after succeeding', async () => {
+    const stream = createKeepaliveStream();
+    const response = { ID: '1', TTL: '60' };
+    stream.write.mockImplementation(() => stream.emit('data', response));
+    mockLeaseTransport(stream);
+    lease = client.lease(60, { autoKeepAlive: false });
+    await lease.grant();
+
+    await expect(lease.keepaliveOnce()).resolves.toBe(response);
+    expect(stream.end).toHaveBeenCalledOnce();
+  });
+
+  it('forwards call options from lease put builders', async () => {
+    const exec = mockLeaseTransport();
+    lease = client.lease(60, { autoKeepAlive: false });
+    const options = { deadline: new Date(Date.now() + 1_000) };
+
+    await lease.put('leased').value('foo').options(options).exec();
+
+    expect(exec).toHaveBeenCalledWith(
+      'KV',
+      'put',
+      expect.objectContaining({ lease: '1' }),
+      options,
+    );
   });
 
   it('is resilient to network interruptions', async () => {
