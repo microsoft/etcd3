@@ -18,6 +18,25 @@ describe('transactions', () => {
     expect(await client.get('foo1').string()).toBe('bar2');
   });
 
+  it('commits transactions when promise-assimilated', async () => {
+    const promiseResolved = client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(client.put('foo1').value('bar2'));
+
+    const firstResult = await Promise.resolve(promiseResolved);
+    expect(firstResult.succeeded).toBe(true);
+    expect(await client.get('foo1').string()).toBe('bar2');
+
+    const directlyAwaited = client
+      .if('foo1', 'Value', '==', 'bar2')
+      .then(client.put('foo1').value('bar3'));
+
+    const awaitTransaction = async <T>(transaction: PromiseLike<T>) => await transaction;
+    const secondResult = await awaitTransaction(directlyAwaited);
+    expect(secondResult.succeeded).toBe(true);
+    expect(await client.get('foo1').string()).toBe('bar3');
+  });
+
   it('runs consequents', async () => {
     await client
       .if('foo1', 'Value', '==', 'bar1')

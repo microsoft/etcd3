@@ -129,16 +129,13 @@ export class ElectionObserver extends EventEmitter {
 
         await new Promise<void>((resolve, reject) => {
           watcher.on('data', data => {
-            let done = false;
             for (const event of data.events) {
               if (event.type === 'Put') {
                 leader = event.kv;
                 revision = event.kv.mod_revision;
-                done = true;
+                resolve();
+                break;
               }
-            }
-            if (done) {
-              resolve();
             }
           });
           watcher.on('error', reject);
@@ -190,6 +187,8 @@ export class Campaign extends EventEmitter {
   private value: Buffer;
   private pendingProclaimation?: IDeferred<void>;
   private terminalError?: Error;
+  private elected = false;
+  private cancelWaiting?: () => void;
 
   constructor(
     private readonly namespace: Namespace,
@@ -234,6 +233,9 @@ export class Campaign extends EventEmitter {
   public wait() {
     if (this.terminalError) {
       return Promise.reject(this.terminalError);
+    }
+    if (this.elected) {
+      return Promise.resolve(this);
     }
 
     return new Promise<this>((resolve, reject) => {
@@ -293,6 +295,7 @@ export class Campaign extends EventEmitter {
     if (this.keyRevision !== ResignedCampaign) {
       this.keyRevision = ResignedCampaign;
       this.rejectPendingProclaimation(new NotCampaigningError());
+      this.cancelWaiting?.();
       await this.lease.revoke();
     }
   }
@@ -331,6 +334,7 @@ export class Campaign extends EventEmitter {
 
     await this.waitForElected(campaignRevision);
     if (!this.hasResigned()) {
+      this.elected = true;
       this.emit('elected');
     }
   }
@@ -372,6 +376,7 @@ export class Campaign extends EventEmitter {
     this.terminalError = error;
     this.keyRevision = ResignedCampaign;
     this.rejectPendingProclaimation(error);
+    this.cancelWaiting?.();
     if (revoke) {
       this.lease.revoke().catch(() => undefined);
     }
@@ -405,13 +410,23 @@ export class Campaign extends EventEmitter {
         return;
       }
 
-      this.emit('_isWaiting'); // internal event used to sync unit tests
+      const cancelled = getDeferred<void>();
+      const cancel = () => cancelled.resolve();
+      this.cancelWaiting = cancel;
+      try {
+        this.emit('_isWaiting'); // internal event used to sync unit tests
 
-      // wait for all it to be deleted for us to become the leader
-      await waitForDeletes(
-        this.namespace,
-        result.kvs.map(k => k.key),
-      );
+        // wait for all it to be deleted for us to become the leader
+        await waitForDeletes(
+          this.namespace,
+          result.kvs.map(k => k.key),
+          cancelled.promise,
+        );
+      } finally {
+        if (this.cancelWaiting === cancel) {
+          this.cancelWaiting = undefined;
+        }
+      }
     }
   }
 }
@@ -535,7 +550,12 @@ export class Election {
   }
 }
 
-async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
+async function waitForDelete(
+  namespace: Namespace,
+  key: Buffer,
+  rev: string,
+  cancelled: Promise<void>,
+) {
   const watcher = await namespace.watch().key(key).startRevision(rev).only('delete').create();
   const deleteOrError = new Promise((resolve, reject) => {
     watcher.once('delete', resolve);
@@ -543,7 +563,7 @@ async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
   });
 
   try {
-    await deleteOrError;
+    await Promise.race([deleteOrError, cancelled]);
   } finally {
     await watcher.cancel();
   }
@@ -552,11 +572,11 @@ async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
 /**
  * Returns a function that resolves when all of the given keys are deleted.
  */
-async function waitForDeletes(namespace: Namespace, keys: Buffer[]) {
+async function waitForDeletes(namespace: Namespace, keys: Buffer[], cancelled: Promise<void>) {
   for (const key of keys) {
     const res = await namespace.get(key).exec();
     if (res.kvs.length) {
-      await waitForDelete(namespace, key, res.header.revision);
+      await waitForDelete(namespace, key, res.header.revision, cancelled);
     }
   }
 }

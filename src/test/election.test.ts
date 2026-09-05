@@ -78,6 +78,57 @@ function campaignNamespaceWith(
   } as unknown as ConstructorParameters<typeof Campaign>[0];
 }
 
+function queuedCampaignNamespace(
+  lease: EventEmitter,
+  watcher: EventEmitter & { cancel: () => Promise<void> },
+  created: ReturnType<typeof getDeferred<void>>,
+): ConstructorParameters<typeof Campaign>[0] {
+  const watchBuilder = {
+    key: () => watchBuilder,
+    startRevision: () => watchBuilder,
+    only: () => watchBuilder,
+    create: async () => {
+      created.resolve();
+      return watcher;
+    },
+  };
+
+  return {
+    lease: () => lease,
+    put: () => ({
+      value: () => ({
+        lease: () => undefined,
+      }),
+    }),
+    getAll: () => ({
+      maxCreateRevision: () => ({
+        sort: () => ({
+          limit: () => ({
+            exec: async () => ({
+              kvs: [{ key: Buffer.from('predecessor') }],
+              header: { revision: '10' },
+            }),
+          }),
+        }),
+      }),
+    }),
+    get: () => ({
+      exec: async () => ({
+        kvs: [{ key: Buffer.from('predecessor') }],
+        header: { revision: '10' },
+      }),
+    }),
+    watch: () => watchBuilder,
+    if: () => ({
+      then: () => ({
+        else: () => ({
+          commit: async () => ({ succeeded: true, header: { revision: '11' }, responses: [] }),
+        }),
+      }),
+    }),
+  } as unknown as ConstructorParameters<typeof Campaign>[0];
+}
+
 const campaignInternals = Campaign.prototype as unknown as {
   waitForElected(revision: string): Promise<void>;
 };
@@ -225,6 +276,69 @@ describe('election', () => {
         waitForElected.mockRestore();
       }
     });
+
+    it('resolves wait when called after election', async () => {
+      const waitForElected = vi
+        .spyOn(campaignInternals, 'waitForElected')
+        .mockResolvedValue(undefined);
+
+      try {
+        const electedCampaign = new Campaign(
+          campaignNamespace({ succeeded: true, header: { revision: '10' }, responses: [] }),
+          'candidate2',
+          1,
+        );
+
+        await onceEvent(electedCampaign, 'elected');
+        await expect(electedCampaign.wait()).resolves.toBe(electedCampaign);
+      } finally {
+        waitForElected.mockRestore();
+      }
+    });
+
+    it.each(['resign', 'lease loss', 'synchronous resign'] as const)(
+      'cancels a queued predecessor watch on %s',
+      async operation => {
+        const created = getDeferred<void>();
+        const watcher = Object.assign(new EventEmitter(), {
+          cancel: vi.fn(async () => undefined),
+        });
+        const lease = Object.assign(new EventEmitter(), {
+          grant: vi.fn(async () => 'campaign-key'),
+          revoke: vi.fn(async () => undefined),
+        });
+        const queuedCampaign = new Campaign(
+          queuedCampaignNamespace(lease, watcher, created),
+          'candidate2',
+          1,
+        );
+        const elected = vi.fn();
+        queuedCampaign.on('elected', elected);
+        const resigned = getDeferred<void>();
+        if (operation === 'synchronous resign') {
+          queuedCampaign.once('_isWaiting', () => {
+            queuedCampaign.resign().then(resigned.resolve, resigned.reject);
+          });
+        }
+
+        await onceEvent(queuedCampaign, '_isWaiting');
+        await created.promise;
+
+        if (operation === 'resign') {
+          await queuedCampaign.resign();
+        } else if (operation === 'lease loss') {
+          const loss = new Error('lease lost');
+          const waiting = queuedCampaign.wait();
+          lease.emit('lost', loss);
+          await expect(waiting).rejects.toBe(loss);
+        } else {
+          await resigned.promise;
+        }
+
+        await vi.waitFor(() => expect(watcher.cancel).toHaveBeenCalledTimes(1));
+        expect(elected).not.toHaveBeenCalled();
+      },
+    );
 
     it('makes lease loss terminal and settles waiting operations', async () => {
       const initialCommitStarted = getDeferred<void>();
@@ -380,9 +494,18 @@ describe('election', () => {
               mod_revision: '8',
             },
           },
+          {
+            type: 'Put',
+            kv: {
+              key: Buffer.from('later-campaign-key'),
+              value: Buffer.from('candidate3'),
+              mod_revision: '9',
+            },
+          },
         ],
       });
       await vi.waitFor(() => expect(leaderWatcher.listenerCount('disconnected')).toBe(1));
+      expect(observer.leader()).toBe('candidate2');
       const leaderPhaseError = new Error('leader phase disconnected');
       leaderWatcher.emit('disconnected', leaderPhaseError);
 

@@ -8,7 +8,6 @@
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stream = (<any> client).<%= lowerFirst(name) %>(<%= req.empty ? '{}' : 'req' %>, metadata, resolved);
-        stream.on('error', (err: Error) => this.client.markFailed(resource, err));
-        return stream;
+        return monitorResponseStream(this.client, resource, stream);
       });
   }

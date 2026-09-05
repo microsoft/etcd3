@@ -306,16 +306,17 @@ describe('roles and auth', () => {
           },
         }),
       );
-      const auth = (authedClient as any).pool.authenticator;
+      const pool = (authedClient as any).pool;
+      const auth = pool.authenticator;
+      const host = pool.hosts[0];
       const badMeta = new grpc.Metadata();
       badMeta.add('token', 'lol');
-      auth.awaitingMetadata = Promise.resolve(badMeta);
+      auth.awaitingMetadata.set(host.address, Promise.resolve(badMeta));
 
       await authedClient.put('foo').value('bar'); // should retry and not throw
-      authedClient.close();
-
-      const updatedMeta: grpc.Metadata = await auth.awaitingMetadata;
+      const updatedMeta: grpc.Metadata = await auth.getMetadata(host.address);
       expect(updatedMeta.get('token')).not.toEqual(badMeta.get('token'));
+      authedClient.close();
     });
   });
 });
