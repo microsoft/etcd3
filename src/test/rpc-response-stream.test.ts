@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
+import { Readable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import {
   KVClient,
@@ -177,5 +178,48 @@ describe('generated response streams', () => {
 
     expect(reportStreamError).toHaveBeenCalledWith(undefined, error, true);
     expect(callable.markFailed).not.toHaveBeenCalled();
+
+    const remoteError = Object.assign(new Error('unavailable'), {
+      code: grpc.status.UNAVAILABLE,
+    });
+    emitError(remoteError);
+
+    expect(reportStreamError).toHaveBeenLastCalledWith(undefined, remoteError, false);
+  });
+
+  it('classifies a native response-stream iterator abort as local cancellation', async () => {
+    const metadata = new grpc.Metadata();
+    const response = {} as IRangeStreamResponse;
+    let emitted = false;
+    const stream = Object.assign(
+      new Readable({
+        objectMode: true,
+        read() {
+          if (!emitted) {
+            emitted = true;
+            this.push(response);
+          }
+        },
+      }),
+      { cancel: vi.fn() },
+    ) as unknown as IResponseStream<IRangeStreamResponse>;
+    const client = { rangeStream: vi.fn(() => stream) } as unknown as grpc.Client;
+    const callable = createCallable(client, metadata, undefined);
+    const reportStreamError = vi.fn();
+    callable.reportStreamError = reportStreamError;
+
+    const result = await new KVClient(callable).rangeStream({ key: Buffer.from('key') });
+    for await (const item of result) {
+      expect(item).toBe(response);
+      break;
+    }
+
+    await vi.waitFor(() => expect(reportStreamError).toHaveBeenCalledOnce());
+    expect(reportStreamError.mock.calls[0][0]).toBeUndefined();
+    expect(reportStreamError.mock.calls[0][1]).toMatchObject({
+      name: 'AbortError',
+      code: 'ABORT_ERR',
+    });
+    expect(reportStreamError.mock.calls[0][2]).toBe(true);
   });
 });

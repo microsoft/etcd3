@@ -52,6 +52,9 @@ function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
   stream: TStream,
 ): TStream {
   let locallyCancelled = false;
+  const isLocalCancellation = (error: Error) =>
+    (locallyCancelled && 'code' in error && error.code === grpc.status.CANCELLED) ||
+    (error.name === 'AbortError' && 'code' in error && error.code === 'ABORT_ERR');
   const cancel = stream.cancel.bind(stream);
   const reportedCancel = () => {
     locallyCancelled = true;
@@ -60,9 +63,10 @@ function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
   Object.assign(reportedCancel, stream.cancel);
   stream.cancel = reportedCancel;
   stream.on('error', error => {
+    const localCancellation = isLocalCancellation(error);
     if (client.reportStreamError) {
-      client.reportStreamError(resource, error, locallyCancelled);
-    } else {
+      client.reportStreamError(resource, error, localCancellation);
+    } else if (!localCancellation) {
       client.markFailed(resource, error);
     }
   });

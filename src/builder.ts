@@ -190,7 +190,15 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.namespace.applyToRequest(this.request), this.callOptions);
+    return this.kv
+      .range(this.namespace.applyToRequest(this.request), this.callOptions)
+      .then(res => ({
+        ...res,
+        kvs: res.kvs.map(kv => ({
+          ...kv,
+          key: this.namespace.unprefix(kv.key),
+        })),
+      }));
   }
 
   /**
@@ -446,7 +454,12 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    */
   public getPrevious(): Promise<RPC.IKeyValue[]> {
     this.request.prev_kv = true;
-    return this.exec().then(res => res.prev_kvs);
+    return this.exec().then(res =>
+      res.prev_kvs.map(previous => ({
+        ...previous,
+        key: this.namespace.unprefix(previous.key),
+      })),
+    );
   }
 
   /**
@@ -536,9 +549,19 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * key before setting it. One may not always be available if a compaction
    * takes place.
    */
-  public getPrevious(): Promise<RPC.IKeyValue & { header: RPC.IResponseHeader }> {
+  public getPrevious(): Promise<(RPC.IKeyValue & { header: RPC.IResponseHeader }) | null> {
     this.request.prev_kv = true;
-    return this.exec().then(res => ({ ...res.prev_kv, header: res.header }));
+    return this.exec().then(res => {
+      if (!res.prev_kv?.key) {
+        return null;
+      }
+
+      return {
+        ...res.prev_kv,
+        key: this.namespace.unprefix(res.prev_kv.key),
+        header: res.header,
+      };
+    });
   }
 
   /**
@@ -662,6 +685,7 @@ export class ComparatorBuilder implements PromiseLike<RPC.ITxnResponse> {
    * is truthy. When called by promise assimilation, it commits the
    * transaction and settles with the transaction response.
    */
+  public then(): Promise<RPC.ITxnResponse>;
   public then(...clauses: (RPC.IRequestOp | IOperation)[]): this;
   public then<TResult1 = RPC.ITxnResponse, TResult2 = never>(
     onfulfilled?: ((value: RPC.ITxnResponse) => TResult1 | PromiseLike<TResult1>) | null,
@@ -670,8 +694,7 @@ export class ComparatorBuilder implements PromiseLike<RPC.ITxnResponse> {
   public then(...args: unknown[]): this | Promise<unknown> {
     const [onfulfilled, onrejected] = args;
     if (
-      args.length > 0 &&
-      (typeof onfulfilled === 'function' || onfulfilled == null) &&
+      (args.length === 0 || typeof onfulfilled === 'function' || onfulfilled == null) &&
       (typeof onrejected === 'function' || onrejected == null)
     ) {
       return this.commit().then(

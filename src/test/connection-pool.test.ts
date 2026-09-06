@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { NoopPolicy, handleAll, retry } from 'cockatiel';
+import { NoopPolicy, handleAll, handleWhen, retry } from 'cockatiel';
 import * as grpc from '@grpc/grpc-js';
 import { KVClient } from '../index.js';
 import type { IOptions } from '../index.js';
@@ -247,9 +247,10 @@ describe('connection pool', () => {
     }
   });
 
-  it('refreshes the selected host token before failing over to another member', async () => {
+  it('refreshes the selected host token once before global retries fail over', async () => {
     const authenticationCalls = new Map<string, number>();
     const requests: Array<{ address: string; token: string }> = [];
+    let freshSecondRequests = 0;
 
     class AuthClient {
       constructor(public readonly address: string) {}
@@ -273,6 +274,12 @@ describe('connection pool', () => {
     class KVClient {
       constructor(public readonly address: string) {}
 
+      public close() {}
+
+      public getChannel() {
+        return { getConnectivityState: () => grpc.connectivityState.READY };
+      }
+
       public range(
         _request: unknown,
         metadata: { get(key: string): unknown[] },
@@ -281,10 +288,14 @@ describe('connection pool', () => {
       ) {
         const token = String(metadata.get('token')[0]);
         requests.push({ address: this.address, token });
-        if (token === `fresh-${this.address}`) {
+        if (token === 'stale-second') {
+          callback(new Error('etcdserver: invalid auth token'));
+        } else if (token === 'fresh-second' && ++freshSecondRequests === 2) {
           callback(null, { kvs: [] });
         } else {
-          callback(new Error('etcdserver: invalid auth token'));
+          callback(
+            Object.assign(new Error('temporarily unavailable'), { code: grpc.status.UNAVAILABLE }),
+          );
         }
       }
     }
@@ -306,7 +317,10 @@ describe('connection pool', () => {
         hosts: ['first', 'second'],
         auth: { username: 'user', password: 'password' },
         faultHandling: {
-          global: new NoopPolicy(),
+          global: retry(
+            handleWhen(error => error instanceof Error && error.name === 'GRPCUnavailableError'),
+            { maxAttempts: 3 },
+          ),
           host: () => new NoopPolicy(),
         },
       });
@@ -318,6 +332,8 @@ describe('connection pool', () => {
 
       expect(requests).toEqual([
         { address: 'second', token: 'stale-second' },
+        { address: 'second', token: 'fresh-second' },
+        { address: 'first', token: 'stale-first' },
         { address: 'second', token: 'fresh-second' },
       ]);
       expect(authenticationCalls).toEqual(
@@ -333,7 +349,7 @@ describe('connection pool', () => {
     }
   });
 
-  it('does not penalize a host for a locally cancelled response stream', async () => {
+  it('does not penalize a host for local stream cancellation', async () => {
     const execute = vi.fn((fn: () => unknown) => Promise.resolve().then(fn));
     pool = new ConnectionPool(
       getOptions({
@@ -352,7 +368,23 @@ describe('connection pool', () => {
     expect(resetAllServices).not.toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
 
-    pool.reportStreamError(host, cancelled, false);
+    pool.reportStreamError(
+      host,
+      Object.assign(new Error('The operation was aborted'), {
+        name: 'AbortError',
+        code: 'ABORT_ERR',
+      }),
+      true,
+    );
+
+    expect(resetAllServices).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+
+    pool.reportStreamError(
+      host,
+      Object.assign(new Error('unavailable'), { code: grpc.status.UNAVAILABLE }),
+      true,
+    );
     await Promise.resolve();
 
     expect(resetAllServices).toHaveBeenCalledOnce();

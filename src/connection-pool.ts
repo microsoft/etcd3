@@ -49,6 +49,10 @@ function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
+function isIteratorAbortError(error: Error): boolean {
+  return error.name === 'AbortError' && 'code' in error && error.code === 'ABORT_ERR';
+}
+
 /**
  * Executes a grpc service calls, casting the error (if any) and wrapping
  * into a Promise.
@@ -318,6 +322,9 @@ export class ConnectionPool implements ICallable<Host> {
 
     for (let authAttempts = 0; authAttempts < 2; authAttempts++) {
       try {
+        const hostGenerator = invalidTokenHost
+          ? this.hostsStartingWith(invalidTokenHost, shuffleGen)
+          : shuffleGen;
         return await this.globalPolicy.execute(() =>
           this.withConnection(
             serviceName,
@@ -342,7 +349,7 @@ export class ConnectionPool implements ICallable<Host> {
                 throw err;
               }
             },
-            invalidTokenHost ? this.hostsStartingWith(invalidTokenHost, shuffleGen) : shuffleGen,
+            hostGenerator,
           ),
         );
       } catch (error) {
@@ -366,16 +373,23 @@ export class ConnectionPool implements ICallable<Host> {
   }
 
   /**
-   * Produces each host once, starting with the host whose token must be refreshed.
+   * Produces hosts indefinitely, starting each pass with the host whose token must be refreshed.
    */
   private *hostsStartingWith(first: Host, fallback: Generator<Host>): Generator<Host> {
-    yield first;
-    const yielded = new Set([first]);
-    while (yielded.size < this.hosts.length) {
-      const host = fallback.next().value as Host;
-      if (!yielded.has(host)) {
-        yielded.add(host);
-        yield host;
+    while (true) {
+      yield first;
+      const yielded = new Set([first]);
+      while (yielded.size < this.hosts.length) {
+        const next = fallback.next();
+        if (next.done) {
+          return;
+        }
+
+        const host = next.value;
+        if (!yielded.has(host)) {
+          yielded.add(host);
+          yield host;
+        }
       }
     }
   }
@@ -394,7 +408,12 @@ export class ConnectionPool implements ICallable<Host> {
 
     let lastError: Error | undefined;
     for (let i = 0; i < this.hosts.length; i++) {
-      const host = shuffleGenerator.next().value as Host;
+      const next = shuffleGenerator.next();
+      if (next.done) {
+        break;
+      }
+
+      const host = next.value;
       let didCallThrough = false;
       try {
         const metadata = await this.authenticator.getMetadata(host.address);
@@ -454,7 +473,10 @@ export class ConnectionPool implements ICallable<Host> {
       this.authenticator.invalidateMetadata(resource.address);
     }
 
-    if (locallyCancelled && typedError instanceof GRPCCancelledError) {
+    if (
+      locallyCancelled &&
+      (typedError instanceof GRPCCancelledError || isIteratorAbortError(error))
+    ) {
       return;
     }
 
