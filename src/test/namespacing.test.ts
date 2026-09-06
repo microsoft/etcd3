@@ -30,6 +30,31 @@ describe('namespacing', () => {
     expect(await ns.getAll().strings()).toEqual({ foo: '' });
   });
 
+  it('unprefixes raw single-key response keys', async () => {
+    await ns.put('foo').value('value');
+
+    expect((await ns.get('foo').exec()).kvs[0]).toMatchObject({
+      key: Buffer.from('foo'),
+      value: Buffer.from('value'),
+    });
+  });
+
+  it('unprefixes previous-value response keys', async () => {
+    await ns.put('put-key').value('old');
+    expect(await ns.put('put-key').value('new').getPrevious()).toMatchObject({
+      key: Buffer.from('put-key'),
+      value: Buffer.from('old'),
+    });
+
+    await ns.put('delete-key').value('old');
+    expect(await ns.delete().key('delete-key').getPrevious()).toMatchObject([
+      {
+        key: Buffer.from('delete-key'),
+        value: Buffer.from('old'),
+      },
+    ]);
+  });
+
   it('deletes values in the namespace', async () => {
     await ns.put('foo1').value('');
     await ns.put('foo2').value('');

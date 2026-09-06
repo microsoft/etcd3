@@ -37,6 +37,36 @@ describe('transactions', () => {
     expect(await client.get('foo1').string()).toBe('bar3');
   });
 
+  it('commits configured success operations with zero-argument then', async () => {
+    const transaction = client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(client.put('foo1').value('bar2'));
+
+    const result = await transaction.then();
+    expect(result.succeeded).toBe(true);
+    expect(await client.get('foo1').string()).toBe('bar2');
+  });
+
+  it('replaces success operations only when then receives DSL clauses', async () => {
+    await client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(client.put('foo1').value('bar2'))
+      .then(client.put('foo1').value('bar3'))
+      .commit();
+
+    expect(await client.get('foo1').string()).toBe('bar3');
+  });
+
+  it('passes transaction results to promise then callbacks', async () => {
+    const succeeded = await client
+      .if('foo1', 'Value', '==', 'bar1')
+      .then(client.put('foo1').value('bar2'))
+      .then(result => result.succeeded);
+
+    expect(succeeded).toBe(true);
+    expect(await client.get('foo1').string()).toBe('bar2');
+  });
+
   it('runs consequents', async () => {
     await client
       .if('foo1', 'Value', '==', 'bar1')

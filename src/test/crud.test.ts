@@ -112,6 +112,10 @@ describe('crud', () => {
           value: Buffer.from('bar1'),
         });
       });
+
+      it('returns null when no previous value exists', async () => {
+        expect(await client.put('missing').value('value').getPrevious()).toBeNull();
+      });
     });
   });
 });

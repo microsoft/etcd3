@@ -24,6 +24,7 @@ class FakeWatchStream {
   public cancelCount = 0;
   private dataHandler: ((response: RPC.IWatchResponse) => void) | undefined;
   private errorHandler: ((error: Error) => void) | undefined;
+  private endHandler: (() => void) | undefined;
 
   public write(request: RPC.IWatchRequest) {
     this.writes.push(request);
@@ -47,6 +48,8 @@ class FakeWatchStream {
       this.dataHandler = handler as (response: RPC.IWatchResponse) => void;
     } else if (event === 'error') {
       this.errorHandler = handler as (error: Error) => void;
+    } else if (event === 'end') {
+      this.endHandler = handler as () => void;
     }
     return this;
   }
@@ -59,6 +62,10 @@ class FakeWatchStream {
 
   public emitError(error: Error) {
     this.errorHandler?.(error);
+  }
+
+  public emitEnd() {
+    this.endHandler?.();
   }
 }
 
@@ -379,6 +386,54 @@ describe('WatchManager protocol handling', () => {
 
     expect(stream.writes[1]).toEqual({ create_request: laterWatcher.request });
     expect(staleEnd).toBe(false);
+  });
+
+  it('handles grpc error followed by end as one stream termination', async () => {
+    vi.useFakeTimers();
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+    try {
+      const firstStream = new FakeWatchStream();
+      const replacementStream = new FakeWatchStream();
+      const backoff = { duration: 100, next: vi.fn() };
+      backoff.next.mockReturnValue(backoff);
+      const watch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          firstStream as unknown as RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
+        )
+        .mockResolvedValueOnce(
+          replacementStream as unknown as RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
+        );
+      const manager = new WatchManager(
+        { watch } as unknown as RPC.WatchClient,
+        { next: () => backoff } as any,
+      );
+      const watcher = new Watcher(manager, NSApplicator.default, {});
+      const disconnected = vi.fn();
+      watcher.on('disconnected', disconnected);
+      await waitForFirstWatchRequest(firstStream);
+
+      firstStream.emitError(new Error('stream failed'));
+      firstStream.emitEnd();
+
+      expect(disconnected).toHaveBeenCalledOnce();
+      expect(backoff.next).toHaveBeenCalledOnce();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+
+      await vi.advanceTimersByTimeAsync(backoff.duration);
+
+      expect(watch).toHaveBeenCalledTimes(2);
+      expect(replacementStream.writes).toEqual([{ create_request: watcher.request }]);
+
+      replacementStream.emitEnd();
+
+      expect(disconnected).toHaveBeenCalledTimes(2);
+      expect(backoff.next).toHaveBeenCalledTimes(2);
+      expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      setTimeoutSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });
 
