@@ -281,14 +281,23 @@ export class WatchManager {
     this.client
       .watch()
       .then(stream => {
+        let terminated = false;
+        const handleTermination = (err: Error) => {
+          if (terminated) {
+            return;
+          }
+          terminated = true;
+          this.handleError(err);
+        };
+
         this.state = State.Connected;
         this.queue = new AttachQueue(stream);
         this.stream = stream
           .on('data', res =>
             res.created ? this.handleCreatedResponse(res) : this.handleResponse(res),
           )
-          .on('error', err => this.handleError(err))
-          .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
+          .on('error', handleTermination)
+          .on('end', () => handleTermination(new EtcdWatchStreamEnded()));
 
         // possible watchers are remove while we're connecting.
         if (this.watchers.length === 0) {

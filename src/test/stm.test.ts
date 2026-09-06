@@ -346,6 +346,13 @@ describe('stm()', () => {
         expectValueReadsAfterExists(Isolation.Serializable);
         expectPrefetchValueReads(Isolation.Serializable);
         expectDeleteThenTouch(Isolation.Serializable);
+
+        it('does not mutate cached raw range responses when unprefixing keys', async () => {
+          await ns.stm({ retries: 0, isolation: Isolation.Serializable }).transact(async tx => {
+            expect((await tx.get('foo1').exec()).kvs[0].key).toEqual(Buffer.from('foo1'));
+            expect((await tx.get('foo1').exec()).kvs[0].key).toEqual(Buffer.from('foo1'));
+          });
+        });
       });
 
       describe('SerializableSnapshot', () => {
