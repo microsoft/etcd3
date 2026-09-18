@@ -9,6 +9,25 @@ import type { CallContext } from './rpc.js';
 export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOptions);
 
 /**
+ * Configures the initial addresses and membership synchronization behavior.
+ */
+export interface IEndpointOptions {
+  /**
+   * An initial address or list of addresses to connect to. Addresses should
+   * include the `https?://` prefix. Defaults to `127.0.0.1:2379`.
+   */
+  address?: string | readonly string[];
+
+  /**
+   * Duration in milliseconds between endpoint membership synchronizations.
+   * The first synchronization runs after one full interval. Defaults to `0`,
+   * which disables automatic synchronization. Failures emit a `warn` event
+   * on the client's `endpoints` property.
+   */
+  syncInterval?: number;
+}
+
+/**
  * IOptions are passed into the client constructor to configure how the client
  * connects to etcd. It supports defining multiple servers and configuring how
  * load is balanced between those servers.
@@ -97,9 +116,10 @@ export interface IOptions {
   defaultCallOptions?: CallOptionsFactory;
 
   /**
-   * A list of hosts to connect to. Hosts should include the `https?://` prefix.
+   * A host or list of hosts to connect to, or endpoint synchronization options.
+   * Hosts should include the `https?://` prefix.
    */
-  hosts: string[] | string;
+  hosts: string | readonly string[] | IEndpointOptions;
 
   /**
    * Duration in milliseconds to wait while connecting before timing out.

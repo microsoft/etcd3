@@ -9,6 +9,40 @@
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **feat:** add dynamic endpoint replacement and cluster membership synchronization.
+
+  The `hosts` option now accepts an object that configures both the initial addresses and an
+  optional automatic synchronization interval:
+
+  ```ts
+  const client = new Etcd3({
+    hosts: {
+      address: ['https://etcd-1.example:2379', 'https://etcd-2.example:2379'],
+      syncInterval: 60_000,
+    },
+  });
+  ```
+
+  The new `client.endpoints` manager exposes a snapshot of the active address list, supports
+  replacing that list without recreating the client, and can refresh it from the client URLs
+  advertised by started voting members:
+
+  ```ts
+  client.endpoints.list = ['https://etcd-3.example:2379'];
+  await client.endpoints.sync();
+  console.log(client.endpoints.list);
+  ```
+
+  Automatic synchronization can be enabled, rescheduled, or disabled at runtime. Background
+  synchronization failures emit a non-fatal `warn` event, while explicit `sync()` failures reject
+  the returned promise:
+
+  ```ts
+  client.endpoints.on('warn', error => console.warn('Endpoint sync failed', error));
+  client.endpoints.interval = 30_000;
+  client.endpoints.interval = undefined;
+  ```
+
 - **fix:** correct grpc-js request, metadata, and options ordering for server response streams.
 - **fix:** continue attaching queued watches after etcd rejects one during its create request, instead of leaving every later `watcher()` call waiting indefinitely.
 - **fix:** stop a campaign that resigns while waiting from later emitting `elected`, and recover existing campaign keys using their creation revision rather than the transaction header revision.

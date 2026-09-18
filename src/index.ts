@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 import { Role, User } from './auth.js';
 import { ConnectionPool } from './connection-pool.js';
+import { EndpointManager } from './endpoints.js';
 import { Namespace } from './namespace.js';
 import type { IOptions } from './options.js';
 import * as RPC from './rpc.js';
@@ -18,6 +19,7 @@ export * from './range.js';
 export * from './rpc.js';
 export * from './stm.js';
 export * from './election.js';
+export { EndpointManager } from './endpoints.js';
 export { WatchBuilder, Watcher } from './watch.js';
 
 /**
@@ -39,6 +41,11 @@ export { WatchBuilder, Watcher } from './watch.js';
  */
 export class Etcd3 extends Namespace {
   /**
+   * Manages the addresses used to connect to etcd.
+   */
+  public readonly endpoints: EndpointManager;
+
+  /**
    * @internal
    */
   public readonly auth = new RPC.AuthClient(this.pool);
@@ -59,6 +66,7 @@ export class Etcd3 extends Namespace {
    */
   constructor(options: IOptions = { hosts: '127.0.0.1:2379' }) {
     super(Buffer.from([]), new ConnectionPool(options), options);
+    this.endpoints = new EndpointManager(this.pool, this.cluster, this.pool.syncInterval);
   }
 
   /**
@@ -140,6 +148,7 @@ export class Etcd3 extends Namespace {
    * Frees resources associated with the client.
    */
   public close() {
+    this.endpoints.close();
     this.pool.close();
   }
 }
