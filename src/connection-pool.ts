@@ -21,7 +21,7 @@ import {
   GRPCCancelledError,
   isRecoverableError,
 } from './errors.js';
-import type { IOptions } from './options.js';
+import type { IEndpointOptions, IOptions } from './options.js';
 import type { CallContext, ICallable, Services } from './rpc.js';
 import { resolveCallOptions } from './util.js';
 
@@ -35,7 +35,50 @@ const packageDefinition = loadSync(fileURLToPath(new URL('../proto/rpc.proto', i
 const services = grpc.loadPackageDefinition(packageDefinition);
 const etcdserverpb = services.etcdserverpb as { [service: string]: typeof grpc.Client };
 
+const defaultEndpoint = '127.0.0.1:2379';
+const insecureProtocolPrefix = 'http:';
+const maxTimerDuration = 2_147_483_647;
 const secureProtocolPrefix = 'https:';
+
+interface INormalizedEndpointOptions {
+  addresses: string[];
+  syncInterval: number | undefined;
+}
+
+export function normalizeEndpointSyncInterval(interval: number | undefined): number | undefined {
+  if (interval === undefined || interval === 0) {
+    return undefined;
+  }
+
+  if (!Number.isSafeInteger(interval) || interval < 0 || interval > maxTimerDuration) {
+    throw new Error(`Endpoint sync interval must be an integer from 0 to ${maxTimerDuration}`);
+  }
+
+  return interval;
+}
+
+function normalizeEndpointOptions(hosts: IOptions['hosts']): INormalizedEndpointOptions {
+  let addresses: string | readonly string[];
+  let syncInterval: number | undefined;
+
+  if (typeof hosts === 'string' || Array.isArray(hosts)) {
+    addresses = hosts;
+  } else {
+    const endpointOptions = hosts as IEndpointOptions;
+    addresses = endpointOptions.address ?? defaultEndpoint;
+    syncInterval = endpointOptions.syncInterval;
+  }
+
+  const normalized = typeof addresses === 'string' ? [addresses] : [...addresses];
+  if (normalized.length === 0) {
+    throw new Error('Cannot construct an etcd client with no hosts specified');
+  }
+
+  return {
+    addresses: normalized,
+    syncInterval: normalizeEndpointSyncInterval(syncInterval),
+  };
+}
 
 /**
  * Strips the https?:// from the start of the connection string.
@@ -255,31 +298,102 @@ export class ConnectionPool implements ICallable<Host> {
   public static deterministicOrder = false;
 
   public readonly callOptionsFactory: IOptions['defaultCallOptions'];
-  private readonly hosts: Host[];
+  public readonly syncInterval: number | undefined;
+  private hosts: Host[];
+  private endpointList: string[];
+  private generation = 0;
+  private closed = false;
   private readonly globalPolicy: IPolicy<IDefaultPolicyContext>;
   private mockImpl: ICallable<Host> | null = null;
   private readonly authenticator: Authenticator;
+  private readonly channelCredentials: grpc.ChannelCredentials;
+  private readonly secureTransport: boolean;
 
   constructor(private readonly options: IOptions) {
+    const endpointOptions = normalizeEndpointOptions(options.hosts);
+    this.syncInterval = endpointOptions.syncInterval;
     this.callOptionsFactory = options.defaultCallOptions;
     this.globalPolicy =
       options.faultHandling?.global ?? retry(handleWhen(isRecoverableError), { maxAttempts: 3 });
 
-    const credentials = this.buildAuthentication();
-    this.authenticator = new Authenticator(options, credentials);
-    const { hosts = '127.0.0.1:2379', grpcOptions } = this.options;
+    this.secureTransport =
+      options.credentials !== undefined || this.hasSecureHost(endpointOptions.addresses);
+    this.validateEndpointTransport(endpointOptions.addresses);
+    this.channelCredentials = this.buildAuthentication();
+    this.authenticator = new Authenticator(options, this.channelCredentials);
+    this.endpointList = endpointOptions.addresses;
+    this.hosts = endpointOptions.addresses.map(address => this.createHost(address));
+  }
 
-    if (typeof hosts === 'string') {
-      this.hosts = [
-        new Host(hosts, credentials, grpcOptions, options.faultHandling?.host?.(hosts)),
-      ];
-    } else if (hosts.length === 0) {
-      throw new Error('Cannot construct an etcd client with no hosts specified');
-    } else {
-      this.hosts = hosts.map(
-        h => new Host(h, credentials, grpcOptions, options.faultHandling?.host?.(h)),
-      );
+  /**
+   * Returns a copy of the endpoints currently registered in the pool.
+   */
+  public getEndpoints(): string[] {
+    return this.endpointList.slice();
+  }
+
+  /**
+   * Replaces all endpoints registered in the pool without waiting for them to connect.
+   */
+  public setEndpoints(addresses: string | readonly string[]): void {
+    if (this.closed) {
+      throw new ClientClosedError('endpoint');
     }
+
+    const nextEndpoints = typeof addresses === 'string' ? [addresses] : [...addresses];
+    if (nextEndpoints.length === 0) {
+      throw new Error('Cannot configure an etcd client with no hosts specified');
+    }
+
+    this.validateEndpointTransport(nextEndpoints);
+
+    const availableHosts = new Map<string, Host[]>();
+    for (const host of this.hosts) {
+      const matches = availableHosts.get(host.address);
+      if (matches) {
+        matches.push(host);
+      } else {
+        availableHosts.set(host.address, [host]);
+      }
+    }
+
+    const createdHosts: Host[] = [];
+    let nextHosts: Host[];
+    try {
+      nextHosts = nextEndpoints.map(address => {
+        const existing = availableHosts.get(removeProtocolPrefix(address))?.shift();
+        if (existing) {
+          return existing;
+        }
+
+        const host = this.createHost(address);
+        createdHosts.push(host);
+        return host;
+      });
+    } catch (error) {
+      createdHosts.forEach(host => host.close());
+      throw error;
+    }
+
+    const removedHosts = [...availableHosts.values()].flat();
+    const retainedAddresses = new Set(nextHosts.map(host => host.address));
+    this.endpointList = nextEndpoints;
+    this.hosts = nextHosts;
+    this.generation++;
+
+    for (const host of removedHosts) {
+      host.close();
+      if (!retainedAddresses.has(host.address)) {
+        this.authenticator.invalidateMetadata(host.address);
+      }
+    }
+  }
+
+  /**
+   * Returns a version that changes each time the endpoint list is replaced.
+   */
+  public get endpointGeneration(): number {
+    return this.generation;
   }
 
   /**
@@ -300,7 +414,13 @@ export class ConnectionPool implements ICallable<Host> {
    * Tears down all ongoing connections and resoruces.
    */
   public close() {
+    if (this.closed) {
+      return;
+    }
+
+    this.closed = true;
     this.hosts.forEach(host => host.close());
+    this.authenticator.invalidateMetadata();
   }
 
   /**
@@ -316,17 +436,31 @@ export class ConnectionPool implements ICallable<Host> {
       return this.mockImpl.exec(serviceName, method, payload, options);
     }
 
-    const shuffleGen = this.shuffledHosts();
     let lastError: Error | undefined;
     let invalidTokenHost: Host | undefined;
 
     for (let authAttempts = 0; authAttempts < 2; authAttempts++) {
       try {
-        const hostGenerator = invalidTokenHost
-          ? this.hostsStartingWith(invalidTokenHost, shuffleGen)
-          : shuffleGen;
-        return await this.globalPolicy.execute(() =>
-          this.withConnection(
+        let generation = this.generation;
+        let hosts = this.hosts.slice();
+        let shuffledHosts = this.shuffledHosts(hosts);
+        let hostGenerator =
+          invalidTokenHost && hosts.includes(invalidTokenHost)
+            ? this.hostsStartingWith(invalidTokenHost, shuffledHosts, hosts.length)
+            : shuffledHosts;
+
+        return await this.globalPolicy.execute(() => {
+          if (generation !== this.generation) {
+            generation = this.generation;
+            hosts = this.hosts.slice();
+            shuffledHosts = this.shuffledHosts(hosts);
+            hostGenerator =
+              invalidTokenHost && hosts.includes(invalidTokenHost)
+                ? this.hostsStartingWith(invalidTokenHost, shuffledHosts, hosts.length)
+                : shuffledHosts;
+          }
+
+          return this.withConnection(
             serviceName,
             async ({ resource, client, metadata }) => {
               const resolvedOpts = resolveCallOptions(options, this.callOptionsFactory, {
@@ -350,8 +484,9 @@ export class ConnectionPool implements ICallable<Host> {
               }
             },
             hostGenerator,
-          ),
-        );
+            hosts.length,
+          );
+        });
       } catch (error) {
         const err = toError(error);
         if (err instanceof EtcdInvalidAuthTokenError && authAttempts === 0 && invalidTokenHost) {
@@ -375,11 +510,15 @@ export class ConnectionPool implements ICallable<Host> {
   /**
    * Produces hosts indefinitely, starting each pass with the host whose token must be refreshed.
    */
-  private *hostsStartingWith(first: Host, fallback: Generator<Host>): Generator<Host> {
+  private *hostsStartingWith(
+    first: Host,
+    fallback: Generator<Host>,
+    hostCount: number,
+  ): Generator<Host> {
     while (true) {
       yield first;
       const yielded = new Set([first]);
-      while (yielded.size < this.hosts.length) {
+      while (yielded.size < hostCount) {
         const next = fallback.next();
         if (next.done) {
           return;
@@ -400,15 +539,18 @@ export class ConnectionPool implements ICallable<Host> {
   public async withConnection<T>(
     service: keyof typeof Services,
     fn: (args: { resource: Host; client: grpc.Client; metadata: grpc.Metadata }) => Promise<T> | T,
-    shuffleGenerator = this.shuffledHosts(),
+    shuffleGenerator?: Generator<Host>,
+    hostCount?: number,
   ): Promise<T> {
     if (this.mockImpl) {
       return this.mockImpl.withConnection(service, fn);
     }
 
+    const hosts = this.hosts.slice();
+    const generator = shuffleGenerator ?? this.shuffledHosts(hosts);
     let lastError: Error | undefined;
-    for (let i = 0; i < this.hosts.length; i++) {
-      const next = shuffleGenerator.next();
+    for (let i = 0; i < (hostCount ?? hosts.length); i++) {
+      const next = generator.next();
       if (next.done) {
         break;
       }
@@ -487,8 +629,8 @@ export class ConnectionPool implements ICallable<Host> {
    * A generator function that endlessly loops through hosts in a
    * fisher-yates shuffle for each iteration.
    */
-  private *shuffledHosts() {
-    const hosts = this.hosts.slice();
+  private *shuffledHosts(source = this.hosts) {
+    const hosts = source.slice();
 
     while (true) {
       for (let i = hosts.length - 1; i >= 0; i--) {
@@ -512,7 +654,7 @@ export class ConnectionPool implements ICallable<Host> {
         credentials.privateKey,
         credentials.certChain,
       );
-    } else if (this.hasSecureHost()) {
+    } else if (this.secureTransport) {
       protocolCredentials = grpc.credentials.createSsl();
     }
 
@@ -522,12 +664,7 @@ export class ConnectionPool implements ICallable<Host> {
   /**
    * Returns whether any configured host is set up to use TLS.
    */
-  private hasSecureHost(): boolean {
-    const { hosts } = this.options;
-    if (typeof hosts === 'string') {
-      return hosts.startsWith(secureProtocolPrefix);
-    }
-
+  private hasSecureHost(hosts: readonly string[]): boolean {
     const countSecure = hosts.filter(host => host.startsWith(secureProtocolPrefix)).length;
     if (countSecure === 0) {
       return false;
@@ -537,5 +674,27 @@ export class ConnectionPool implements ICallable<Host> {
     }
 
     return true;
+  }
+
+  private validateEndpointTransport(addresses: readonly string[]): void {
+    const hasSecure = addresses.some(address => address.startsWith(secureProtocolPrefix));
+    const hasInsecure = addresses.some(address => address.startsWith(insecureProtocolPrefix));
+
+    if (
+      (hasSecure && hasInsecure) ||
+      (hasSecure && !this.secureTransport) ||
+      (hasInsecure && this.secureTransport)
+    ) {
+      throw new Error('etcd3 cannot be configured with a mix of secure and insecure hosts');
+    }
+  }
+
+  private createHost(address: string): Host {
+    return new Host(
+      address,
+      this.channelCredentials,
+      this.options.grpcOptions,
+      this.options.faultHandling?.host?.(address),
+    );
   }
 }

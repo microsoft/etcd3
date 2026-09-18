@@ -63,6 +63,80 @@ describe('connection pool', () => {
     expect(exec).toHaveBeenCalledWith('KV', 'range', { key }, options);
   });
 
+  it('supports endpoint options and keeps address snapshots isolated', () => {
+    const addresses = ['first', 'second'];
+    pool = new ConnectionPool(
+      getOptions({
+        hosts: {
+          address: addresses,
+          syncInterval: 1_000,
+        },
+      }),
+    );
+
+    addresses.push('third');
+    const snapshot = pool.getEndpoints();
+    snapshot.push('fourth');
+
+    expect(pool.syncInterval).toBe(1_000);
+    expect(pool.getEndpoints()).toEqual(['first', 'second']);
+  });
+
+  it('uses the default address for empty endpoint options', () => {
+    pool = new ConnectionPool(getOptions({ hosts: {} }));
+
+    expect(pool.getEndpoints()).toEqual(['127.0.0.1:2379']);
+  });
+
+  it.each([-1, 1.5, 2_147_483_648, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects an invalid endpoint sync interval of %s',
+    syncInterval => {
+      expect(() => new ConnectionPool(getOptions({ hosts: { syncInterval } }))).toThrow(
+        /sync interval must be an integer from 0/,
+      );
+    },
+  );
+
+  it('reuses retained hosts and closes removed hosts when replacing endpoints', () => {
+    pool = new ConnectionPool(getOptions({ hosts: ['first', 'second'] }));
+    const [first, second] = (pool as any).hosts;
+    const closeFirst = vi.spyOn(first, 'close');
+    const closeSecond = vi.spyOn(second, 'close');
+
+    pool.setEndpoints(['second', 'third']);
+
+    expect(pool.getEndpoints()).toEqual(['second', 'third']);
+    expect((pool as any).hosts[0]).toBe(second);
+    expect(closeFirst).toHaveBeenCalledOnce();
+    expect(closeSecond).not.toHaveBeenCalled();
+  });
+
+  it('rejects empty endpoint replacements without changing the pool', () => {
+    pool = new ConnectionPool(getOptions({ hosts: 'first' }));
+
+    expect(() => pool!.setEndpoints([])).toThrow(/no hosts specified/);
+    expect(pool.getEndpoints()).toEqual(['first']);
+  });
+
+  it('rejects endpoint replacements with a different transport mode', () => {
+    pool = new ConnectionPool(
+      getOptions({
+        credentials: undefined,
+        hosts: 'http://first',
+      }),
+    );
+
+    expect(() => pool!.setEndpoints('https://second')).toThrow(/mix of secure and insecure hosts/);
+    expect(pool.getEndpoints()).toEqual(['http://first']);
+  });
+
+  it('rejects endpoint replacement after closing', () => {
+    pool = new ConnectionPool(getOptions({ hosts: 'first' }));
+    pool.close();
+
+    expect(() => pool!.setEndpoints('second')).toThrow(/client was already closed/);
+  });
+
   it('caches authentication metadata per host and falls back after authentication failures', async () => {
     const clients: Array<{
       address: string;
