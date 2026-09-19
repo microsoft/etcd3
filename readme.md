@@ -8,6 +8,7 @@ etcd3 is a high-quality, production-ready client for the Protocol Buffer-based [
 - [software transactional memory](https://microsoft.github.io/etcd3/classes/SoftwareTransaction.html)
 - [high-level query builders](https://microsoft.github.io/etcd3/classes/Etcd3.html)
 - [lease management](https://microsoft.github.io/etcd3/classes/Lease.html)
+- [fair distributed mutexes](https://microsoft.github.io/etcd3/classes/Mutex.html)
 - [watchers](https://microsoft.github.io/etcd3/classes/WatchBuilder.html)
 - [user](https://microsoft.github.io/etcd3/classes/Etcd3.html#user) and [role](https://microsoft.github.io/etcd3/classes/Etcd3.html#role) [mocking](https://microsoft.github.io/etcd3/classes/Etcd3.html#mock) management
 - [elections](https://microsoft.github.io/etcd3/classes/Election.html)

@@ -9,6 +9,69 @@
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **feat:** add fair, queued distributed mutexes with fencing tokens, ownership-loss signals,
+  cancelable acquisition, and async-disposable guards.
+
+  Use `await using` to release a mutex automatically when control leaves the scope, including when
+  the protected operation throws:
+
+  ```ts
+  await using guard = await client.mutex(`order:${orderId}`).ttl(15).lock();
+  await processOrder(orderId);
+  ```
+
+  `tryLock()` provides nonblocking acquisition, returning `null` when the mutex is already held or
+  an upgraded client is ahead in the queue:
+
+  ```ts
+  const guard = await client.mutex('periodic-job').tryLock();
+  if (guard) {
+    await using acquired = guard;
+    await runPeriodicJob();
+  }
+  ```
+
+  The returned guard has a `signal` that aborts when this client learns that its lease was lost or
+  when unlocking begins. Pass it to operations that accept an `AbortSignal` so they can stop early:
+
+  ```ts
+  await using guard = await client.mutex('search-index/rebuild').lock();
+  await fetch('https://search.example/rebuild', {
+    method: 'POST',
+    signal: guard.signal,
+  });
+  ```
+
+  For protected etcd writes, `ifOwner()` compares the authoritative key's creation revision in
+  the same transaction:
+
+  ```ts
+  await using guard = await client.mutex('scheduler').lock();
+  const result = await guard
+    .ifOwner()
+    .then(client.put('scheduler/last-run').value(Date.now().toString()))
+    .commit();
+
+  if (!result.succeeded) {
+    throw new Error('Mutex ownership was lost before the update');
+  }
+  ```
+
+  For an external database or service, pass `guard.fencingToken.toString()` with the write and
+  have the destination reject tokens older than the newest token it has accepted. This prevents a
+  paused process from making stale writes after its lease expires.
+
+  Pass an `AbortSignal` to cancel an acquisition that is still waiting:
+
+  ```ts
+  const controller = new AbortController();
+  const guard = await client.mutex('report').lock({ signal: controller.signal });
+  ```
+
+  Existing `client.lock()` calls retain their immediate-failure behavior and use the same
+  authoritative owner key, so old and new clients remain mutually exclusive during a rolling
+  upgrade. FIFO ordering is guaranteed among `mutex()` contenders; legacy `lock()` clients may
+  still acquire ahead of queued contenders until the migration is complete.
 - **feat:** add dynamic endpoint replacement and cluster membership synchronization.
 
   The `hosts` option now accepts an object that configures both the initial addresses and an

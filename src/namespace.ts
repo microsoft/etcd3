@@ -8,6 +8,7 @@ import { Election } from './election.js';
 import { Lease } from './lease.js';
 import type { ILeaseOptions } from './lease.js';
 import { Lock } from './lock.js';
+import { Mutex } from './mutex.js';
 import type { IOptions } from './options.js';
 import { Range } from './range.js';
 import type { Rangable } from './range.js';
@@ -116,6 +117,29 @@ export class Namespace {
    */
   public lock(key: string | Buffer): Lock {
     return new Lock(this.pool, this.nsApplicator, key);
+  }
+
+  /**
+   * Creates a fair, lease-backed distributed mutex for `key`.
+   *
+   * The exact namespaced key remains the authoritative owner key, so mutexes
+   * exclude legacy {@link Lock} users on the same key. FIFO ordering applies
+   * among mutex users; legacy lock users can barge during a rolling migration.
+   *
+   * @example
+   * ```ts
+   * await client.mutex('inventory').runExclusive(async () => {
+   *   await rebuildInventory();
+   * });
+   * ```
+   */
+  public mutex(key: string | Buffer): Mutex {
+    return new Mutex(
+      this.pool,
+      this.nsApplicator,
+      key,
+      () => new WatchBuilder(this.watchManager, this.nsApplicator),
+    );
   }
 
   /**
