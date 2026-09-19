@@ -9,6 +9,22 @@
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **feat:** add explicit resource management for clients, streams, watches, leases, locks, and
+  elections. `Etcd3` and low-level response streams support synchronous `using`; resources whose
+  cleanup waits for etcd support `await using`:
+
+  ```ts
+  using client = new Etcd3();
+  await using lease = client.lease(30);
+  await lease.put('workers/current').value(workerId);
+
+  await using watcher = await client.watch().prefix('jobs/').create();
+  watcher.on('put', job => processJob(job));
+  ```
+
+  `await using` also cancels election observers, resigns campaigns, and releases acquired legacy
+  locks. Lease disposal actively revokes the lease rather than waiting for its TTL to expire.
+
 - **feat:** add fair, queued distributed mutexes with fencing tokens, ownership-loss signals,
   cancelable acquisition, and async-disposable guards.
 
@@ -72,6 +88,7 @@
   authoritative owner key, so old and new clients remain mutually exclusive during a rolling
   upgrade. FIFO ordering is guaranteed among `mutex()` contenders; legacy `lock()` clients may
   still acquire ahead of queued contenders until the migration is complete.
+
 - **feat:** add dynamic endpoint replacement and cluster membership synchronization.
 
   The `hosts` option now accepts an object that configures both the initial addresses and an

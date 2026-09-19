@@ -506,6 +506,23 @@ describe('watch()', () => {
     });
   }
 
+  it('cancels watchers when disposed after an error', async () => {
+    const watcher = await client.watch().key('foo').create();
+    const cancel = vi.spyOn(watcher, 'cancel');
+    const error = new Error('operation failed');
+
+    await expect(
+      (async () => {
+        await using disposableWatcher = watcher;
+        void disposableWatcher;
+        throw error;
+      })(),
+    ).rejects.toBe(error);
+
+    expect(cancel).toHaveBeenCalledOnce();
+    await expect(watcher[Symbol.asyncDispose]()).resolves.toBeUndefined();
+  });
+
   async function cleanUpNetworkInterruption(
     watcher: Watcher | undefined,
     proxiedClient: Etcd3 | undefined,

@@ -215,6 +215,16 @@ describe('election', () => {
       expect(oldValue).toBe('candidate');
     });
 
+    it('resigns campaigns when disposed', async () => {
+      {
+        await using disposableCampaign = campaign;
+        expect(await disposableCampaign.wait()).toBe(disposableCampaign);
+      }
+
+      expect(await election.leader()).toBeUndefined();
+      await expect(campaign[Symbol.asyncDispose]()).resolves.toBeUndefined();
+    });
+
     it('does not elect a queued campaign that resigns before its predecessor', async () => {
       const predecessorDeleted = getDeferred<void>();
       const waiting = getDeferred<void>();
@@ -448,6 +458,19 @@ describe('election', () => {
   });
 
   describe('observe', () => {
+    it('cancels observers when disposed', async () => {
+      const observer = await election.observe();
+      const cancel = vi.spyOn(observer, 'cancel');
+
+      {
+        await using disposableObserver = observer;
+        expect(disposableObserver.leader()).toBe('candidate');
+      }
+
+      expect(cancel).toHaveBeenCalledOnce();
+      await expect(observer[Symbol.asyncDispose]()).resolves.toBeUndefined();
+    });
+
     it('forwards watcher disconnects while retaining normal cancellation', async () => {
       const emptyWatcher = Object.assign(new EventEmitter(), {
         cancel: vi.fn(async () => undefined),

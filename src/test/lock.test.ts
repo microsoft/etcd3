@@ -50,6 +50,26 @@ describe('lock()', () => {
     await lock.release();
   });
 
+  it('releases acquired locks when disposed and tolerates explicit release', async () => {
+    const error = new Error('operation failed');
+    const lock = await client.lock('resource').acquire();
+
+    await expect(
+      (async () => {
+        await using disposableLock = lock;
+        void disposableLock;
+        throw error;
+      })(),
+    ).rejects.toBe(error);
+
+    await assertAbleToLock();
+    await expect(lock[Symbol.asyncDispose]()).resolves.toBeUndefined();
+
+    const manuallyReleased = await client.lock('resource').acquire();
+    await manuallyReleased.release();
+    await expect(manuallyReleased[Symbol.asyncDispose]()).resolves.toBeUndefined();
+  });
+
   it('releases and reacquires a lock after its acquire deadline has expired', async () => {
     const deadline = new Date(Date.now() + 2_000);
     const lock = client.lock('resource').options({ deadline });
@@ -191,9 +211,9 @@ describe('lock()', () => {
       const lock = client.lock('pending-resource');
       const acquisition = lock.acquire();
       await expect(lock.leaseId()).resolves.toBe('pending-lease');
-      expect(exec.mock.calls.some(([service, method]) => service === 'KV' && method === 'txn')).toBe(
-        true,
-      );
+      expect(
+        exec.mock.calls.some(([service, method]) => service === 'KV' && method === 'txn'),
+      ).toBe(true);
 
       rejectTransaction(transactionError);
       await expect(acquisition).rejects.toBe(transactionError);

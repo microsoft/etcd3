@@ -41,7 +41,7 @@ export { WatchBuilder, Watcher } from './watch.js';
  * await client.delete().all();
  * ```
  */
-export class Etcd3 extends Namespace {
+export class Etcd3 extends Namespace implements Disposable {
   /**
    * Manages the addresses used to connect to etcd.
    */
@@ -152,5 +152,10 @@ export class Etcd3 extends Namespace {
   public close() {
     this.endpoints.close();
     this.pool.close();
+  }
+
+  /** Closes this client when used with `using`. */
+  public [Symbol.dispose](): void {
+    this.close();
   }
 }

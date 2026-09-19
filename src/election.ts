@@ -17,7 +17,7 @@ const UnsetCurrent = Symbol('unset');
  * the current election.
  * @noInheritDoc
  */
-export class ElectionObserver extends EventEmitter {
+export class ElectionObserver extends EventEmitter implements AsyncDisposable {
   /**
    * Gets whether the election has any leader.
    */
@@ -70,6 +70,11 @@ export class ElectionObserver extends EventEmitter {
     this.running = false;
     this.disposer?.();
     await this.runLoop;
+  }
+
+  /** Cancels this observer when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.cancel();
   }
 
   /**
@@ -181,7 +186,7 @@ const ResignedCampaign = Symbol('ResignedCampaign');
  * method for an example.
  * @noInheritDoc
  */
-export class Campaign extends EventEmitter {
+export class Campaign extends EventEmitter implements AsyncDisposable {
   private lease: Lease;
   private keyRevision?: string | typeof ResignedCampaign;
   private value: Buffer;
@@ -298,6 +303,11 @@ export class Campaign extends EventEmitter {
       this.cancelWaiting?.();
       await this.lease.revoke();
     }
+  }
+
+  /** Resigns this campaign when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.resign();
   }
 
   private async start() {

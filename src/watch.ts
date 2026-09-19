@@ -532,7 +532,7 @@ export class WatchBuilder {
  * of keys. See {@link WatchBuilder} for a usage example.
  * @noInheritDoc
  */
-export class Watcher extends EventEmitter {
+export class Watcher extends EventEmitter implements AsyncDisposable {
   /**
    * id is the watcher's ID in etcd. This is `null` initially and during
    * reconnections, only populated while the watcher is idle.
@@ -657,6 +657,11 @@ export class Watcher extends EventEmitter {
     }
 
     return (this.cancelPromise ??= this.manager.detach(this));
+  }
+
+  /** Cancels this watcher when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.cancel();
   }
 
   /**

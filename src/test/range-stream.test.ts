@@ -10,6 +10,7 @@ import { NSApplicator } from '../util.js';
 
 class FakeResponseStream<T> implements RPC.IResponseStream<T> {
   public readonly cancel = vi.fn<() => void>();
+  public readonly [Symbol.dispose] = this.cancel;
 
   constructor(
     private readonly chunks: readonly T[],
@@ -209,8 +210,22 @@ describe('MultiRangeBuilder.stream()', () => {
 
   it('cancels the response stream when iteration ends early', async () => {
     const stream = new FakeResponseStream<RPC.IRangeStreamResponse>([
-      { range_response: rangeResponse('101', [keyValue('tenant/first', 'first value', '1')], true, '2') },
-      { range_response: rangeResponse('102', [keyValue('tenant/second', 'second value', '2')], false, '2') },
+      {
+        range_response: rangeResponse(
+          '101',
+          [keyValue('tenant/first', 'first value', '1')],
+          true,
+          '2',
+        ),
+      },
+      {
+        range_response: rangeResponse(
+          '102',
+          [keyValue('tenant/second', 'second value', '2')],
+          false,
+          '2',
+        ),
+      },
     ]);
     const { builder } = createBuilder(stream);
 
