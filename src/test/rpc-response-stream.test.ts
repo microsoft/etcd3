@@ -22,6 +22,7 @@ function createResponseStream<T>(values: T[]) {
   const errorListeners: Array<(error: Error) => void> = [];
   const stream: IResponseStream<T> = {
     cancel,
+    [Symbol.dispose]: cancel,
     on(event, listener) {
       if (event === 'error') {
         errorListeners.push(listener as (error: Error) => void);
@@ -119,6 +120,21 @@ describe('generated response streams', () => {
     expect(snapshot).toHaveBeenCalledWith({}, metadata, options);
 
     result.cancel();
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('cancels response streams when disposed', async () => {
+    const metadata = new grpc.Metadata();
+    const { cancel, stream } = createResponseStream<IRangeStreamResponse>([]);
+    const client = { rangeStream: vi.fn(() => stream) } as unknown as grpc.Client;
+
+    {
+      using result = await new KVClient(createCallable(client, metadata, undefined)).rangeStream({
+        key: Buffer.from('key'),
+      });
+      expect(result).toBe(stream);
+    }
+
     expect(cancel).toHaveBeenCalledOnce();
   });
 

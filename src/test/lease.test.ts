@@ -106,6 +106,22 @@ describe('lease()', () => {
     expect(await client.get('leased').buffer()).toBeNull();
   });
 
+  it('revokes leases when disposed after an error', async () => {
+    const error = new Error('operation failed');
+
+    await expect(
+      (async () => {
+        await using disposableLease = (lease = client.lease(100));
+        await disposableLease.put('disposed-lease').value('foo');
+        throw error;
+      })(),
+    ).rejects.toBe(error);
+
+    expect(lease.revoked()).toBe(true);
+    expect(await client.get('disposed-lease').buffer()).toBeNull();
+    await expect(lease[Symbol.asyncDispose]()).resolves.toBeUndefined();
+  });
+
   it('attaches leases through transactions', async () => {
     lease = client.lease(100);
     await lease.put('leased').value('foo');

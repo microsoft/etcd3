@@ -111,7 +111,7 @@ export interface ILeaseOptions extends grpc.CallOptions {
  * ```
  * @noInheritDoc
  */
-export class Lease extends EventEmitter {
+export class Lease extends EventEmitter implements AsyncDisposable {
   private leaseID: Promise<string | Error>;
   private innerState = LeaseState.Pending;
 
@@ -205,6 +205,11 @@ export class Lease extends EventEmitter {
    */
   public release() {
     this.close();
+  }
+
+  /** Revokes this lease when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.revoke();
   }
 
   /**

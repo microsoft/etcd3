@@ -33,7 +33,7 @@ import { NSApplicator } from './util.js';
  * });
  * ```
  */
-export class Lock {
+export class Lock implements AsyncDisposable {
   private leaseTTL = 30;
   private guard: MutexGuard | null = null;
   private acquiredLeaseID: string | null = null;
@@ -138,6 +138,11 @@ export class Lock {
         this.acquiredLeaseID = null;
       }
     });
+  }
+
+  /** Releases an acquired lock when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.guard ? this.release() : Promise.resolve();
   }
 
   /**

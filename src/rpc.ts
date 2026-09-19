@@ -30,7 +30,7 @@ export interface ICallable<T> {
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
-export interface IResponseStream<T> extends AsyncIterable<T> {
+export interface IResponseStream<T> extends AsyncIterable<T>, Disposable {
   cancel(): void;
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
@@ -38,7 +38,7 @@ export interface IResponseStream<T> extends AsyncIterable<T> {
   on(event: 'error', fn: (err: Error) => void): this;
 }
 
-export interface IRequestStream<T> {
+export interface IRequestStream<T> extends Disposable {
   write(item: T): void;
   end(): void;
   cancel(): void;
@@ -62,6 +62,7 @@ function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
   };
   Object.assign(reportedCancel, stream.cancel);
   stream.cancel = reportedCancel;
+  stream[Symbol.dispose] = reportedCancel;
   stream.on('error', error => {
     const localCancellation = isLocalCancellation(error);
     if (client.reportStreamError) {

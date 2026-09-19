@@ -25,6 +25,23 @@ describe('client', () => {
     client.unmock();
     expect(await client.get('foo1').string()).toBe('bar1');
   });
+
+  it('closes clients when disposed after an error', async () => {
+    const close = vi.spyOn(Etcd3.prototype, 'close');
+    const error = new Error('operation failed');
+
+    try {
+      expect(() => {
+        using disposableClient = new Etcd3(getOptions());
+        void disposableClient;
+        throw error;
+      }).toThrow(error);
+
+      expect(close).toHaveBeenCalledOnce();
+    } finally {
+      close.mockRestore();
+    }
+  });
 });
 
 describe('endpoint management', () => {
