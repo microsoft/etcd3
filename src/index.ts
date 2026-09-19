@@ -13,6 +13,8 @@ export * from './builder.js';
 export * from './errors.js';
 export * from './lease.js';
 export * from './lock.js';
+export { Mutex, MutexGuard } from './mutex.js';
+export type { IMutexAcquireOptions } from './mutex.js';
 export * from './namespace.js';
 export * from './options.js';
 export * from './range.js';

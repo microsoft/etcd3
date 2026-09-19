@@ -3,11 +3,9 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { ComparatorBuilder, PutBuilder } from './builder.js';
 import { ConnectionPool } from './connection-pool.js';
 import { EtcdLockFailedError } from './errors.js';
-import { Lease } from './lease.js';
-import * as RPC from './rpc.js';
+import { MutexEngine, MutexGuard } from './mutex.js';
 import { NSApplicator } from './util.js';
 
 /**
@@ -37,7 +35,10 @@ import { NSApplicator } from './util.js';
  */
 export class Lock {
   private leaseTTL = 30;
-  private lease: Lease | null = null;
+  private guard: MutexGuard | null = null;
+  private acquiredLeaseID: string | null = null;
+  private pendingAcquisition: Promise<{ guard: MutexGuard; leaseID: string }> | null = null;
+  private pendingLeaseID: Promise<string> | null = null;
   private callOptions: grpc.CallOptions | undefined;
 
   constructor(
@@ -51,7 +52,7 @@ export class Lock {
    * to 30 seconds.
    */
   public ttl(seconds: number): this {
-    if (this.lease) {
+    if (this.guard || this.pendingAcquisition) {
       throw new Error('Cannot set a lock TTL after acquiring the lock');
     }
 
@@ -71,47 +72,43 @@ export class Lock {
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
   public async acquire(): Promise<this> {
-    if (this.lease) {
+    if (this.guard || this.pendingAcquisition) {
       throw new EtcdLockFailedError(
         `Failed to acquire a lock on ${this.key}: lock is already acquired`,
       );
     }
 
-    const lease = (this.lease = new Lease(
+    let resolveLeaseID!: (leaseID: string) => void;
+    let rejectLeaseID!: (error: unknown) => void;
+    const pendingLeaseID = new Promise<string>((resolve, reject) => {
+      resolveLeaseID = resolve;
+      rejectLeaseID = reject;
+    });
+    // leaseId() may never be called, but a failed grant must not become an
+    // unhandled rejection.
+    void pendingLeaseID.catch(() => undefined);
+
+    const pending = new MutexEngine(
       this.pool,
       this.namespace,
+      this.key,
       this.leaseTTL,
       this.callOptions,
-    ));
-    const kv = new RPC.KVClient(this.pool);
+    ).acquireImmediate(resolveLeaseID, rejectLeaseID);
+    this.pendingAcquisition = pending;
+    this.pendingLeaseID = pendingLeaseID;
 
-    let leaseID: string;
     try {
-      leaseID = await lease.grant();
-    } catch (error) {
-      this.lease = null;
-      throw error;
-    }
-
-    let res: RPC.ITxnResponse;
-    try {
-      res = await new ComparatorBuilder(kv, this.namespace)
-        .and(this.key, 'Create', '==', 0)
-        .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
-        .options(this.callOptions)
-        .commit();
-    } catch (error) {
-      return this.cleanupFailedAcquire(lease, error);
-    }
-
-    if (res.succeeded) {
+      const acquired = await pending;
+      this.guard = acquired.guard;
+      this.acquiredLeaseID = acquired.leaseID;
       return this;
+    } finally {
+      if (this.pendingAcquisition === pending) {
+        this.pendingAcquisition = null;
+        this.pendingLeaseID = null;
+      }
     }
-
-    return this.cleanupFailedAcquire(
-      lease,
-      new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`),
-    );
   }
 
   /**
@@ -119,21 +116,26 @@ export class Lock {
    * the lock has not been acquired.
    */
   public leaseId(): Promise<string | null> {
-    return this.lease ? this.lease.grant() : Promise.resolve(null);
+    if (this.acquiredLeaseID) {
+      return Promise.resolve(this.acquiredLeaseID);
+    }
+
+    return this.pendingLeaseID ?? Promise.resolve(null);
   }
 
   /**
    * Release frees the lock.
    */
   public release(): Promise<void> {
-    const lease = this.lease;
-    if (!lease) {
+    const guard = this.guard;
+    if (!guard) {
       throw new Error('Attempted to release a lock which was not acquired');
     }
 
-    return lease.revoke().then(() => {
-      if (this.lease === lease) {
-        this.lease = null;
+    return guard.unlock().then(() => {
+      if (this.guard === guard) {
+        this.guard = null;
+        this.acquiredLeaseID = null;
       }
     });
   }
@@ -150,22 +152,5 @@ export class Lock {
     } finally {
       await this.release();
     }
-  }
-
-  private async cleanupFailedAcquire(lease: Lease, error: unknown): Promise<never> {
-    try {
-      await lease.revoke();
-    } catch (cleanupError) {
-      throw new AggregateError(
-        [error, cleanupError],
-        'Failed to acquire a lock and release its lease',
-      );
-    }
-
-    if (this.lease === lease) {
-      this.lease = null;
-    }
-
-    throw error;
   }
 }

@@ -166,4 +166,40 @@ describe('lock()', () => {
     expect((await client.get('resource').exec()).kvs[0].lease).toBe(leaseId);
     await lock.release();
   });
+
+  it('exposes its granted lease ID while the owner transaction is pending', async () => {
+    const transactionError = new Error('transaction failed after observing lease');
+    let rejectTransaction!: (error: Error) => void;
+    const transaction = new Promise<never>((_, reject) => {
+      rejectTransaction = reject;
+    });
+    const exec = vi.fn((service: string, method: string) => {
+      if (service === 'Lease' && method === 'leaseGrant') {
+        return Promise.resolve({ ID: 'pending-lease', TTL: '30' });
+      }
+      if (service === 'KV' && method === 'txn') {
+        return transaction;
+      }
+      if (service === 'Lease' && method === 'leaseRevoke') {
+        return Promise.resolve({});
+      }
+      throw new Error(`Unexpected call: ${service}.${method}`);
+    });
+    client.mock({ exec: exec as any });
+
+    try {
+      const lock = client.lock('pending-resource');
+      const acquisition = lock.acquire();
+      await expect(lock.leaseId()).resolves.toBe('pending-lease');
+      expect(exec.mock.calls.some(([service, method]) => service === 'KV' && method === 'txn')).toBe(
+        true,
+      );
+
+      rejectTransaction(transactionError);
+      await expect(acquisition).rejects.toBe(transactionError);
+      await expect(lock.leaseId()).resolves.toBeNull();
+    } finally {
+      client.unmock();
+    }
+  });
 });
