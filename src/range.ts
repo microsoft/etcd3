@@ -48,7 +48,7 @@ export class Range {
    * Converts a rangable into a qualified Range.
    */
   public static from(v: Rangable): Range {
-    if (typeof v === 'string' || v instanceof Buffer) {
+    if (typeof v === 'string' || Buffer.isBuffer(v)) {
       return new Range(toBuffer(v));
     }
 
