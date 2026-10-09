@@ -133,6 +133,10 @@ export class Proxy {
 
     let ended = false;
     const end = (err?: Error) => {
+      if (ended) {
+        return;
+      }
+
       ended = true;
       if (err instanceof Error) {
         throw err;

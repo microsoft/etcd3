@@ -118,11 +118,10 @@ describe('watch()', () => {
       const watcher = await proxiedClient.watch().key('foo1').create();
       proxy.suspend();
       await onceEvent(watcher, 'disconnected');
-      const actualRevision = Number(watcher.request.start_revision);
       watcher.request.start_revision = 999999;
       proxy.unsuspend();
-      await onceEvent(watcher, 'connected');
-      expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+      const response = await onceEvent(watcher, 'connected');
+      expect(Number(watcher.request.start_revision)).to.equal(Number(response.header.revision) + 1);
 
       await watcher.cancel();
       proxiedClient.close();
