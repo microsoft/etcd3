@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Etcd3 } from '../index.js';
-import { createTestClientAndKeys, tearDownTestClient } from './util.js';
+import { createTestClientAndKeys, tearDownTestClient, isAtLeastVersion } from './util.js';
 
 describe('crud', () => {
   let client: Etcd3;
@@ -94,12 +94,16 @@ describe('crud', () => {
     });
 
     describe('put()', () => {
-      it('allows touching key revisions', async () => {
-        const original = (await client.get('foo1').exec()).kvs[0].mod_revision;
-        await client.put('foo1').touch();
-        const updated = (await client.get('foo1').exec()).kvs[0].mod_revision;
-        expect(Number(updated)).toBeGreaterThan(Number(original));
-      });
+      it.skipIf(!isAtLeastVersion('3.2.0'))(
+        'allows touching key revisions without changing values',
+        async () => {
+          const original = (await client.get('foo1').exec()).kvs[0].mod_revision;
+          await client.put('foo1').touch();
+          const updated = (await client.get('foo1').exec()).kvs[0].mod_revision;
+          expect(Number(updated)).toBeGreaterThan(Number(original));
+          expect(await client.get('foo1').string()).toBe('bar1');
+        },
+      );
 
       it('updates key values', async () => {
         await client.put('foo1').value('updated');

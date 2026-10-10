@@ -566,7 +566,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
 
   /**
    * Touch updates the key's revision without changing its value. This is
-   * equivalent to the etcd 'ignore value' flag.
+   * equivalent to the etcd 'ignore value' flag and requires etcd 3.2 or newer.
    */
   public touch(): Promise<RPC.IPutResponse> {
     this.request.value = undefined;

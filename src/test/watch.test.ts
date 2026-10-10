@@ -90,20 +90,16 @@ function watchResponse(overrides: Partial<RPC.IWatchResponse> = {}): RPC.IWatchR
 
 async function createFakeWatchManager() {
   const stream = new FakeWatchStream();
+  const watch = vi.fn(() => Promise.resolve(stream));
   const backoff = {
     duration: 0,
     next: () => backoff,
   };
   const manager = new WatchManager(
-    {
-      watch: () =>
-        Promise.resolve(
-          stream as unknown as RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
-        ),
-    } as unknown as RPC.WatchClient,
+    { watch } as unknown as RPC.WatchClient,
     { next: () => backoff } as any,
   );
-  return { manager, stream };
+  return { manager, stream, watch };
 }
 
 async function waitForFirstWatchRequest(stream: FakeWatchStream) {
@@ -216,6 +212,41 @@ describe('WatchManager protocol handling', () => {
 
     await expect(canceled).resolves.toBeUndefined();
     expect(stream.cancelCount).toBe(1);
+  });
+
+  it('reopens the stream for existing and queued watchers after a creation rejection', async () => {
+    const { manager, stream, watch } = await createFakeWatchManager();
+    const existing = new Watcher(manager, NSApplicator.default, { key: Buffer.from('existing') });
+    await waitForFirstWatchRequest(stream);
+    stream.emitData(watchResponse({ created: true }));
+
+    const rejected = new Watcher(manager, NSApplicator.default, { key: Buffer.from('rejected') });
+    const errors = vi.fn();
+    rejected.on('error', errors);
+    const queued = new Watcher(manager, NSApplicator.default, { key: Buffer.from('queued') });
+    const connected = onceEvent(queued, 'connected', 'error');
+    const nextStream = new FakeWatchStream();
+    watch.mockResolvedValueOnce(nextStream);
+
+    stream.emitData(
+      watchResponse({ created: true, canceled: true, watch_id: '-1', cancel_reason: 'denied' }),
+    );
+
+    expect(errors).toHaveBeenCalledOnce();
+    expect(rejected.id).toBeNull();
+    expect(stream.cancelCount).toBe(1);
+    expect(stream.writes).toHaveLength(2);
+    stream.emitError(new Error('watch stream canceled'));
+
+    await waitForFirstWatchRequest(nextStream);
+    expect(watch).toHaveBeenCalledTimes(2);
+    expect(existing.id).toBeNull();
+    expect(nextStream.writes[0]).toEqual({ create_request: existing.request });
+    nextStream.emitData(watchResponse({ created: true }));
+    expect(nextStream.writes[1]).toEqual({ create_request: queued.request });
+    nextStream.emitData(watchResponse({ created: true, watch_id: '2' }));
+    await connected;
+    expect(queued.id).toBe('2');
   });
 
   it('emits the complete watch request while connecting', async () => {
@@ -628,11 +659,12 @@ describe('watch()', () => {
       await proxy.deactivate();
     });
 
-    describe('emits an error if a watcher is cancelled upon creation (#114)', () => {
-      beforeEach(async () => await setupAuth(client));
-      afterEach(async () => await removeAuth(client));
+    describe.skipIf(!isAtLeastVersion('3.2.0'))(
+      'emits an error if a watcher is cancelled upon creation (#114)',
+      () => {
+        beforeEach(async () => await setupAuth(client));
+        afterEach(async () => await removeAuth(client));
 
-      if (isAtLeastVersion('3.2.0')) {
         it('is fixed', async () => {
           const authedClient = new Etcd3(
             getOptions({
@@ -692,8 +724,8 @@ describe('watch()', () => {
             authedClient.close();
           }
         });
-      }
-    });
+      },
+    );
   });
 
   describe('subscription', () => {

@@ -6,7 +6,7 @@ import { Isolation } from '../stm.js';
 import type { SoftwareTransaction } from '../stm.js';
 import { Etcd3, STMConflictError } from '../index.js';
 import type { Namespace } from '../index.js';
-import { createTestClient, createTestKeys, tearDownTestClient } from './util.js';
+import { createTestClient, createTestKeys, tearDownTestClient, isAtLeastVersion } from './util.js';
 
 describe('stm()', () => {
   [
@@ -231,22 +231,25 @@ describe('stm()', () => {
           expect(await ns.get('foo1')).toBeNull();
         });
 
-        it('touches the value committed before it reaches the server', async () => {
-          const txn = vi.spyOn(ns.kv, 'txn');
-          try {
-            await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
-              await tx.put('foo1').touch();
-              await ns.put('foo1').value('concurrent');
-            });
+        it.skipIf(!isAtLeastVersion('3.2.0'))(
+          'touches the value committed before it reaches the server',
+          async () => {
+            const txn = vi.spyOn(ns.kv, 'txn');
+            try {
+              await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {
+                await tx.put('foo1').touch();
+                await ns.put('foo1').value('concurrent');
+              });
 
-            const put = txn.mock.lastCall?.[0].success?.find(op => op.request_put);
-            expect(put?.request_put).toMatchObject({ ignore_value: true, value: undefined });
-          } finally {
-            txn.mockRestore();
-          }
+              const put = txn.mock.lastCall?.[0].success?.find(op => op.request_put);
+              expect(put?.request_put).toMatchObject({ ignore_value: true, value: undefined });
+            } finally {
+              txn.mockRestore();
+            }
 
-          expect(await ns.get('foo1')).toBe('concurrent');
-        });
+            expect(await ns.get('foo1')).toBe('concurrent');
+          },
+        );
 
         it('preserves a preceding local put when touching', async () => {
           await ns.stm({ isolation: Isolation.ReadCommitted }).transact(async tx => {

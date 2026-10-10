@@ -9,6 +9,8 @@
 - **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
 - **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
 - **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **fix:** reopen watch streams after a rejected creation so existing and queued watchers
+  recover on older etcd servers.
 - **feat:** add explicit resource management for clients, streams, watches, leases, locks, and
   elections. `Etcd3` and low-level response streams support synchronous `using`; resources whose
   cleanup waits for etcd support `await using`:

@@ -81,8 +81,8 @@ class AttachQueue {
     if (!res.canceled) {
       (watcher as { id: string }).id = res.watch_id;
       emitSafely(watcher, 'connected', res);
+      this.readQueue();
     }
-    this.readQueue();
     return watcher;
   }
 
@@ -393,6 +393,9 @@ export class WatchManager {
       } finally {
         if (this.watchers.length === 0) {
           this.destroyStream();
+        } else {
+          // Older etcd servers stop reading the stream after rejecting a creation.
+          this.getStream().cancel();
         }
       }
     }
