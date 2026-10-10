@@ -3,9 +3,9 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { Range } from './range';
-import { AuthClient, Permission } from './rpc';
-import { toBuffer } from './util';
+import { Range } from './range.js';
+import { AuthClient, Permission } from './rpc.js';
+import { toBuffer } from './util.js';
 
 /**
  * IPermission can be used to grant a certain role in etcd access to a certain
@@ -65,16 +65,19 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
+      return Promise.all(req.map(r => this.revoke(r, options))).then(() => this);
     }
 
     const range = getRange(req);
     return this.client
-      .roleRevokePermission({
-        role: this.name,
-        key: range.start,
-        range_end: range.end,
-      })
+      .roleRevokePermission(
+        {
+          role: this.name,
+          key: range.start,
+          range_end: range.end,
+        },
+        options,
+      )
       .then(() => this);
   }
 
@@ -86,7 +89,7 @@ export class Role {
     options?: grpc.CallOptions,
   ): Promise<this> {
     if (req instanceof Array) {
-      return Promise.all(req.map(r => this.grant(r))).then(() => this);
+      return Promise.all(req.map(r => this.grant(r, options))).then(() => this);
     }
 
     const range = getRange(req);

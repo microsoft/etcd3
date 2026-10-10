@@ -1,17 +1,28 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util';
+import { emptyKey, endRangeForPrefix, toBuffer, zeroKey } from './util.js';
 
-function compare(a: Buffer, b: Buffer) {
-  if (a.length === 0) {
-    return b.length === 0 ? 0 : 1;
-  }
-  if (b.length === 0) {
-    return -1;
+/**
+ * Tests a key using etcd's range request conventions:
+ * - an empty end is a point range;
+ * - a zero-byte end is unbounded;
+ * - all other ends are exclusive.
+ */
+function rangeIncludes(start: Buffer, end: Buffer, value: Buffer) {
+  if (end.length === 0) {
+    return start.equals(value);
   }
 
-  return a.compare(b);
+  return start.compare(value) <= 0 && (end.equals(zeroKey) || value.compare(end) < 0);
+}
+
+function rangeIsPoint(range: Range) {
+  return range.end.length === 0;
+}
+
+function rangeIsBounded(range: Range) {
+  return range.end.length !== 0 && !range.end.equals(zeroKey);
 }
 
 // Rangable is a type that can be converted into an etcd range.
@@ -22,8 +33,14 @@ export type Rangable =
   | { start: string | Buffer; end: string | Buffer }
   | { prefix: string | Buffer };
 
-function rangableIsPrefix(r: Rangable): r is { prefix: string | Buffer } {
-  return r.hasOwnProperty('prefix');
+function rangableIsPrefix(r: unknown): r is { prefix: string | Buffer } {
+  return typeof r === 'object' && r !== null && Object.hasOwn(r, 'prefix');
+}
+
+function rangableHasEndpoints(r: unknown): r is { start: string | Buffer; end: string | Buffer } {
+  return (
+    typeof r === 'object' && r !== null && Object.hasOwn(r, 'start') && Object.hasOwn(r, 'end')
+  );
 }
 
 /**
@@ -48,7 +65,7 @@ export class Range {
    * Converts a rangable into a qualified Range.
    */
   public static from(v: Rangable): Range {
-    if (typeof v === 'string' || v instanceof Buffer) {
+    if (typeof v === 'string' || Buffer.isBuffer(v)) {
       return new Range(toBuffer(v));
     }
 
@@ -60,7 +77,11 @@ export class Range {
       return Range.prefix(v.prefix);
     }
 
-    return new Range(v.start, v.end);
+    if (rangableHasEndpoints(v)) {
+      return new Range(v.start, v.end);
+    }
+
+    throw new TypeError('Invalid range');
   }
   public readonly start: Buffer;
   public readonly end: Buffer;
@@ -74,8 +95,7 @@ export class Range {
    * Returns whether the byte range includes the provided value.
    */
   public includes(value: string | Buffer) {
-    value = toBuffer(value);
-    return compare(this.start, value) <= 0 && compare(this.end, value) > 0;
+    return rangeIncludes(this.start, this.end, toBuffer(value));
   }
 
   /**
@@ -85,15 +105,31 @@ export class Range {
    *  0 if they overlap
    */
   public compare(other: Range): number {
-    const ivbCmpBegin = compare(this.start, other.start);
-    const ivbCmpEnd = compare(this.start, other.end);
-    const iveCmpBegin = compare(this.end, other.start);
+    if (rangeIsPoint(this)) {
+      if (rangeIsPoint(other)) {
+        return this.start.compare(other.start);
+      }
 
-    if (ivbCmpBegin < 0 && iveCmpBegin <= 0) {
+      if (other.includes(this.start)) {
+        return 0;
+      }
+
+      return this.start.compare(other.start) < 0 ? -1 : 1;
+    }
+
+    if (rangeIsPoint(other)) {
+      if (this.includes(other.start)) {
+        return 0;
+      }
+
+      return this.start.compare(other.start) > 0 ? 1 : -1;
+    }
+
+    if (rangeIsBounded(this) && this.end.compare(other.start) <= 0) {
       return -1;
     }
 
-    if (ivbCmpEnd >= 0) {
+    if (rangeIsBounded(other) && other.end.compare(this.start) <= 0) {
       return 1;
     }
 

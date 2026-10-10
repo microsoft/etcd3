@@ -1,25 +1,29 @@
-'use strict';
-
 /**
  * This script parses downloaded protobuf files to output TypeScript typings
  * and methods to call declared the declared types.
  *
  * Usage:
  *
- *  > node bin/generate-methods proto/rpc.proto > src/rpc.ts
+ *  > node bin/generate-methods [proto/rpc.proto] [output-file]
  *
  * protobufjs does have a TypeScript generator but its output isn't very useful
  * for grpc, much less this client. Rather than reprocessing it, let's just
  * create the output ourselves since it's pretty simple (~100 lines of code).
  */
 
-const prettier = require('prettier');
-const pbjs = require('protobufjs');
-const fs = require('fs');
-const _ = require('lodash');
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import pbjs from 'protobufjs';
+import prettier from 'prettier';
 
-const contents = fs.readFileSync(process.argv[2]).toString();
+const inputPath = process.argv[2] ?? fileURLToPath(new URL('../proto/rpc.proto', import.meta.url));
+const outputPath = process.argv[3] ?? fileURLToPath(new URL('../src/rpc.ts', import.meta.url));
+const packageJson = JSON.parse(
+  fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+);
+const contents = fs.readFileSync(inputPath).toString();
 const lines = contents.split('\n');
+const rootPackageName = contents.match(/^\s*package\s+([^.;\s]+)/m)?.[1];
 
 const singleLineCommentRe = /\/\/\s*(.+)$/;
 const singleLineCommentStandaloneRe = /^\s*\/\/\s*/;
@@ -28,6 +32,7 @@ const indentation = '  ';
 const enums = [];
 const services = {};
 const templates = {};
+const templateTagRe = /<%=([\s\S]+?)%>|<%([\s\S]+?)%>/g;
 
 const pbTypeAliases = {
   bool: 'boolean',
@@ -77,25 +82,56 @@ function emit(string) {
   return emit;
 }
 
-function writeOut() {
+async function writeOut() {
   fs.writeFileSync(
-    `${__dirname}/../src/rpc.ts`,
-    prettier.format(result, {
-      ...require('../package.json').prettier,
+    outputPath,
+    await prettier.format(result, {
+      ...packageJson.prettier,
       parser: 'typescript',
     }),
   );
 }
 
+function compileTemplate(contents) {
+  let body = '';
+  let cursor = 0;
+  let interpolationIndex = 0;
+
+  for (const match of contents.matchAll(templateTagRe)) {
+    body += `output += ${JSON.stringify(contents.slice(cursor, match.index))};\n`;
+    if (match[1] !== undefined) {
+      const variable = `value${interpolationIndex++}`;
+      body += `const ${variable} = (${match[1]});\n`;
+      body += `output += ${variable} == null ? '' : ${variable};\n`;
+    } else {
+      body += `${match[2]}\n`;
+    }
+    cursor = match.index + match[0].length;
+  }
+
+  body += `output += ${JSON.stringify(contents.slice(cursor))};\n`;
+  return new Function(
+    'context',
+    `let output = '';\nwith (context) {\n${body}}\nreturn output;`,
+  );
+}
+
+function lowerFirst(value) {
+  return value ? value[0].toLowerCase() + value.slice(1) : '';
+}
+
 function template(name, params) {
   if (!templates[name]) {
-    templates[name] = _.template(fs.readFileSync(`${__dirname}/template/${name}.tmpl`, 'utf8'));
+    templates[name] = compileTemplate(
+      fs.readFileSync(new URL(`template/${name}.tmpl`, import.meta.url), 'utf8'),
+    );
   }
 
   params = Object.assign(params || {}, {
     getCommentPrefixing,
     getLineContaining,
     formatType,
+    lowerFirst,
     aliases: pbTypeAliases,
   });
 
@@ -185,7 +221,7 @@ function generateMethodCalls(node, name) {
   const service = (services[name] = { cls: `${name}Client`, methods: new Map() });
   template('class-header', { name });
 
-  _.forOwn(node.methods, (method, mname) => {
+  for (const [mname, method] of Object.entries(node.methods)) {
     const req = messages.find(method.requestType);
     const res = messages.find(method.responseType);
 
@@ -211,7 +247,7 @@ function generateMethodCalls(node, name) {
     } else {
       template('basic-method', params);
     }
-  });
+  }
 
   emit('}\n\n');
 }
@@ -238,16 +274,29 @@ function generateEnum(node, name) {
 }
 
 function walk(ast, iterator, path = []) {
-  _.forOwn(ast, (node, name) => {
+  const entries = Object.entries(ast);
+  if (path.length === 0) {
+    entries.sort(([first], [second]) => {
+      if (first === rootPackageName) {
+        return -1;
+      }
+      if (second === rootPackageName) {
+        return 1;
+      }
+      return first < second ? -1 : first > second ? 1 : 0;
+    });
+  }
+
+  for (const [name, node] of entries) {
     if (!node) {
-      return;
+      continue;
     }
     if (node.nested) {
       walk(node.nested, iterator, path.concat(name));
     }
 
     iterator(node, name, path);
-  });
+  }
 }
 
 function markResponsesFor(message, seen = []) {
@@ -258,8 +307,7 @@ function markResponsesFor(message, seen = []) {
 
   message.response = true;
 
-  _(message.node.fields)
-    .values()
+  Object.values(message.node.fields)
     .map(f => messages.find(f.type))
     .filter(Boolean)
     .forEach(m => markResponsesFor(m, seen.concat(name)));
@@ -273,7 +321,7 @@ function prepareForGeneration(ast) {
 
     if (node.fields) {
       messages.add(name, {
-        empty: _.isEmpty(node.fields),
+        empty: Object.keys(node.fields).length === 0,
         node,
         response: false,
       });
@@ -282,8 +330,7 @@ function prepareForGeneration(ast) {
 
   walk(ast, (node, name) => {
     if (node.methods) {
-      _(node.methods)
-        .values()
+      Object.values(node.methods)
         .map(m => messages.find(m.responseType))
         .filter(Boolean)
         .forEach(m => markResponsesFor(m));
@@ -309,11 +356,14 @@ function codeGen(ast) {
 }
 
 new pbjs.Root()
-  .load(process.argv[2], { keepCase: true })
+  .load(inputPath, { keepCase: true })
   .then(ast => {
     prepareForGeneration(ast.nested);
     template('rpc-prefix');
     codeGen(ast.nested);
-    writeOut();
+    return writeOut();
   })
-  .catch(err => console.error(err.stack));
+  .catch(err => {
+    console.error(err.stack);
+    process.exitCode = 1;
+  });

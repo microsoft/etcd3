@@ -2,22 +2,22 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import BigNumber from 'bignumber.js';
-import { EventEmitter } from 'events';
-import { ClientRuntimeError, NotCampaigningError } from './errors';
-import { Lease } from './lease';
-import { Namespace } from './namespace';
-import { IKeyValue } from './rpc';
-import { IDeferred, getDeferred, toBuffer } from './util';
+import { EventEmitter } from 'node:events';
+import { ClientRuntimeError, NotCampaigningError } from './errors.js';
+import { Lease } from './lease.js';
+import { Namespace } from './namespace.js';
+import type { IKeyValue } from './rpc.js';
+import { getDeferred, toBuffer } from './util.js';
+import type { IDeferred } from './util.js';
 
 const UnsetCurrent = Symbol('unset');
 
 /**
- * Object returned from election.observer() that exposees information about
+ * Object returned from election.observer() that exposes information about
  * the current election.
  * @noInheritDoc
  */
-export class ElectionObserver extends EventEmitter {
+export class ElectionObserver extends EventEmitter implements AsyncDisposable {
   /**
    * Gets whether the election has any leader.
    */
@@ -70,6 +70,11 @@ export class ElectionObserver extends EventEmitter {
     this.running = false;
     this.disposer?.();
     await this.runLoop;
+  }
+
+  /** Cancels this observer when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.cancel();
   }
 
   /**
@@ -129,19 +134,17 @@ export class ElectionObserver extends EventEmitter {
 
         await new Promise<void>((resolve, reject) => {
           watcher.on('data', data => {
-            let done = false;
             for (const event of data.events) {
               if (event.type === 'Put') {
                 leader = event.kv;
                 revision = event.kv.mod_revision;
-                done = true;
+                resolve();
+                break;
               }
-            }
-            if (done) {
-              resolve();
             }
           });
           watcher.on('error', reject);
+          watcher.on('disconnected', err => this.emit('disconnected', err));
           this.disposer = resolve;
         }).finally(() => watcher.cancel());
 
@@ -158,14 +161,15 @@ export class ElectionObserver extends EventEmitter {
 
       const watcher = this.namespace
         .watch()
-        .startRevision(new BigNumber(revision).plus(1).toString())
+        .startRevision((BigInt(revision) + 1n).toString())
         .key(leader.key)
         .watcher();
 
       await new Promise<void>((resolve, reject) => {
-        watcher!.on('put', kv => this.setLeader(kv));
-        watcher!.on('delete', () => resolve());
-        watcher!.on('error', reject);
+        watcher.on('put', kv => this.setLeader(kv));
+        watcher.on('delete', () => resolve());
+        watcher.on('error', reject);
+        watcher.on('disconnected', err => this.emit('disconnected', err));
         this.disposer = () => {
           resolve();
           return watcher.cancel();
@@ -182,11 +186,14 @@ const ResignedCampaign = Symbol('ResignedCampaign');
  * method for an example.
  * @noInheritDoc
  */
-export class Campaign extends EventEmitter {
+export class Campaign extends EventEmitter implements AsyncDisposable {
   private lease: Lease;
   private keyRevision?: string | typeof ResignedCampaign;
   private value: Buffer;
   private pendingProclaimation?: IDeferred<void>;
+  private terminalError?: Error;
+  private elected = false;
+  private cancelWaiting?: () => void;
 
   constructor(
     private readonly namespace: Namespace,
@@ -196,11 +203,11 @@ export class Campaign extends EventEmitter {
     super();
     this.value = toBuffer(value);
     this.lease = this.namespace.lease(ttl);
-    this.lease.on('lost', err => this.emit('error', err));
+    this.lease.on('lost', error => this.fail(error));
     this.start().catch(error => {
-      this.resign().catch(() => undefined);
-      this.pendingProclaimation?.reject(error);
-      this.emit('error', error);
+      if (!this.hasResigned()) {
+        this.fail(error, true);
+      }
     });
   }
 
@@ -229,9 +236,29 @@ export class Campaign extends EventEmitter {
    * If an error is emitted, the promise is rejected.
    */
   public wait() {
+    if (this.terminalError) {
+      return Promise.reject(this.terminalError);
+    }
+    if (this.elected) {
+      return Promise.resolve(this);
+    }
+
     return new Promise<this>((resolve, reject) => {
-      this.on('elected', () => resolve(this));
-      this.on('error', reject);
+      const cleanup = () => {
+        this.removeListener('elected', elected);
+        this.removeListener('error', failed);
+      };
+      const elected = () => {
+        cleanup();
+        resolve(this);
+      };
+      const failed = (error: Error) => {
+        cleanup();
+        reject(error);
+      };
+
+      this.on('elected', elected);
+      this.on('error', failed);
     });
   }
 
@@ -272,8 +299,15 @@ export class Campaign extends EventEmitter {
   public async resign() {
     if (this.keyRevision !== ResignedCampaign) {
       this.keyRevision = ResignedCampaign;
+      this.rejectPendingProclaimation(new NotCampaigningError());
+      this.cancelWaiting?.();
       await this.lease.revoke();
     }
+  }
+
+  /** Resigns this campaign when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.resign();
   }
 
   private async start() {
@@ -290,24 +324,33 @@ export class Campaign extends EventEmitter {
       return; // torn down in the meantime
     }
 
-    this.keyRevision = result.header.revision;
+    let campaignRevision = result.header.revision;
+    this.keyRevision = campaignRevision;
 
     if (result.succeeded) {
       if (this.pendingProclaimation) {
         await this.proclaimInner(this.value, this.keyRevision);
-        this.pendingProclaimation.resolve();
+        this.resolvePendingProclaimation();
       }
     } else {
       const kv = result.responses[0].response_range.kvs[0];
-      this.keyRevision = kv.create_revision;
+      campaignRevision = kv.create_revision;
+      this.keyRevision = campaignRevision;
       if (!kv.value.equals(this.value)) {
         await this.proclaimInner(this.value, this.keyRevision);
-        this.pendingProclaimation?.resolve();
       }
+      this.resolvePendingProclaimation();
     }
 
-    await this.waitForElected(result.header.revision);
-    this.emit('elected');
+    await this.waitForElected(campaignRevision);
+    if (!this.hasResigned()) {
+      this.elected = true;
+      this.emit('elected');
+    }
+  }
+
+  private hasResigned() {
+    return this.keyRevision === ResignedCampaign;
   }
 
   private async proclaimInner(buf: Buffer, keyRevision: string | undefined) {
@@ -322,6 +365,11 @@ export class Campaign extends EventEmitter {
       .if(leaseId, 'Create', '==', keyRevision)
       .then(this.namespace.put(leaseId).value(buf).lease(leaseId))
       .commit();
+
+    if (this.hasResigned()) {
+      throw new NotCampaigningError();
+    }
+
     this.value = buf;
 
     if (!r.succeeded) {
@@ -330,10 +378,37 @@ export class Campaign extends EventEmitter {
     }
   }
 
+  private fail(error: Error, revoke = false) {
+    if (this.hasResigned() || this.terminalError) {
+      return;
+    }
+
+    this.terminalError = error;
+    this.keyRevision = ResignedCampaign;
+    this.rejectPendingProclaimation(error);
+    this.cancelWaiting?.();
+    if (revoke) {
+      this.lease.revoke().catch(() => undefined);
+    }
+    this.emit('error', error);
+  }
+
+  private resolvePendingProclaimation() {
+    const pending = this.pendingProclaimation;
+    this.pendingProclaimation = undefined;
+    pending?.resolve();
+  }
+
+  private rejectPendingProclaimation(error: Error) {
+    const pending = this.pendingProclaimation;
+    this.pendingProclaimation = undefined;
+    pending?.reject(error);
+  }
+
   private async waitForElected(revision: string) {
     while (this.keyRevision !== ResignedCampaign) {
       // find last created before this one
-      const lastRevision = new BigNumber(revision).minus(1).toString();
+      const lastRevision = (BigInt(revision) - 1n).toString();
       const result = await this.namespace
         .getAll()
         .maxCreateRevision(lastRevision)
@@ -345,13 +420,23 @@ export class Campaign extends EventEmitter {
         return;
       }
 
-      this.emit('_isWaiting'); // internal event used to sync unit tests
+      const cancelled = getDeferred<void>();
+      const cancel = () => cancelled.resolve();
+      this.cancelWaiting = cancel;
+      try {
+        this.emit('_isWaiting'); // internal event used to sync unit tests
 
-      // wait for all it to be deleted for us to become the leader
-      await waitForDeletes(
-        this.namespace,
-        result.kvs.map(k => k.key),
-      );
+        // wait for all it to be deleted for us to become the leader
+        await waitForDeletes(
+          this.namespace,
+          result.kvs.map(k => k.key),
+          cancelled.promise,
+        );
+      } finally {
+        if (this.cancelWaiting === cancel) {
+          this.cancelWaiting = undefined;
+        }
+      }
     }
   }
 }
@@ -370,7 +455,7 @@ export class Campaign extends EventEmitter {
  * @example
  *
  * ```js
- * const os = require('os');
+ * import * as os from 'node:os';
  * const client = new Etcd3();
  * const election = client.election('singleton-job');
  *
@@ -475,7 +560,12 @@ export class Election {
   }
 }
 
-async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
+async function waitForDelete(
+  namespace: Namespace,
+  key: Buffer,
+  rev: string,
+  cancelled: Promise<void>,
+) {
   const watcher = await namespace.watch().key(key).startRevision(rev).only('delete').create();
   const deleteOrError = new Promise((resolve, reject) => {
     watcher.once('delete', resolve);
@@ -483,7 +573,7 @@ async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
   });
 
   try {
-    await deleteOrError;
+    await Promise.race([deleteOrError, cancelled]);
   } finally {
     await watcher.cancel();
   }
@@ -492,11 +582,11 @@ async function waitForDelete(namespace: Namespace, key: Buffer, rev: string) {
 /**
  * Returns a function that resolves when all of the given keys are deleted.
  */
-async function waitForDeletes(namespace: Namespace, keys: Buffer[]) {
+async function waitForDeletes(namespace: Namespace, keys: Buffer[], cancelled: Promise<void>) {
   for (const key of keys) {
     const res = await namespace.get(key).exec();
     if (res.kvs.length) {
-      await waitForDelete(namespace, key, res.header.revision);
+      await waitForDelete(namespace, key, res.header.revision, cancelled);
     }
   }
 }

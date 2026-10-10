@@ -7,8 +7,8 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import * as grpc from '@grpc/grpc-js';
-import type { CallOptionsFactory } from './options';
-import { resolveCallOptions } from './util';
+import type { CallOptionsFactory } from './options.js';
+import { resolveCallOptions } from './util.js';
 
 export interface ICallable<T> {
   exec<T>(
@@ -25,10 +25,13 @@ export interface ICallable<T> {
 
   markFailed(resource: T, error: Error): void;
 
+  reportStreamError?(resource: T, error: Error, locallyCancelled: boolean): void;
+
   readonly callOptionsFactory: CallOptionsFactory | undefined;
 }
 
-export interface IResponseStream<T> {
+export interface IResponseStream<T> extends AsyncIterable<T> {
+  cancel(): void;
   on(event: 'data', fn: (item: T) => void): this;
   on(event: 'end', fn: () => void): this;
   on(event: 'status', fn: (status: grpc.StatusObject) => void): this;
@@ -42,3 +45,30 @@ export interface IRequestStream<T> {
 }
 
 export interface IDuplexStream<T, R> extends IRequestStream<T>, IResponseStream<R> {}
+
+function monitorResponseStream<T, R, TStream extends IResponseStream<T>>(
+  client: ICallable<R>,
+  resource: R,
+  stream: TStream,
+): TStream {
+  let locallyCancelled = false;
+  const isLocalCancellation = (error: Error) =>
+    (locallyCancelled && 'code' in error && error.code === grpc.status.CANCELLED) ||
+    (error.name === 'AbortError' && 'code' in error && error.code === 'ABORT_ERR');
+  const cancel = stream.cancel.bind(stream);
+  const reportedCancel = () => {
+    locallyCancelled = true;
+    cancel();
+  };
+  Object.assign(reportedCancel, stream.cancel);
+  stream.cancel = reportedCancel;
+  stream.on('error', error => {
+    const localCancellation = isLocalCancellation(error);
+    if (client.reportStreamError) {
+      client.reportStreamError(resource, error, localCancellation);
+    } else if (!localCancellation) {
+      client.markFailed(resource, error);
+    }
+  });
+  return stream;
+}

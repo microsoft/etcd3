@@ -1,5 +1,5 @@
 export const Services = {
---<% _.forOwn(services, (clientName, serviceName) => { %>
+--<% for (const [serviceName, clientName] of Object.entries(services)) { %>
   <%= serviceName %>: <%= clientName.cls %>,
---<% }) %>
+--<% } %>
 };

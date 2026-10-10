@@ -1,10 +1,12 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Etcd3, Namespace } from '..';
-import { createTestClientAndKeys, tearDownTestClient } from './util';
+import { Etcd3 } from '../index.js';
+import type { Namespace } from '../index.js';
+import { Range } from '../range.js';
+import { createTestClientAndKeys, tearDownTestClient } from './util.js';
 
 describe('namespacing', () => {
   let client: Etcd3;
@@ -18,14 +20,39 @@ describe('namespacing', () => {
   afterEach(async () => await tearDownTestClient(client));
 
   const assertEqualInNamespace = async (key: string, value: string) => {
-    expect(await ns.get(key)).to.equal(value);
-    expect(await client.get(`user1/${key}`)).to.equal(value);
+    expect(await ns.get(key)).toBe(value);
+    expect(await client.get(`user1/${key}`)).toBe(value);
   };
 
   it('puts and gets values in the namespace', async () => {
     await ns.put('foo').value('');
     await assertEqualInNamespace('foo', '');
-    expect(await ns.getAll().strings()).to.deep.equal({ foo: '' });
+    expect(await ns.getAll().strings()).toEqual({ foo: '' });
+  });
+
+  it('unprefixes raw single-key response keys', async () => {
+    await ns.put('foo').value('value');
+
+    expect((await ns.get('foo').exec()).kvs[0]).toMatchObject({
+      key: Buffer.from('foo'),
+      value: Buffer.from('value'),
+    });
+  });
+
+  it('unprefixes previous-value response keys', async () => {
+    await ns.put('put-key').value('old');
+    expect(await ns.put('put-key').value('new').getPrevious()).toMatchObject({
+      key: Buffer.from('put-key'),
+      value: Buffer.from('old'),
+    });
+
+    await ns.put('delete-key').value('old');
+    expect(await ns.delete().key('delete-key').getPrevious()).toMatchObject([
+      {
+        key: Buffer.from('delete-key'),
+        value: Buffer.from('old'),
+      },
+    ]);
   });
 
   it('deletes values in the namespace', async () => {
@@ -33,11 +60,70 @@ describe('namespacing', () => {
     await ns.put('foo2').value('');
 
     await ns.delete().key('foo1');
-    expect(await ns.getAll().strings()).to.deep.equal({ foo2: '' });
+    expect(await ns.getAll().strings()).toEqual({ foo2: '' });
     await ns.delete().all();
 
-    expect(await ns.getAll().strings()).to.deep.equal({});
-    expect(await client.getAll().keys()).to.have.length.greaterThan(0);
+    expect(await ns.getAll().strings()).toEqual({});
+    expect(await client.getAll().keys()).not.toHaveLength(0);
+  });
+
+  it('includes and deletes the logical empty namespace key', async () => {
+    const zeroByteKey = Buffer.from([0]);
+
+    await ns.put('').value('empty');
+    await ns.put('ordinary').value('ordinary');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    const expected = { '': 'empty', ordinary: 'ordinary', '\0': 'zero-byte' };
+    expect(await ns.getAll().strings()).toEqual(expected);
+    expect(await ns.getAll().all().strings()).toEqual(expected);
+    expect(await ns.get(zeroByteKey)).toBe('zero-byte');
+
+    await ns.delete().all();
+
+    expect(await ns.getAll().strings()).toEqual({});
+    expect(await client.get('user1/')).toBeNull();
+    expect(await client.get('user1/ordinary')).toBeNull();
+    expect(await client.get(Buffer.concat([Buffer.from('user1/'), zeroByteKey]))).toBeNull();
+    expect(await client.get('outside')).toBe('outside');
+  });
+
+  it('preserves point ranges and the whole-keyspace sentinel', async () => {
+    const zeroByteKey = Buffer.from([0]);
+    await ns.put('a').value('a');
+    await ns.put('b').value('b');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    expect(await ns.getAll().inRange('a').strings()).toEqual({ a: 'a' });
+    expect(await ns.getAll().inRange(zeroByteKey).strings()).toEqual({ '\0': 'zero-byte' });
+    expect(
+      await ns
+        .getAll()
+        .inRange(Range.prefix(Buffer.alloc(0)))
+        .strings(),
+    ).toEqual({
+      '\0': 'zero-byte',
+      a: 'a',
+      b: 'b',
+    });
+  });
+
+  it('deletes only a namespaced point range', async () => {
+    const zeroByteKey = Buffer.from([0]);
+    await ns.put('a').value('a');
+    await ns.put('b').value('b');
+    await ns.put(zeroByteKey).value('zero-byte');
+    await client.put('outside').value('outside');
+
+    await ns.delete().inRange('a');
+
+    expect(await ns.getAll().strings()).toEqual({ '\0': 'zero-byte', b: 'b' });
+    await ns.delete().inRange(zeroByteKey);
+
+    expect(await ns.getAll().strings()).toEqual({ b: 'b' });
+    expect(await client.get('outside')).toBe('outside');
   });
 
   it('contains leases in the namespace', async () => {
@@ -50,8 +136,8 @@ describe('namespacing', () => {
   it('contains locks in the namespace', async () => {
     const lock = ns.lock('mylock');
     await lock.acquire();
-    expect(await ns.get('mylock')).to.not.be.null;
-    expect(await client.get('user1/mylock')).to.not.be.null;
+    expect(await ns.get('mylock')).not.toBeNull();
+    expect(await client.get('user1/mylock')).not.toBeNull();
     await lock.release();
   });
 

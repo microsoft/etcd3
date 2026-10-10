@@ -1,5 +1,154 @@
 # Changelog
 
+## 2.0.0 (Unreleased)
+
+- **breaking:** Node.js 24 or newer is now required.
+- **breaking:** the package is now ESM-only; CommonJS `require('etcd3')` is no longer supported.
+- **breaking:** remove the deprecated `WatchBuilder.ignore()` method; use `WatchBuilder.only()` to filter watch events.
+- **breaking:** `Watcher.lastRevision()` now returns a lossless `bigint | null`.
+- **breaking:** modernize the TypeScript toolchain for strict mode, ES2024, and Node.js 24 types.
+- **feat:** use native `bigint` for etcd's 64-bit values and remove the `bignumber.js` dependency.
+- **feat:** add async-iterable range streaming through `MultiRangeBuilder.stream()`.
+- **fix:** reopen watch streams after a rejected creation so existing and queued watchers
+  recover on older etcd servers.
+- **feat:** add explicit resource management for clients, streams, watches, leases, locks, and
+  elections. `Etcd3` and low-level response streams support synchronous `using`; resources whose
+  cleanup waits for etcd support `await using`:
+
+  ```ts
+  using client = new Etcd3();
+  await using lease = client.lease(30);
+  await lease.put('workers/current').value(workerId);
+
+  await using watcher = await client.watch().prefix('jobs/').create();
+  watcher.on('put', job => processJob(job));
+  ```
+
+  `await using` also cancels election observers, resigns campaigns, and releases acquired legacy
+  locks. Lease disposal actively revokes the lease rather than waiting for its TTL to expire.
+
+- **feat:** add fair, queued distributed mutexes with fencing tokens, ownership-loss signals,
+  cancelable acquisition, and async-disposable guards.
+
+  Use `await using` to release a mutex automatically when control leaves the scope, including when
+  the protected operation throws:
+
+  ```ts
+  await using guard = await client.mutex(`order:${orderId}`).ttl(15).lock();
+  await processOrder(orderId);
+  ```
+
+  `tryLock()` provides nonblocking acquisition, returning `null` when the mutex is already held or
+  an upgraded client is ahead in the queue:
+
+  ```ts
+  const guard = await client.mutex('periodic-job').tryLock();
+  if (guard) {
+    await using acquired = guard;
+    await runPeriodicJob();
+  }
+  ```
+
+  The returned guard has a `signal` that aborts when this client learns that its lease was lost or
+  when unlocking begins. Pass it to operations that accept an `AbortSignal` so they can stop early:
+
+  ```ts
+  await using guard = await client.mutex('search-index/rebuild').lock();
+  await fetch('https://search.example/rebuild', {
+    method: 'POST',
+    signal: guard.signal,
+  });
+  ```
+
+  For protected etcd writes, `ifOwner()` compares the authoritative key's creation revision in
+  the same transaction:
+
+  ```ts
+  await using guard = await client.mutex('scheduler').lock();
+  const result = await guard
+    .ifOwner()
+    .then(client.put('scheduler/last-run').value(Date.now().toString()))
+    .commit();
+
+  if (!result.succeeded) {
+    throw new Error('Mutex ownership was lost before the update');
+  }
+  ```
+
+  For an external database or service, pass `guard.fencingToken.toString()` with the write and
+  have the destination reject tokens older than the newest token it has accepted. This prevents a
+  paused process from making stale writes after its lease expires.
+
+  Pass an `AbortSignal` to cancel an acquisition that is still waiting:
+
+  ```ts
+  const controller = new AbortController();
+  const guard = await client.mutex('report').lock({ signal: controller.signal });
+  ```
+
+  Existing `client.lock()` calls retain their immediate-failure behavior and use the same
+  authoritative owner key, so old and new clients remain mutually exclusive during a rolling
+  upgrade. FIFO ordering is guaranteed among `mutex()` contenders; legacy `lock()` clients may
+  still acquire ahead of queued contenders until the migration is complete.
+
+- **feat:** add dynamic endpoint replacement and cluster membership synchronization.
+
+  The `hosts` option now accepts an object that configures both the initial addresses and an
+  optional automatic synchronization interval:
+
+  ```ts
+  const client = new Etcd3({
+    hosts: {
+      address: ['https://etcd-1.example:2379', 'https://etcd-2.example:2379'],
+      syncInterval: 60_000,
+    },
+  });
+  ```
+
+  The new `client.endpoints` manager exposes a snapshot of the active address list, supports
+  replacing that list without recreating the client, and can refresh it from the client URLs
+  advertised by started voting members:
+
+  ```ts
+  client.endpoints.list = ['https://etcd-3.example:2379'];
+  await client.endpoints.sync();
+  console.log(client.endpoints.list);
+  ```
+
+  Automatic synchronization can be enabled, rescheduled, or disabled at runtime. Background
+  synchronization failures emit a non-fatal `warn` event, while explicit `sync()` failures reject
+  the returned promise:
+
+  ```ts
+  client.endpoints.on('warn', error => console.warn('Endpoint sync failed', error));
+  client.endpoints.interval = 30_000;
+  client.endpoints.interval = undefined;
+  ```
+
+- **fix:** correct grpc-js request, metadata, and options ordering for server response streams.
+- **fix:** continue attaching queued watches after etcd rejects one during its create request, instead of leaving every later `watcher()` call waiting indefinitely.
+- **fix:** stop a campaign that resigns while waiting from later emitting `elected`, and recover existing campaign keys using their creation revision rather than the transaction header revision.
+- **fix:** revoke renewable leases when lock acquisition fails, and reject repeated `acquire()` calls without replacing the lease needed by the original lock.
+- **fix:** make STM commits compare every snapshot read, preserve the latest operation across overlapping range deletes and writes, touch the value read by the transaction, and track point deletes in conflict checks.
+- **fix:** include a namespace's root key when `getAll()` or `delete().all()` applies the namespace prefix to an otherwise unbounded range.
+- **fix:** send one role-permission revoke request per key range, propagate gRPC call options through permission operations, and report the requested lease ID when keepalive or revoke targets a missing lease.
+- **fix:** resume interrupted fragmented watches from the incomplete revision, settle cancellation while creation is pending, close streams after rejected sole watches, and keep attach bookkeeping running when lifecycle listeners throw.
+- **fix:** make lease loss permanently fail an active campaign, reject `wait()` and pending `proclaim()` calls, prevent a later `elected` event, and forward watcher disconnections from both phases of `observe()`.
+- **fix:** apply lock acquisition options when creating the lease, but remove absolute deadlines before later `release()` or failed-acquisition cleanup revokes that lease.
+- **fix:** fetch each remote read again under read-committed STM isolation while still honoring buffered writes and deletes, and reject overlapping `transact()` calls before they can share mutable transaction state.
+- **fix:** preserve exact-key operations when an empty range end passes through a namespace, while continuing to treat the zero-byte etcd sentinel as an unbounded range.
+- **fix:** close the temporary Auth client after credential exchange, pass call options through mocked RPC execution, and keep normalized error stack headers consistent with the resulting error name and message.
+- **fix:** keep a watch's earlier replay revision until catch-up events arrive, and make `cancel()` idempotent after either client- or server-initiated termination without disturbing sibling watches.
+- **fix:** select the first candidate from an election catch-up batch, let `wait()` resolve after election has already completed, and cancel predecessor watches when queued campaigns resign or lose their lease.
+- **fix:** suppress delayed keepalive retries after manual lease revocation, always close one-shot keepalive streams, and forward call options from `lease.put()`.
+- **fix:** retain full STM values when `exists()` populates the read cache, and preserve transaction-local point or range deletes when the same key is subsequently touched.
+- **fix:** authenticate separately with each selected etcd member, refresh expired tokens for both unary and streaming calls, bound invalid-token retries, and avoid penalizing a host when callers intentionally cancel response streams.
+- **fix:** allow transaction comparator builders to be awaited or promise-assimilated without overwriting their `.then()` operations or hanging.
+- **chore:** update dependencies, including Cockatiel 4 and the gRPC libraries.
+- **chore:** migrate tests to Vitest and remove direct Mocha, Chai, Sinon, and NYC dependencies.
+- **chore:** update the CI etcd compatibility matrix through etcd 3.6.14.
+- **chore:** modernize package, build, documentation, and protobuf tooling.
+
 # 1.1.2 2023-07-30
 
 - **fix:** elections sometimes electing >1 leader (see [#176](https://github.com/microsoft/etcd3/issues/176))

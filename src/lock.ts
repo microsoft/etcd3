@@ -3,12 +3,10 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { ComparatorBuilder, PutBuilder } from './builder';
-import { ConnectionPool } from './connection-pool';
-import { EtcdLockFailedError } from './errors';
-import { Lease } from './lease';
-import * as RPC from './rpc';
-import { NSApplicator } from './util';
+import { ConnectionPool } from './connection-pool.js';
+import { EtcdLockFailedError } from './errors.js';
+import { MutexEngine, MutexGuard } from './mutex.js';
+import { NSApplicator } from './util.js';
 
 /**
  * A Lock can be used for distributed locking to create atomic operations
@@ -26,7 +24,7 @@ import { NSApplicator } from './util';
  * A quick example:
  *
  * ```
- * const { Etcd3 } = require('etcd3');
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * client.lock('my_resource').do(() => {
@@ -35,9 +33,12 @@ import { NSApplicator } from './util';
  * });
  * ```
  */
-export class Lock {
+export class Lock implements AsyncDisposable {
   private leaseTTL = 30;
-  private lease: Lease | null;
+  private guard: MutexGuard | null = null;
+  private acquiredLeaseID: string | null = null;
+  private pendingAcquisition: Promise<{ guard: MutexGuard; leaseID: string }> | null = null;
+  private pendingLeaseID: Promise<string> | null = null;
   private callOptions: grpc.CallOptions | undefined;
 
   constructor(
@@ -51,7 +52,7 @@ export class Lock {
    * to 30 seconds.
    */
   public ttl(seconds: number): this {
-    if (this.lease) {
+    if (this.guard || this.pendingAcquisition) {
       throw new Error('Cannot set a lock TTL after acquiring the lock');
     }
 
@@ -70,28 +71,44 @@ export class Lock {
   /**
    * Acquire attempts to acquire the lock, rejecting if it's unable to.
    */
-  public acquire(): Promise<this> {
-    const lease = (this.lease = new Lease(this.pool, this.namespace, this.leaseTTL));
-    const kv = new RPC.KVClient(this.pool);
+  public async acquire(): Promise<this> {
+    if (this.guard || this.pendingAcquisition) {
+      throw new EtcdLockFailedError(
+        `Failed to acquire a lock on ${this.key}: lock is already acquired`,
+      );
+    }
 
-    return lease.grant().then(leaseID => {
-      return new ComparatorBuilder(kv, this.namespace)
-        .and(this.key, 'Create', '==', 0)
-        .then(new PutBuilder(kv, this.namespace, this.key).value('').lease(leaseID))
-        .options(this.callOptions)
-        .commit()
-        .then<this>(res => {
-          if (res.succeeded) {
-            return this;
-          }
-
-          return this.release()
-            .catch(() => undefined)
-            .then(() => {
-              throw new EtcdLockFailedError(`Failed to acquire a lock on ${this.key}`);
-            });
-        });
+    let resolveLeaseID!: (leaseID: string) => void;
+    let rejectLeaseID!: (error: unknown) => void;
+    const pendingLeaseID = new Promise<string>((resolve, reject) => {
+      resolveLeaseID = resolve;
+      rejectLeaseID = reject;
     });
+    // leaseId() may never be called, but a failed grant must not become an
+    // unhandled rejection.
+    void pendingLeaseID.catch(() => undefined);
+
+    const pending = new MutexEngine(
+      this.pool,
+      this.namespace,
+      this.key,
+      this.leaseTTL,
+      this.callOptions,
+    ).acquireImmediate(resolveLeaseID, rejectLeaseID);
+    this.pendingAcquisition = pending;
+    this.pendingLeaseID = pendingLeaseID;
+
+    try {
+      const acquired = await pending;
+      this.guard = acquired.guard;
+      this.acquiredLeaseID = acquired.leaseID;
+      return this;
+    } finally {
+      if (this.pendingAcquisition === pending) {
+        this.pendingAcquisition = null;
+        this.pendingLeaseID = null;
+      }
+    }
   }
 
   /**
@@ -99,18 +116,33 @@ export class Lock {
    * the lock has not been acquired.
    */
   public leaseId(): Promise<string | null> {
-    return this.lease ? this.lease.grant() : Promise.resolve(null);
+    if (this.acquiredLeaseID) {
+      return Promise.resolve(this.acquiredLeaseID);
+    }
+
+    return this.pendingLeaseID ?? Promise.resolve(null);
   }
 
   /**
    * Release frees the lock.
    */
   public release(): Promise<void> {
-    if (!this.lease) {
+    const guard = this.guard;
+    if (!guard) {
       throw new Error('Attempted to release a lock which was not acquired');
     }
 
-    return this.lease.revoke(this.callOptions);
+    return guard.unlock().then(() => {
+      if (this.guard === guard) {
+        this.guard = null;
+        this.acquiredLeaseID = null;
+      }
+    });
+  }
+
+  /** Releases an acquired lock when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.guard ? this.release() : Promise.resolve();
   }
 
   /**
@@ -118,14 +150,12 @@ export class Lock {
    * the function, and releases the lock after any promise the function
    * returns resolves or throws.
    */
-  public do<T>(fn: () => T | Promise<T>): Promise<T> {
-    return this.acquire()
-      .then(fn)
-      .then(value => this.release().then(() => value))
-      .catch(err =>
-        this.release().then(() => {
-          throw err;
-        }),
-      );
+  public async do<T>(fn: () => T | Promise<T>): Promise<T> {
+    await this.acquire();
+    try {
+      return await fn();
+    } finally {
+      await this.release();
+    }
   }
 }

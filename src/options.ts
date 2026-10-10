@@ -2,12 +2,30 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
-import { CallOptions } from '@grpc/grpc-js';
-import { IPolicy, IBackoff, IDefaultPolicyContext } from 'cockatiel';
-import { CallContext } from './rpc';
+import type { CallOptions, ChannelOptions } from '@grpc/grpc-js';
+import type { IBackoff, IDefaultPolicyContext, IPolicy } from 'cockatiel';
+import type { CallContext } from './rpc.js';
 
 export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOptions);
+
+/**
+ * Configures the initial addresses and membership synchronization behavior.
+ */
+export interface IEndpointOptions {
+  /**
+   * An initial address or list of addresses to connect to. Addresses should
+   * include the `https?://` prefix. Defaults to `127.0.0.1:2379`.
+   */
+  address?: string | readonly string[];
+
+  /**
+   * Duration in milliseconds between endpoint membership synchronizations.
+   * The first synchronization runs after one full interval. Defaults to `0`,
+   * which disables automatic synchronization. Failures emit a `warn` event
+   * on the client's `endpoints` property.
+   */
+  syncInterval?: number;
+}
 
 /**
  * IOptions are passed into the client constructor to configure how the client
@@ -16,10 +34,9 @@ export type CallOptionsFactory = CallOptions | ((context: CallContext) => CallOp
  */
 export interface IOptions {
   /**
-   * Optional client cert credentials for talking to etcd. Describe more
-   * {@link https://coreos.com/etcd/docs/latest/op-guide/security.html here},
-   * passed into the createSsl function in GRPC
-   * {@link https://grpc.io/grpc/node/grpc.credentials.html#.createSsl__anchor here}.
+   * Optional client certificate credentials for talking to etcd. See the
+   * {@link https://etcd.io/docs/v3.6/op-guide/security/ etcd security guide}.
+   * They are passed to {@link https://grpc.github.io/grpc/node/grpc.credentials.html#.createSsl__anchor createSsl}.
    *
    * For example:
    *
@@ -38,7 +55,7 @@ export interface IOptions {
   };
 
   /**
-   * Internal options to configure the GRPC client. These are channel options
+   * Options to configure the gRPC client. These are channel options
    * as enumerated in their [C++ documentation](https://grpc.io/grpc/cpp/group__grpc__arg__keys.html).
    * For example:
    *
@@ -75,7 +92,7 @@ export interface IOptions {
    * {
    *   service: 'KV',   // etcd service name
    *   method: 'range', // etcd method name
-   *   isStream: false, // whether the call create a stream
+   *   isStream: false, // whether the call creates a stream
    *   params: { ... }, // arguments given to the call
    * }
    * ```
@@ -99,9 +116,10 @@ export interface IOptions {
   defaultCallOptions?: CallOptionsFactory;
 
   /**
-   * A list of hosts to connect to. Hosts should include the `https?://` prefix.
+   * A host or list of hosts to connect to, or endpoint synchronization options.
+   * Hosts should include the `https?://` prefix.
    */
-  hosts: string[] | string;
+  hosts: string | readonly string[] | IEndpointOptions;
 
   /**
    * Duration in milliseconds to wait while connecting before timing out.
@@ -111,7 +129,7 @@ export interface IOptions {
 
   /**
    * Defines the fault-handling policies for the client via
-   * [Cockatiel](https://github.com/connor4312/cockatiel/blob/master/readme.md).
+   * [Cockatiel](https://github.com/connor4312/cockatiel#readme).
    * There are two policies: per-host, and global. Calls will call through the
    * global policy, and then to a host policy. Each time the global policy
    * retries, it will pick a new host to run the call on.
@@ -131,13 +149,22 @@ export interface IOptions {
    *
    * ```ts
    * import { Etcd3, isRecoverableError } from 'etcd3';
-   * import { Policy, ConsecutiveBreaker, ExponentialBackoff } from 'cockatiel';
+   * import {
+   *   circuitBreaker,
+   *   ConsecutiveBreaker,
+   *   ExponentialBackoff,
+   *   handleWhen,
+   *   retry,
+   * } from 'cockatiel';
    *
    * const etcd = new Etcd3({
    *   faultHandling: {
    *     host: () =>
-   *       Policy.handleWhen(isRecoverableError).circuitBreaker(5_000, new ConsecutiveBreaker(3)),
-   *     global: Policy.handleWhen(isRecoverableError).retry(3),
+   *       circuitBreaker(handleWhen(isRecoverableError), {
+   *         halfOpenAfter: 5_000,
+   *         breaker: new ConsecutiveBreaker(3),
+   *       }),
+   *     global: retry(handleWhen(isRecoverableError), { maxAttempts: 3 }),
    *     watchBackoff: new ExponentialBackoff(),
    *   },
    * });
@@ -147,12 +174,12 @@ export interface IOptions {
    *
    * ```ts
    * import { Etcd3 } from 'etcd3';
-   * import { Policy } from 'cockatiel';
+   * import { NoopPolicy } from 'cockatiel';
    *
    * const etcd = new Etcd3({
    *   faultHandling: {
-   *     host: () => Policy.noop,
-   *     global: Policy.noop,
+   *     host: () => new NoopPolicy(),
+   *     global: new NoopPolicy(),
    *   },
    * });
    * ```

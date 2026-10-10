@@ -1,11 +1,13 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import BigNumber from 'bignumber.js';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Etcd3, IKeyValue, IWatchResponse, Watcher } from '..';
-import { onceEvent } from '../util';
+import { Etcd3, Watcher } from '../index.js';
+import type { IKeyValue, IWatchCreateRequest, IWatchResponse } from '../index.js';
+import * as RPC from '../rpc.js';
+import { WatchManager } from '../watch.js';
+import { NSApplicator, onceEvent } from '../util.js';
 import {
   createTestClientAndKeys,
   getOptions,
@@ -14,8 +16,479 @@ import {
   setupAuth,
   removeAuth,
   isAtLeastVersion,
-} from './util';
-import { EtcdPermissionDeniedError } from '../errors';
+} from './util.js';
+import { ClientRuntimeError, EtcdPermissionDeniedError } from '../errors.js';
+
+class FakeWatchStream {
+  public readonly writes: RPC.IWatchRequest[] = [];
+  public cancelCount = 0;
+  private dataHandler: ((response: RPC.IWatchResponse) => void) | undefined;
+  private errorHandler: ((error: Error) => void) | undefined;
+  private endHandler: (() => void) | undefined;
+
+  public write(request: RPC.IWatchRequest) {
+    this.writes.push(request);
+  }
+
+  public end() {}
+
+  public cancel() {
+    this.cancelCount++;
+  }
+
+  public on(
+    event: 'data' | 'error' | 'end' | 'status',
+    handler:
+      | ((response: RPC.IWatchResponse) => void)
+      | ((error: Error) => void)
+      | (() => void)
+      | ((status: never) => void),
+  ): this {
+    if (event === 'data') {
+      this.dataHandler = handler as (response: RPC.IWatchResponse) => void;
+    } else if (event === 'error') {
+      this.errorHandler = handler as (error: Error) => void;
+    } else if (event === 'end') {
+      this.endHandler = handler as () => void;
+    }
+    return this;
+  }
+
+  public async *[Symbol.asyncIterator](): AsyncIterableIterator<RPC.IWatchResponse> {}
+
+  public emitData(response: RPC.IWatchResponse) {
+    this.dataHandler?.(response);
+  }
+
+  public emitError(error: Error) {
+    this.errorHandler?.(error);
+  }
+
+  public emitEnd() {
+    this.endHandler?.();
+  }
+}
+
+function watchResponse(overrides: Partial<RPC.IWatchResponse> = {}): RPC.IWatchResponse {
+  return {
+    header: {
+      cluster_id: '1',
+      member_id: '1',
+      revision: '10',
+      raft_term: '1',
+    },
+    watch_id: '1',
+    created: false,
+    canceled: false,
+    compact_revision: '0',
+    cancel_reason: '',
+    fragment: false,
+    events: [],
+    ...overrides,
+  };
+}
+
+async function createFakeWatchManager() {
+  const stream = new FakeWatchStream();
+  const watch = vi.fn(() => Promise.resolve(stream));
+  const backoff = {
+    duration: 0,
+    next: () => backoff,
+  };
+  const manager = new WatchManager(
+    { watch } as unknown as RPC.WatchClient,
+    { next: () => backoff } as any,
+  );
+  return { manager, stream, watch };
+}
+
+async function waitForFirstWatchRequest(stream: FakeWatchStream) {
+  await vi.waitFor(() => expect(stream.writes).toHaveLength(1));
+}
+
+describe('WatchManager protocol handling', () => {
+  it('does not advance past a fragmented revision until its final response', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, {});
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+    stream.emitData(
+      watchResponse({ header: { ...watchResponse().header, revision: '20' }, fragment: true }),
+    );
+
+    expect(watcher.lastRevision()).toBe(20n);
+    expect(watcher.request.start_revision).toBe('20');
+
+    stream.emitData(watchResponse({ header: { ...watchResponse().header, revision: '20' } }));
+
+    expect(watcher.lastRevision()).toBe(21n);
+  });
+
+  it('preserves a replay revision when its create response has a newer header', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, { start_revision: '5' });
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(
+      watchResponse({
+        created: true,
+        watch_id: '1',
+        header: { ...watchResponse().header, revision: '20' },
+      }),
+    );
+
+    expect(watcher.lastRevision()).toBe(5n);
+    expect(watcher.request.start_revision).toBe('5');
+
+    stream.emitData(
+      watchResponse({ header: { ...watchResponse().header, revision: '5' }, fragment: true }),
+    );
+    expect(watcher.lastRevision()).toBe(5n);
+
+    stream.emitData(watchResponse({ header: { ...watchResponse().header, revision: '5' } }));
+    expect(watcher.lastRevision()).toBe(6n);
+  });
+
+  it('makes terminal cancellation idempotent and ignores stale responses without disrupting siblings', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const normallyCanceled = new Watcher(manager, NSApplicator.default, {});
+    const unexpectedlyCanceled = new Watcher(manager, NSApplicator.default, {});
+    const sibling = new Watcher(manager, NSApplicator.default, {});
+    const errors: Error[] = [];
+    const siblingData = vi.fn();
+    unexpectedlyCanceled.on('error', error => errors.push(error));
+    sibling.on('data', siblingData);
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+    stream.emitData(watchResponse({ created: true, watch_id: '2' }));
+    stream.emitData(watchResponse({ created: true, watch_id: '3' }));
+
+    const normalCancel = normallyCanceled.cancel();
+    const duplicateNormalCancel = normallyCanceled.cancel();
+    expect(stream.writes).toHaveLength(4);
+    stream.emitData(watchResponse({ canceled: true, watch_id: '1' }));
+    await expect(Promise.all([normalCancel, duplicateNormalCancel])).resolves.toEqual([
+      undefined,
+      undefined,
+    ]);
+    await expect(normallyCanceled.cancel()).resolves.toBeUndefined();
+    expect(stream.writes).toHaveLength(4);
+
+    stream.emitData(
+      watchResponse({ canceled: true, watch_id: '2', cancel_reason: 'server canceled' }),
+    );
+    expect(errors).toHaveLength(1);
+    await expect(unexpectedlyCanceled.cancel()).resolves.toBeUndefined();
+    expect(stream.writes).toHaveLength(4);
+
+    expect(() => stream.emitData(watchResponse({ canceled: true, watch_id: '2' }))).not.toThrow();
+    expect(() => stream.emitData(watchResponse({ watch_id: 'unknown' }))).toThrow(
+      ClientRuntimeError,
+    );
+    stream.emitData(watchResponse({ watch_id: '3' }));
+    expect(siblingData).toHaveBeenCalledOnce();
+  });
+
+  it('tears down a stream after its sole watcher is canceled during creation', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, {});
+    watcher.on('error', () => undefined);
+    await waitForFirstWatchRequest(stream);
+
+    stream.emitData(watchResponse({ created: true, canceled: true }));
+
+    expect(stream.cancelCount).toBe(1);
+  });
+
+  it('settles cancel when the pending creation response is canceled', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, {});
+    await waitForFirstWatchRequest(stream);
+
+    const canceled = watcher.cancel();
+    stream.emitData(watchResponse({ created: true, canceled: true }));
+
+    await expect(canceled).resolves.toBeUndefined();
+    expect(stream.cancelCount).toBe(1);
+  });
+
+  it('reopens the stream for existing and queued watchers after a creation rejection', async () => {
+    const { manager, stream, watch } = await createFakeWatchManager();
+    const existing = new Watcher(manager, NSApplicator.default, { key: Buffer.from('existing') });
+    await waitForFirstWatchRequest(stream);
+    stream.emitData(watchResponse({ created: true }));
+
+    const rejected = new Watcher(manager, NSApplicator.default, { key: Buffer.from('rejected') });
+    const errors = vi.fn();
+    rejected.on('error', errors);
+    const queued = new Watcher(manager, NSApplicator.default, { key: Buffer.from('queued') });
+    const connected = onceEvent(queued, 'connected', 'error');
+    const nextStream = new FakeWatchStream();
+    watch.mockResolvedValueOnce(nextStream);
+
+    stream.emitData(
+      watchResponse({ created: true, canceled: true, watch_id: '-1', cancel_reason: 'denied' }),
+    );
+
+    expect(errors).toHaveBeenCalledOnce();
+    expect(rejected.id).toBeNull();
+    expect(stream.cancelCount).toBe(1);
+    expect(stream.writes).toHaveLength(2);
+    stream.emitError(new Error('watch stream canceled'));
+
+    await waitForFirstWatchRequest(nextStream);
+    expect(watch).toHaveBeenCalledTimes(2);
+    expect(existing.id).toBeNull();
+    expect(nextStream.writes[0]).toEqual({ create_request: existing.request });
+    nextStream.emitData(watchResponse({ created: true }));
+    expect(nextStream.writes[1]).toEqual({ create_request: queued.request });
+    nextStream.emitData(watchResponse({ created: true, watch_id: '2' }));
+    await connected;
+    expect(queued.id).toBe('2');
+  });
+
+  it('emits the complete watch request while connecting', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const watcher = new Watcher(manager, NSApplicator.default, { progress_notify: true });
+    let received: RPC.IWatchRequest | undefined;
+    watcher.on('connecting', request => (received = request));
+
+    await waitForFirstWatchRequest(stream);
+
+    expect(received).toEqual({ create_request: watcher.request });
+    expect(received?.create_request).toBe(watcher.request);
+  });
+
+  it('continues attaching watchers when a connected listener throws', async () => {
+    const deferred: (() => void)[] = [];
+    const setImmediateSpy = vi
+      .spyOn(global, 'setImmediate')
+      .mockImplementation((callback: (...args: any[]) => void) => {
+        deferred.push(callback);
+        return {} as NodeJS.Immediate;
+      });
+    try {
+      const { manager, stream } = await createFakeWatchManager();
+      const first = new Watcher(manager, NSApplicator.default, {});
+      const error = new Error('connected listener failed');
+      first.on('connected', () => {
+        throw error;
+      });
+      const second = new Watcher(manager, NSApplicator.default, {});
+      await waitForFirstWatchRequest(stream);
+
+      stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+
+      expect(stream.writes).toHaveLength(2);
+      expect(stream.writes[1]).toEqual({ create_request: second.request });
+      expect(deferred).toHaveLength(1);
+      expect(deferred[0]).toThrow(error);
+    } finally {
+      setImmediateSpy.mockRestore();
+    }
+  });
+
+  it('continues attaching when a connecting listener throws', async () => {
+    const deferred: (() => void)[] = [];
+    const setImmediateSpy = vi
+      .spyOn(global, 'setImmediate')
+      .mockImplementation((callback: (...args: any[]) => void) => {
+        deferred.push(callback);
+        return {} as NodeJS.Immediate;
+      });
+    try {
+      const { manager, stream } = await createFakeWatchManager();
+      const first = new Watcher(manager, NSApplicator.default, {});
+      const error = new Error('connecting listener failed');
+      first.on('connecting', () => {
+        throw error;
+      });
+      const second = new Watcher(manager, NSApplicator.default, {});
+      await waitForFirstWatchRequest(stream);
+
+      stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+
+      expect(stream.writes).toHaveLength(2);
+      expect(stream.writes[1]).toEqual({ create_request: second.request });
+      expect(deferred).toHaveLength(1);
+      expect(deferred[0]).toThrow(error);
+    } finally {
+      setImmediateSpy.mockRestore();
+    }
+  });
+
+  it('settles pending cancellation before a throwing connected listener', async () => {
+    const deferred: (() => void)[] = [];
+    const setImmediateSpy = vi
+      .spyOn(global, 'setImmediate')
+      .mockImplementation((callback: (...args: any[]) => void) => {
+        deferred.push(callback);
+        return {} as NodeJS.Immediate;
+      });
+    try {
+      const { manager, stream } = await createFakeWatchManager();
+      const first = new Watcher(manager, NSApplicator.default, {});
+      const error = new Error('connected listener failed');
+      first.on('connected', () => {
+        throw error;
+      });
+      const second = new Watcher(manager, NSApplicator.default, {});
+      await waitForFirstWatchRequest(stream);
+
+      const canceled = first.cancel();
+      stream.emitData(watchResponse({ created: true, watch_id: '1' }));
+
+      expect(stream.writes).toEqual([
+        { create_request: first.request },
+        { cancel_request: { watch_id: '1' } },
+        { create_request: second.request },
+      ]);
+      expect(deferred).toHaveLength(1);
+      expect(deferred[0]).toThrow(error);
+
+      stream.emitData(watchResponse({ canceled: true, watch_id: '1' }));
+      await expect(canceled).resolves.toBeUndefined();
+    } finally {
+      setImmediateSpy.mockRestore();
+    }
+  });
+
+  it('settles pending cancellation before throwing disconnected and end listeners', async () => {
+    const deferred: (() => void)[] = [];
+    const setImmediateSpy = vi
+      .spyOn(global, 'setImmediate')
+      .mockImplementation((callback: (...args: any[]) => void) => {
+        deferred.push(callback);
+        return {} as NodeJS.Immediate;
+      });
+    try {
+      const { manager: disconnectedManager, stream: disconnectedStream } =
+        await createFakeWatchManager();
+      const disconnectedWatcher = new Watcher(disconnectedManager, NSApplicator.default, {});
+      const disconnectedError = new Error('disconnected listener failed');
+      disconnectedWatcher.on('disconnected', () => {
+        throw disconnectedError;
+      });
+      await waitForFirstWatchRequest(disconnectedStream);
+
+      const disconnectedCancel = disconnectedWatcher.cancel();
+      disconnectedStream.emitError(new Error('stream failed'));
+
+      await expect(disconnectedCancel).resolves.toBeUndefined();
+      expect(deferred).toHaveLength(1);
+      expect(deferred[0]).toThrow(disconnectedError);
+
+      const { manager: endManager, stream: endStream } = await createFakeWatchManager();
+      const endWatcher = new Watcher(endManager, NSApplicator.default, {});
+      const endError = new Error('end listener failed');
+      endWatcher.on('end', () => {
+        throw endError;
+      });
+      await waitForFirstWatchRequest(endStream);
+
+      const endCancel = endWatcher.cancel();
+      endStream.emitData(watchResponse({ created: true, canceled: true }));
+
+      await expect(endCancel).resolves.toBeUndefined();
+      expect(deferred).toHaveLength(2);
+      expect(deferred[1]).toThrow(endError);
+    } finally {
+      setImmediateSpy.mockRestore();
+    }
+  });
+
+  it('does not emit a stale end when attaching after a pending cancel disconnects', async () => {
+    const { manager, stream } = await createFakeWatchManager();
+    const canceledWatcher = new Watcher(manager, NSApplicator.default, {});
+    let staleEnd = false;
+    canceledWatcher.on('end', () => {
+      staleEnd = true;
+    });
+    await waitForFirstWatchRequest(stream);
+
+    const canceled = canceledWatcher.cancel();
+    stream.emitError(new Error('stream failed'));
+    await expect(canceled).resolves.toBeUndefined();
+
+    const laterWatcher = new Watcher(manager, NSApplicator.default, {});
+    await vi.waitFor(() => expect(stream.writes).toHaveLength(2));
+
+    expect(stream.writes[1]).toEqual({ create_request: laterWatcher.request });
+    expect(staleEnd).toBe(false);
+  });
+
+  it('handles grpc error followed by end as one stream termination', async () => {
+    vi.useFakeTimers();
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+    try {
+      const firstStream = new FakeWatchStream();
+      const replacementStream = new FakeWatchStream();
+      const backoff = { duration: 100, next: vi.fn() };
+      backoff.next.mockReturnValue(backoff);
+      const watch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          firstStream as unknown as RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
+        )
+        .mockResolvedValueOnce(
+          replacementStream as unknown as RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>,
+        );
+      const manager = new WatchManager(
+        { watch } as unknown as RPC.WatchClient,
+        { next: () => backoff } as any,
+      );
+      const watcher = new Watcher(manager, NSApplicator.default, {});
+      const disconnected = vi.fn();
+      watcher.on('disconnected', disconnected);
+      await waitForFirstWatchRequest(firstStream);
+
+      firstStream.emitError(new Error('stream failed'));
+      firstStream.emitEnd();
+
+      expect(disconnected).toHaveBeenCalledOnce();
+      expect(backoff.next).toHaveBeenCalledOnce();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+
+      await vi.advanceTimersByTimeAsync(backoff.duration);
+
+      expect(watch).toHaveBeenCalledTimes(2);
+      expect(replacementStream.writes).toEqual([{ create_request: watcher.request }]);
+
+      replacementStream.emitEnd();
+
+      expect(disconnected).toHaveBeenCalledTimes(2);
+      expect(backoff.next).toHaveBeenCalledTimes(2);
+      expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      setTimeoutSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('Watcher.lastRevision()', () => {
+  const createWatcher = (request: IWatchCreateRequest = {}) =>
+    new Watcher(
+      { attach: () => undefined } as unknown as WatchManager,
+      NSApplicator.default,
+      request,
+    );
+
+  it('returns null before connection', () => {
+    expect(createWatcher().lastRevision()).toBeNull();
+  });
+
+  it('returns a lossless bigint resume revision', () => {
+    const revision = '9007199254740993';
+    const watcher = createWatcher({ start_revision: revision });
+
+    expect(watcher.lastRevision()).toBe(BigInt(revision));
+    expect(typeof watcher.lastRevision()).toBe('bigint');
+    expect(watcher.request.start_revision).toBe(revision);
+  });
+});
 
 describe('watch()', () => {
   let client: Etcd3;
@@ -41,8 +514,8 @@ describe('watch()', () => {
     return Promise.all([
       client.put(key).value('updated!'),
       onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).to.equal(key);
-        expect(res.value.toString()).to.equal('updated!');
+        expect(res.key.toString()).toBe(key);
+        expect(res.value.toString()).toBe('updated!');
       }),
     ]).then(() => watcher);
   }
@@ -58,57 +531,114 @@ describe('watch()', () => {
 
     return new Promise<Watcher>(resolve => {
       setTimeout(() => {
-        expect(watching).to.equal(false, `expected not to be watching ${key}`);
+        expect(watching, `expected not to be watching ${key}`).toBe(false);
         resolve(watcher);
       }, 200);
     });
   }
 
+  it('cancels watchers when disposed after an error', async () => {
+    const watcher = await client.watch().key('foo').create();
+    const cancel = vi.spyOn(watcher, 'cancel');
+    const error = new Error('operation failed');
+
+    await expect(
+      (async () => {
+        await using disposableWatcher = watcher;
+        void disposableWatcher;
+        throw error;
+      })(),
+    ).rejects.toBe(error);
+
+    expect(cancel).toHaveBeenCalledOnce();
+    await expect(watcher[Symbol.asyncDispose]()).resolves.toBeUndefined();
+  });
+
+  async function cleanUpNetworkInterruption(
+    watcher: Watcher | undefined,
+    proxiedClient: Etcd3 | undefined,
+  ) {
+    try {
+      try {
+        await proxy.unsuspend();
+      } finally {
+        await watcher?.cancel();
+      }
+    } finally {
+      try {
+        proxiedClient?.close();
+      } finally {
+        await proxy.deactivate();
+      }
+    }
+  }
+
   describe('network interruptions', () => {
-    it.skip('is resilient to network interruptions', async () => {
-      await proxy.activate();
-      const proxiedClient = await createTestClientAndKeys();
+    it('is resilient to network interruptions', async () => {
+      let proxiedClient: Etcd3 | undefined;
+      let watcher: Watcher | undefined;
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
-      proxy.suspend();
-      await onceEvent(watcher, 'disconnected');
-      proxy.unsuspend();
-      await onceEvent(watcher, 'connected');
-      await expectWatching(watcher, 'foo1');
+      try {
+        await proxy.activate();
+        proxiedClient = await createTestClientAndKeys();
+        watcher = await proxiedClient.watch().key('foo1').create();
+        const activeWatcher = watcher;
 
-      await watcher.cancel();
-      proxiedClient.close();
-      await proxy.deactivate();
+        const disconnected = onceEvent(activeWatcher, 'disconnected', 'error');
+        await proxy.suspend();
+        await disconnected;
+
+        const connected = onceEvent(activeWatcher, 'connected', 'error');
+        await proxy.unsuspend();
+        await connected;
+        await expectWatching(activeWatcher, 'foo1');
+      } finally {
+        await cleanUpNetworkInterruption(watcher, proxiedClient);
+      }
     });
 
-    // todo(connor4312): this is disabled pending resolution on:
-    // https://github.com/grpc/grpc-node/issues/80
-    it.skip('replays historical updates', async () => {
-      await proxy.activate();
-      const proxiedClient = await createTestClientAndKeys();
+    it('replays historical updates', async () => {
+      let proxiedClient: Etcd3 | undefined;
+      let watcher: Watcher | undefined;
 
-      const watcher = await proxiedClient.watch().key('foo1').create();
+      try {
+        await proxy.activate();
+        proxiedClient = await createTestClientAndKeys();
+        watcher = await proxiedClient.watch().key('foo1').create();
+        const activeWatcher = watcher;
 
-      await Promise.all([
-        client.put('foo1').value('update 1'),
-        onceEvent(watcher, 'data').then((res: IWatchResponse) => {
-          expect(watcher.request.start_revision).to.equal(
-            new BigNumber(res.header.revision).plus(1).toString(),
-          );
-        }),
-      ]);
+        const firstUpdate = onceEvent(activeWatcher, 'data', 'error').then(
+          (res: IWatchResponse) => {
+            expect(activeWatcher.request.start_revision).toBe(
+              (BigInt(res.header.revision) + 1n).toString(),
+            );
+          },
+        );
+        await Promise.all([client.put('foo1').value('update 1'), firstUpdate]);
 
-      proxy.suspend();
-      await onceEvent(watcher, 'disconnected');
-      proxy.unsuspend();
-      await onceEvent(watcher, 'put').then((res: IKeyValue) => {
-        expect(res.key.toString()).to.equal('foo1');
-        expect(res.value.toString()).to.equal('update 2');
-      });
+        const disconnected = onceEvent(activeWatcher, 'disconnected', 'error');
+        await proxy.suspend();
+        await disconnected;
 
-      await watcher.cancel();
-      proxiedClient.close();
-      await proxy.deactivate();
+        const replayedUpdate = onceEvent(activeWatcher, 'data', 'error').then(
+          (res: IWatchResponse) => {
+            expect(res.events).toHaveLength(1);
+            expect(res.events[0].kv.key.toString()).toBe('foo1');
+            expect(res.events[0].kv.value.toString()).toBe('update 2');
+            return res;
+          },
+        );
+        const missedUpdate = await client.put('foo1').value('update 2');
+
+        const connected = onceEvent(activeWatcher, 'connected', 'error');
+        await proxy.unsuspend();
+        await Promise.all([connected, replayedUpdate]);
+        expect(activeWatcher.request.start_revision).toBe(
+          (BigInt(missedUpdate.header.revision) + 1n).toString(),
+        );
+      } finally {
+        await cleanUpNetworkInterruption(watcher, proxiedClient);
+      }
     });
 
     it('caps watchers revisions', async () => {
@@ -122,18 +652,19 @@ describe('watch()', () => {
       watcher.request.start_revision = 999999;
       proxy.unsuspend();
       await onceEvent(watcher, 'connected');
-      expect(Number(watcher.request.start_revision)).to.equal(actualRevision);
+      expect(Number(watcher.request.start_revision)).toBe(actualRevision);
 
       await watcher.cancel();
       proxiedClient.close();
       await proxy.deactivate();
     });
 
-    describe('emits an error if a watcher is cancelled upon creation (#114)', () => {
-      beforeEach(() => setupAuth(client));
-      afterEach(() => removeAuth(client));
+    describe.skipIf(!isAtLeastVersion('3.2.0'))(
+      'emits an error if a watcher is cancelled upon creation (#114)',
+      () => {
+        beforeEach(async () => await setupAuth(client));
+        afterEach(async () => await removeAuth(client));
 
-      if (isAtLeastVersion('3.2.0')) {
         it('is fixed', async () => {
           const authedClient = new Etcd3(
             getOptions({
@@ -144,19 +675,64 @@ describe('watch()', () => {
             }),
           );
 
-          await expect(authedClient.watch().key('outside of range').create()).to.be.rejectedWith(
+          await expect(authedClient.watch().key('outside of range').create()).rejects.toThrow(
             EtcdPermissionDeniedError,
           );
         });
-      }
-    });
+
+        it('continues attaching queued watchers after a creation rejection', async () => {
+          const authedClient = new Etcd3(
+            getOptions({
+              auth: {
+                username: 'connor',
+                password: 'password',
+              },
+            }),
+          );
+          const rejectedWatcher = authedClient.watch().key('outside of range').watcher();
+          let rejectedConnected = false;
+          rejectedWatcher.on('connected', () => (rejectedConnected = true));
+          const rejected = onceEvent(rejectedWatcher, 'error');
+          const validWatcher = authedClient.watch().key('foo').watcher();
+          const connected = onceEvent(validWatcher, 'connected', 'error');
+
+          try {
+            await expect(rejected).rejects.toThrow(EtcdPermissionDeniedError);
+            expect(rejectedWatcher.id).toBeNull();
+            expect(rejectedConnected).toBe(false);
+
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(
+                () => reject(new Error('queued valid watcher did not connect')),
+                5_000,
+              );
+              connected.then(
+                () => {
+                  clearTimeout(timeout);
+                  resolve();
+                },
+                error => {
+                  clearTimeout(timeout);
+                  reject(error);
+                },
+              );
+            });
+          } finally {
+            if (validWatcher.id !== null) {
+              await validWatcher.cancel();
+            }
+            authedClient.close();
+          }
+        });
+      },
+    );
   });
 
   describe('subscription', () => {
     it('subscribes before the connection is established', async () => {
       const watcher = await client.watch().key('foo1').create();
       await expectWatching(watcher, 'foo1');
-      expect(getWatchers()).to.deep.equal([watcher]);
+      expect(getWatchers()).toEqual([watcher]);
       await watcher.cancel();
     });
 
@@ -169,7 +745,7 @@ describe('watch()', () => {
         watcher2.then(w => expectWatching(w, 'bar')),
       ]);
 
-      expect(getWatchers()).to.deep.equal(watchers);
+      expect(getWatchers()).toEqual(watchers);
       await (await watcher1).cancel();
       await (await watcher2).cancel();
     });
@@ -186,7 +762,7 @@ describe('watch()', () => {
 
       await onceEvent(watcher2, 'connected');
 
-      expect(events).to.deep.equal(['connecting1', 'connected1', 'connecting2', 'connected2']);
+      expect(events).toEqual(['connecting1', 'connected1', 'connecting2', 'connected2']);
       await watcher1.cancel();
       await watcher2.cancel();
     });
@@ -196,7 +772,7 @@ describe('watch()', () => {
       await expectWatching(watcher1, 'foo1');
       const watcher2 = await client.watch().key('bar').create();
       await expectWatching(watcher2, 'bar');
-      expect(getWatchers()).to.deep.equal([watcher1, watcher2]);
+      expect(getWatchers()).toEqual([watcher1, watcher2]);
       await watcher1.cancel();
       await watcher2.cancel();
     });
@@ -217,7 +793,7 @@ describe('watch()', () => {
       const watcher = await client.watch().key('foo1').create();
       await watcher.cancel();
       await expectNotWatching(watcher, 'foo1');
-      expect(getWatchers()).to.deep.equal([]);
+      expect(getWatchers()).toEqual([]);
     });
 
     it('unsubscribes while the connection is being reestablished', async () => {
@@ -229,7 +805,7 @@ describe('watch()', () => {
       await watcher.cancel();
 
       proxy.unsuspend();
-      expect(getWatchers()).to.deep.equal([]);
+      expect(getWatchers()).toEqual([]);
 
       proxiedClient.close();
 

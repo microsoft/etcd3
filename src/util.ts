@@ -2,11 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { CallOptions } from '@grpc/grpc-js';
-import { EventEmitter } from 'events';
-import { ClientRuntimeError } from './errors';
-import { CallOptionsFactory } from './options';
-import { CallContext, Services } from './rpc';
+import type { CallOptions } from '@grpc/grpc-js';
+import { EventEmitter } from 'node:events';
+import { ClientRuntimeError } from './errors.js';
+import type { CallOptionsFactory } from './options.js';
+import type { CallContext, Services } from './rpc.js';
 
 export const zeroKey = Buffer.from([0]);
 export const emptyKey = Buffer.from([]);
@@ -53,7 +53,7 @@ export class NSApplicator {
   public static readonly default = new NSApplicator(emptyKey);
 
   // A little caching, maybe a microoptimization :P
-  private endRange: Buffer | null;
+  private endRange: Buffer | null = null;
 
   constructor(private readonly prefix: Buffer) {}
 
@@ -73,7 +73,13 @@ export class NSApplicator {
    * ranges, we need special logic here.
    */
   public applyRangeEnd(buf?: Buffer) {
-    if (this.prefix.length === 0 || !buf) {
+    // Etcd identifies point requests by an absent range_end. Normalize an
+    // empty endpoint so the protobuf encoder does not turn it into a range.
+    if (!buf || buf.length === 0) {
+      return undefined;
+    }
+
+    if (this.prefix.length === 0) {
       return buf;
     }
 
@@ -94,12 +100,17 @@ export class NSApplicator {
    */
   public applyToRequest<T extends { key?: Buffer; range_end?: Buffer }>(req: T): T {
     if (this.prefix.length === 0) {
-      return req;
+      return req.range_end?.length === 0 ? Object.assign({}, req, { range_end: undefined }) : req;
     }
+
+    // Etcd represents the whole keyspace as [zeroKey, zeroKey). Preserve the
+    // namespace root for that sentinel range; a lone zeroKey remains a point key.
+    const isWholeKeyspaceRange =
+      req.key?.equals(zeroKey) === true && req.range_end?.equals(zeroKey) === true;
 
     // TS doesn't seem to like the spread operator on generics, so O.A it is.
     return Object.assign({}, req, {
-      key: this.applyKey(req.key),
+      key: isWholeKeyspaceRange ? Buffer.from(this.prefix) : this.applyKey(req.key),
       range_end: this.applyRangeEnd(req.range_end),
     });
   }

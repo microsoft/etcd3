@@ -1,14 +1,15 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import * as grpc from '@grpc/grpc-js';
 
-import { PutBuilder } from './builder';
-import { ConnectionPool, Host } from './connection-pool';
-import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCCancelledError } from './errors';
-import * as RPC from './rpc';
-import { NSApplicator, debounce } from './util';
+import { PutBuilder } from './builder.js';
+import { ConnectionPool } from './connection-pool.js';
+import type { Host } from './connection-pool.js';
+import { castGrpcError, EtcdError, EtcdLeaseInvalidError, GRPCCancelledError } from './errors.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, debounce } from './util.js';
 
 function throwIfError<T>(value: T | Error): T {
   if (value instanceof Error) {
@@ -27,18 +28,25 @@ function leaseExpired(lease: RPC.ILeaseKeepAliveResponse) {
  * put requests before executing them.
  */
 class LeaseClientWrapper implements RPC.ICallable<Host> {
-  public readonly callOptionsFactory = this.pool.callOptionsFactory;
+  public readonly callOptionsFactory: RPC.ICallable<Host>['callOptionsFactory'];
 
   constructor(
-    private pool: ConnectionPool,
+    private readonly pool: ConnectionPool,
     private readonly lease: {
       leaseID: Promise<string | Error>;
       emitLoss(err: EtcdError): void;
     },
-  ) {}
+  ) {
+    this.callOptionsFactory = pool.callOptionsFactory;
+  }
 
-  public exec(service: keyof typeof RPC.Services, method: string, payload: any): Promise<any> {
-    return this.pool.exec(service, method, payload).catch(err => {
+  public exec(
+    service: keyof typeof RPC.Services,
+    method: string,
+    payload: any,
+    options?: grpc.CallOptions,
+  ): Promise<any> {
+    return this.pool.exec(service, method, payload, options).catch(err => {
       if (err instanceof EtcdLeaseInvalidError) {
         this.lease.emitLoss(err);
       }
@@ -78,8 +86,8 @@ export interface ILeaseOptions extends grpc.CallOptions {
  * Leases are great for things like service discovery:
  *
  * ```
- * const os = require('os');
- * const { Etcd3 } = require('etcd3');
+ * import * as os from 'node:os';
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * const hostPrefix = 'available-hosts/';
@@ -103,11 +111,11 @@ export interface ILeaseOptions extends grpc.CallOptions {
  * ```
  * @noInheritDoc
  */
-export class Lease extends EventEmitter {
+export class Lease extends EventEmitter implements AsyncDisposable {
   private leaseID: Promise<string | Error>;
   private innerState = LeaseState.Pending;
 
-  private client = new RPC.LeaseClient(this.pool);
+  private readonly client: RPC.LeaseClient;
   private lastKeepAlive: number;
   private defaultOptions: grpc.CallOptions;
 
@@ -122,6 +130,8 @@ export class Lease extends EventEmitter {
     options: ILeaseOptions = {},
   ) {
     super();
+    this.client = new RPC.LeaseClient(pool);
+    this.lastKeepAlive = Date.now();
 
     const { autoKeepAlive, deadline, ...rest } = options;
     this.defaultOptions = rest;
@@ -197,6 +207,11 @@ export class Lease extends EventEmitter {
     this.close();
   }
 
+  /** Revokes this lease when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.revoke();
+  }
+
   /**
    * Put returns a put builder that operates within the current lease.
    */
@@ -211,26 +226,29 @@ export class Lease extends EventEmitter {
   /**
    * keepaliveOnce fires an immediate keepalive for the lease.
    */
-  public keepaliveOnce(
+  public async keepaliveOnce(
     options: grpc.CallOptions | undefined = this.defaultOptions,
   ): Promise<RPC.ILeaseKeepAliveResponse> {
-    return Promise.all([this.client.leaseKeepAlive(options), this.grant()]).then(([stream, id]) => {
-      return new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
+    const stream = await this.client.leaseKeepAlive(options);
+    try {
+      const id = await this.grant();
+      const res = await new Promise<RPC.ILeaseKeepAliveResponse>((resolve, reject) => {
         stream.on('data', resolve);
         stream.on('error', err => reject(castGrpcError(err)));
         stream.write({ ID: id });
-      }).then(res => {
-        stream.end();
-        if (leaseExpired(res)) {
-          const err = new EtcdLeaseInvalidError(res.ID);
-          this.emitLoss(err);
-          throw err;
-        }
-
-        this.lastKeepAlive = Date.now();
-        return res;
       });
-    });
+
+      if (leaseExpired(res)) {
+        const err = new EtcdLeaseInvalidError(res.ID);
+        this.emitLoss(err);
+        throw err;
+      }
+
+      this.lastKeepAlive = Date.now();
+      return res;
+    } finally {
+      stream.end();
+    }
   }
 
   /**
@@ -288,12 +306,17 @@ export class Lease extends EventEmitter {
   private teardown: () => void = () => {
     /* noop */
   };
+  private keepaliveRetryTimer: ReturnType<typeof setTimeout> | undefined;
 
   /**
    * Tears down resources associated with the lease.
    */
   private close() {
     this.innerState = LeaseState.Revoked;
+    if (this.keepaliveRetryTimer !== undefined) {
+      clearTimeout(this.keepaliveRetryTimer);
+      this.keepaliveRetryTimer = undefined;
+    }
     this.teardown();
   }
 
@@ -310,6 +333,10 @@ export class Lease extends EventEmitter {
    * keepalive starts a loop keeping the lease alive.
    */
   private keepalive() {
+    if (this.innerState === LeaseState.Revoked) {
+      return;
+    }
+
     // When the cluster goes down, we keep trying to reconnect. But if we're
     // far past the end of our key's TTL, there's no way we're going to be
     // able to renew it. Fire a "lost".
@@ -380,8 +407,14 @@ export class Lease extends EventEmitter {
 
     if (err instanceof EtcdLeaseInvalidError) {
       this.emitLoss(err);
-    } else {
-      setTimeout(() => this.keepalive(), 100);
+    } else if (!this.revoked()) {
+      if (this.keepaliveRetryTimer !== undefined) {
+        clearTimeout(this.keepaliveRetryTimer);
+      }
+      this.keepaliveRetryTimer = setTimeout(() => {
+        this.keepaliveRetryTimer = undefined;
+        this.keepalive();
+      }, 100);
     }
   }
 }

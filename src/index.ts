@@ -1,43 +1,52 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { Role, User } from './auth';
-import { ConnectionPool } from './connection-pool';
-import { Namespace } from './namespace';
-import { IOptions } from './options';
-import * as RPC from './rpc';
+import { Role, User } from './auth.js';
+import { ConnectionPool } from './connection-pool.js';
+import { EndpointManager } from './endpoints.js';
+import { Namespace } from './namespace.js';
+import type { IOptions } from './options.js';
+import * as RPC from './rpc.js';
 
-export * from './auth';
-export * from './builder';
-export * from './errors';
-export * from './lease';
-export * from './lock';
-export * from './namespace';
-export * from './options';
-export * from './range';
-export * from './rpc';
-export * from './stm';
-export * from './election';
-export { WatchBuilder, Watcher } from './watch';
+export * from './auth.js';
+export * from './builder.js';
+export * from './errors.js';
+export * from './lease.js';
+export * from './lock.js';
+export { Mutex, MutexGuard } from './mutex.js';
+export type { IMutexAcquireOptions } from './mutex.js';
+export * from './namespace.js';
+export * from './options.js';
+export * from './range.js';
+export * from './rpc.js';
+export * from './stm.js';
+export * from './election.js';
+export { EndpointManager } from './endpoints.js';
+export { WatchBuilder, Watcher } from './watch.js';
 
 /**
  * Etcd3 is a high-level interface for interacting and calling etcd endpoints.
  * It also provides several lower-level clients for directly calling methods.
  *
  * ```
- * const { Etcd3 } = require('etcd3');
+ * import { Etcd3 } from 'etcd3';
  * const client = new Etcd3();
  *
  * await client.put('foo').value('bar');
  * console.log('foo is:', await client.get('foo').string());
  *
  * const keys = await client.getAll().prefix('f').strings();
- * console.log('all keys starting with "f"': keys);
+ * console.log('all keys starting with "f":', keys);
  *
  * await client.delete().all();
  * ```
  */
-export class Etcd3 extends Namespace {
+export class Etcd3 extends Namespace implements Disposable {
+  /**
+   * Manages the addresses used to connect to etcd.
+   */
+  public readonly endpoints: EndpointManager;
+
   /**
    * @internal
    */
@@ -59,6 +68,7 @@ export class Etcd3 extends Namespace {
    */
   constructor(options: IOptions = { hosts: '127.0.0.1:2379' }) {
     super(Buffer.from([]), new ConnectionPool(options), options);
+    this.endpoints = new EndpointManager(this.pool, this.cluster, this.pool.syncInterval);
   }
 
   /**
@@ -101,16 +111,26 @@ export class Etcd3 extends Namespace {
    * For example:
    *
    * ```
-   * const sinon = require('sinon');
-   * const { expect } = require('chai');
-   *
-   * const { Etcd3 } = require('etcd3');
+   * import { Etcd3 } from 'etcd3';
    * const client = new Etcd3();
    *
-   * const mock = client.mock({ exec: sinon.stub() });
-   * mock.exec.resolves({ kvs: [{ key: 'foo', value: 'bar' }]});
-   * const output = client.get('foo').string();
-   * expect(output).to.equal('bar');
+   * client.mock({
+   *   exec: async (service, method) => {
+   *     if (service === 'KV' && method === 'range') {
+   *       return {
+   *         header: { cluster_id: '0', member_id: '0', revision: '0', raft_term: '0' },
+   *         kvs: [{ key: Buffer.from('foo'), value: Buffer.from('bar') }],
+   *         more: false,
+   *         count: '1',
+   *       };
+   *     }
+   *
+   *     throw new Error(`Unexpected call: ${service}.${method}`);
+   *   },
+   * });
+   *
+   * const output = await client.get('foo').string();
+   * console.log(output); // 'bar'
    * client.unmock();
    * ```
    */
@@ -130,6 +150,12 @@ export class Etcd3 extends Namespace {
    * Frees resources associated with the client.
    */
   public close() {
+    this.endpoints.close();
     this.pool.close();
+  }
+
+  /** Closes this client when used with `using`. */
+  public [Symbol.dispose](): void {
+    this.close();
   }
 }

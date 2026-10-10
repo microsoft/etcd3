@@ -2,17 +2,21 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import { ExponentialBackoff } from 'cockatiel';
-import * as Builder from './builder';
-import { ConnectionPool } from './connection-pool';
-import { Election } from './election';
-import { ILeaseOptions, Lease } from './lease';
-import { Lock } from './lock';
-import { IOptions } from './options';
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { Isolation, ISTMOptions, SoftwareTransaction } from './stm';
-import { NSApplicator, toBuffer } from './util';
-import { WatchBuilder, WatchManager } from './watch';
+import * as Builder from './builder.js';
+import { ConnectionPool } from './connection-pool.js';
+import { Election } from './election.js';
+import { Lease } from './lease.js';
+import type { ILeaseOptions } from './lease.js';
+import { Lock } from './lock.js';
+import { Mutex } from './mutex.js';
+import type { IOptions } from './options.js';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { Isolation, SoftwareTransaction } from './stm.js';
+import type { ISTMOptions } from './stm.js';
+import { NSApplicator, toBuffer } from './util.js';
+import { WatchBuilder, WatchManager } from './watch.js';
 
 /**
  * Namespace is the class on which CRUD operations can be invoked. The default
@@ -38,22 +42,19 @@ export class Namespace {
   /**
    * @internal
    */
-  public readonly kv = new RPC.KVClient(this.pool);
+  public readonly kv: RPC.KVClient;
 
   /**
    * @internal
    */
-  public readonly leaseClient = new RPC.LeaseClient(this.pool);
+  public readonly leaseClient: RPC.LeaseClient;
 
   /**
    * @internal
    */
-  public readonly watchClient = new RPC.WatchClient(this.pool);
-  private readonly nsApplicator = new NSApplicator(this.prefix);
-  private readonly watchManager = new WatchManager(
-    this.watchClient,
-    this.options.faultHandling?.watchBackoff ?? new ExponentialBackoff(),
-  );
+  public readonly watchClient: RPC.WatchClient;
+  private readonly nsApplicator: NSApplicator;
+  private readonly watchManager: WatchManager;
 
   protected constructor(
     /** @internal */
@@ -62,7 +63,16 @@ export class Namespace {
     protected readonly pool: ConnectionPool,
     /** @internal */
     protected readonly options: IOptions,
-  ) {}
+  ) {
+    this.kv = new RPC.KVClient(pool);
+    this.leaseClient = new RPC.LeaseClient(pool);
+    this.watchClient = new RPC.WatchClient(pool);
+    this.nsApplicator = new NSApplicator(prefix);
+    this.watchManager = new WatchManager(
+      this.watchClient,
+      options.faultHandling?.watchBackoff ?? new ExponentialBackoff(),
+    );
+  }
 
   /**
    * `.get()` starts a query to look up a single key from etcd.
@@ -107,6 +117,29 @@ export class Namespace {
    */
   public lock(key: string | Buffer): Lock {
     return new Lock(this.pool, this.nsApplicator, key);
+  }
+
+  /**
+   * Creates a fair, lease-backed distributed mutex for `key`.
+   *
+   * The exact namespaced key remains the authoritative owner key, so mutexes
+   * exclude legacy {@link Lock} users on the same key. FIFO ordering applies
+   * among mutex users; legacy lock users can barge during a rolling migration.
+   *
+   * @example
+   * ```ts
+   * await client.mutex('inventory').runExclusive(async () => {
+   *   await rebuildInventory();
+   * });
+   * ```
+   */
+  public mutex(key: string | Buffer): Mutex {
+    return new Mutex(
+      this.pool,
+      this.nsApplicator,
+      key,
+      () => new WatchBuilder(this.watchManager, this.nsApplicator),
+    );
   }
 
   /**

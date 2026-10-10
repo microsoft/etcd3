@@ -27,7 +27,10 @@ export const RecoverableError = Symbol('RecoverableError');
  * Returns whether the error is a network or server error that should trigger
  * fault-handling policies.
  */
-export const isRecoverableError = (error: Error) => RecoverableError in error;
+export const isRecoverableError = (
+  error: unknown,
+): error is Error & Record<typeof RecoverableError, unknown> =>
+  error instanceof Error && RecoverableError in error;
 
 /**
  * A GRPCGenericError is rejected via the connection when some error occurs
@@ -155,12 +158,18 @@ export class GRPCUnauthenticatedError extends GRPCGenericError {}
 export class EtcdError extends Error {}
 
 /**
- * EtcdLeaseInvalidError is thrown when trying to renew a lease that's
- * expired.
+ * EtcdLeaseInvalidError is thrown when a known lease is expired or revoked,
+ * or when etcd reports that a requested lease was not found.
  */
 export class EtcdLeaseInvalidError extends Error {
-  constructor(leaseID: string) {
-    super(`Lease ${leaseID} is expired or revoked`);
+  constructor();
+  constructor(leaseID: string);
+  constructor(leaseID?: string) {
+    super(
+      leaseID === undefined
+        ? 'The requested lease was not found'
+        : `Lease ${leaseID} is expired or revoked`,
+    );
   }
 }
 
@@ -234,7 +243,7 @@ export class EtcdWatchStreamEnded extends Error {
 }
 
 /**
- * Thrown from methods of {@link ElectionCampaign} if the campaign has ceased.
+ * Thrown from methods of {@link Campaign} if the campaign has ceased.
  */
 export class NotCampaigningError extends Error {}
 
@@ -304,12 +313,16 @@ function rewriteErrorName(str: string, ctor: new (...args: any[]) => Error): str
   return str.replace(/^Error:/, `${ctor.name}:`);
 }
 
+function createGrpcError(ctor: IErrorCtor, message: string): Error {
+  return ctor === EtcdLeaseInvalidError ? new EtcdLeaseInvalidError() : new ctor(message);
+}
+
 /**
  * Tries to convert an Etcd error string to an etcd error.
  */
 export function castGrpcErrorMessage(message: string): Error {
   const ctor = getMatchingGrpcError(message) || EtcdError;
-  return new ctor(message);
+  return createGrpcError(ctor, message);
 }
 
 /**
@@ -330,7 +343,10 @@ export function castGrpcError<T extends Error>(err: T): Error {
     ctor = err.message.includes('etcdserver:') ? EtcdError : GRPCGenericError;
   }
 
-  const castError = new ctor(rewriteErrorName(err.message, ctor));
-  castError.stack = rewriteErrorName(String(err.stack), ctor);
+  const castError = createGrpcError(ctor, rewriteErrorName(err.message, ctor));
+  castError.name = ctor.name;
+  const stack = String(err.stack).split('\n');
+  stack[0] = `${ctor.name}: ${castError.message}`;
+  castError.stack = stack.join('\n');
   return castError;
 }

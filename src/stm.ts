@@ -2,13 +2,12 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
-import BigNumber from 'bignumber.js';
 
-import * as Builder from './builder';
-import { ClientRuntimeError, STMConflictError } from './errors';
-import { Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, toBuffer } from './util';
+import * as Builder from './builder.js';
+import { ClientRuntimeError, STMConflictError } from './errors.js';
+import { Range } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, toBuffer, zeroKey } from './util.js';
 
 /**
  * Isolation level which can be passed into the ISTMOptions.
@@ -101,13 +100,13 @@ class ReadSet {
   private readonly reads: Record<string, Promise<RPC.IRangeResponse> | undefined> =
     Object.create(null);
   private readonly completedReads: CompletedReads[] = [];
-  private earliestMod = new BigNumber(Infinity);
+  private firstReadRevision: bigint | undefined;
 
   /**
-   * Returns the earliest modified revision of any key in this change set.
+   * Returns the revision at which the transaction's reads are snapshotted.
    */
-  public earliestModRevision(): BigNumber {
-    return this.earliestMod;
+  public snapshotRevision(): bigint | undefined {
+    return this.firstReadRevision;
   }
 
   /**
@@ -134,11 +133,14 @@ class ReadSet {
       return previous;
     }
 
-    const promise = kv.range(req).then(res => {
+    // STM needs values for later reads and mod revisions for conflict checks, so
+    // a keys-only request is satisfied by a value-complete cached read instead.
+    const valueRequest = req.keys_only ? { ...req, keys_only: undefined } : req;
+    const promise = kv.range(valueRequest).then(res => {
       this.completedReads.push({ key: req.key!, res });
 
-      if (res.kvs.length > 0) {
-        this.earliestMod = BigNumber.min(new BigNumber(res.kvs[0].mod_revision), this.earliestMod);
+      if (this.firstReadRevision === undefined) {
+        this.firstReadRevision = BigInt(res.header.revision);
       }
 
       return res;
@@ -156,7 +158,7 @@ const enum WriteKind {
 }
 
 type WriteOp =
-  | { op: WriteKind.Write; req: RPC.IPutRequest }
+  | { op: WriteKind.Write; req: RPC.IPutRequest; shadowValue?: Buffer }
   | { op: WriteKind.DeleteKey; key: Buffer; req: RPC.IDeleteRangeRequest }
   | { op: WriteKind.DeleteRange; range: Range; req: RPC.IDeleteRangeRequest };
 
@@ -170,8 +172,8 @@ class WriteSet {
    * Add checks to make sure that none of the write tagets have changed since
    * the given revision.
    */
-  public addNotChangedChecks(cmp: Builder.ComparatorBuilder, sinceBeforeMod: string) {
-    if (sinceBeforeMod === 'Infinity') {
+  public addNotChangedChecks(cmp: Builder.ComparatorBuilder, sinceBeforeMod: string | undefined) {
+    if (sinceBeforeMod === undefined) {
       return; // no reads were made
     }
 
@@ -226,7 +228,7 @@ class WriteSet {
       switch (op.op) {
         case WriteKind.Write:
           if (op.req.key!.equals(key)) {
-            return keyValueToResponse(key, op.req.value);
+            return keyValueToResponse(key, op.shadowValue ?? op.req.value);
           }
           break;
         case WriteKind.DeleteKey:
@@ -235,7 +237,7 @@ class WriteSet {
           }
           break;
         case WriteKind.DeleteRange:
-          if (op.range.includes(key)) {
+          if (this.rangeIncludes(op.range, key)) {
             return keyValueToResponse(key);
           }
           break;
@@ -250,33 +252,111 @@ class WriteSet {
   /**
    * Inserts a put operation into the set.
    */
-  public addPut(put: RPC.IPutRequest) {
-    this.purgeExistingOperationOn(put.key!);
-    this.ops.push({ op: WriteKind.Write, req: put });
+  public addPut(put: RPC.IPutRequest, shadowValue?: Buffer) {
+    this.removeOperationsOnKey(put.key!);
+    this.ops.push({ op: WriteKind.Write, req: put, shadowValue });
   }
 
   /**
    * Inserts a delete operation.
    */
-  public addDeletion(req: RPC.IDeleteRangeRequest) {
-    if (req.range_end) {
-      this.ops.push({ req, op: WriteKind.DeleteRange, range: new Range(req.key!, req.range_end) });
-    } else {
-      this.purgeExistingOperationOn(req.key!);
+  public addDeletion(req: RPC.IDeleteRangeRequest, isPointDelete = false) {
+    if (isPointDelete || !req.range_end || req.range_end.length === 0) {
+      this.removeOperationsOnKey(req.key!);
       this.ops.push({ req, op: WriteKind.DeleteKey, key: req.key! });
+      return;
     }
+
+    let range = new Range(req.key!, req.range_end);
+    this.removePointOperationsInRange(range);
+
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const op = this.ops[i];
+      if (op.op !== WriteKind.DeleteRange || !this.rangesOverlap(op.range, range)) {
+        continue;
+      }
+
+      range = this.unionRanges(range, op.range);
+      this.ops.splice(i, 1);
+    }
+
+    this.ops.push({
+      req: { ...req, key: range.start, range_end: range.end },
+      op: WriteKind.DeleteRange,
+      range,
+    });
   }
 
-  private purgeExistingOperationOn(key: Buffer) {
-    for (let i = 0; i < this.ops.length; i++) {
-      const { op, req } = this.ops[i];
+  private removeOperationsOnKey(key: Buffer) {
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const writeOp = this.ops[i];
+      const { op, req } = writeOp;
       if (op === WriteKind.Write || op === WriteKind.DeleteKey) {
         if (req.key!.equals(key)) {
           this.ops.splice(i, 1);
-          break;
         }
+      } else if (op === WriteKind.DeleteRange && this.rangeIncludes(writeOp.range, key)) {
+        this.splitDeletionAroundKey(i, key);
       }
     }
+  }
+
+  private removePointOperationsInRange(range: Range) {
+    for (let i = this.ops.length - 1; i >= 0; i--) {
+      const { op, req } = this.ops[i];
+      if (
+        (op === WriteKind.Write || op === WriteKind.DeleteKey) &&
+        this.rangeIncludes(range, req.key!)
+      ) {
+        this.ops.splice(i, 1);
+      }
+    }
+  }
+
+  private splitDeletionAroundKey(index: number, key: Buffer) {
+    const op = this.ops[index] as Extract<WriteOp, { op: WriteKind.DeleteRange }>;
+    const replacements: WriteOp[] = [];
+    if (op.range.start.compare(key) < 0) {
+      replacements.push(this.makeDeleteRange(op.req, op.range.start, key));
+    }
+
+    const nextKey = Buffer.concat([key, zeroKey]);
+    if (op.range.end.equals(zeroKey) || nextKey.compare(op.range.end) < 0) {
+      replacements.push(this.makeDeleteRange(op.req, nextKey, op.range.end));
+    }
+
+    this.ops.splice(index, 1, ...replacements);
+  }
+
+  private unionRanges(a: Range, b: Range): Range {
+    const start = a.start.compare(b.start) <= 0 ? a.start : b.start;
+    const end =
+      a.end.equals(zeroKey) || (!b.end.equals(zeroKey) && a.end.compare(b.end) >= 0)
+        ? a.end
+        : b.end;
+    return new Range(start, end);
+  }
+
+  private rangeIncludes(range: Range, key: Buffer): boolean {
+    return (
+      range.start.compare(key) <= 0 && (range.end.equals(zeroKey) || range.end.compare(key) > 0)
+    );
+  }
+
+  private rangesOverlap(a: Range, b: Range): boolean {
+    return this.rangeIncludes(a, b.start) || this.rangeIncludes(b, a.start);
+  }
+
+  private makeDeleteRange(
+    req: RPC.IDeleteRangeRequest,
+    start: Buffer,
+    end: Buffer,
+  ): Extract<WriteOp, { op: WriteKind.DeleteRange }> {
+    return {
+      req: { ...req, key: start, range_end: end },
+      op: WriteKind.DeleteRange,
+      range: new Range(start, end),
+    };
   }
 }
 
@@ -303,14 +383,32 @@ class BasicTransaction {
     }
 
     req.serializable = true;
+    if (this.options.isolation === Isolation.ReadCommitted) {
+      return kv.range(req);
+    }
+
     return this.readSet.runRequest(kv, req);
   }
 
   /**
    * Schedules the put request in the writeSet.
    */
-  public put(req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
+  public put(kv: RPC.KVClient, req: RPC.IPutRequest): Promise<RPC.IPutResponse> {
     this.assertNoOption('put', req, ['lease', 'prev_kv']);
+    if (req.ignore_value) {
+      const existingWrite = this.writeSet.findExistingWrite(req.key!);
+      if (existingWrite !== null) {
+        // A touch does not supersede an earlier transaction-local write or delete.
+        // In particular, touching a locally deleted key preserves that deletion.
+        return Promise.resolve({} as RPC.IPutResponse);
+      }
+
+      return this.range(kv, { key: req.key! }).then(res => {
+        this.writeSet.addPut(req, res.kvs[0]?.value);
+        return {} as RPC.IPutResponse;
+      });
+    }
+
     this.writeSet.addPut(req);
     return Promise.resolve({} as any);
   }
@@ -318,9 +416,12 @@ class BasicTransaction {
   /**
    * Schedules the put request in the writeSet.
    */
-  public deleteRange(req: RPC.IDeleteRangeRequest): Promise<RPC.IDeleteRangeResponse> {
+  public deleteRange(
+    req: RPC.IDeleteRangeRequest,
+    isPointDelete = false,
+  ): Promise<RPC.IDeleteRangeResponse> {
     this.assertNoOption('delete', req, ['prev_kv']);
-    this.writeSet.addDeletion(req);
+    this.writeSet.addDeletion(req, isPointDelete);
     return Promise.resolve({
       header: undefined as any,
       deleted: '1',
@@ -356,12 +457,12 @@ class BasicTransaction {
  * and Serializable isolation levels.
  */
 class SerializableTransaction extends BasicTransaction {
-  private firstRead: Promise<RPC.IRangeResponse> | null;
+  private firstRead: Promise<RPC.IRangeResponse> | null = null;
 
-  constructor(options: ISTMOptions, kv: RPC.KVClient) {
+  constructor(options: ISTMOptions, kv: RPC.KVClient, namespace: NSApplicator) {
     super(options);
     options.prefetch.forEach(key => {
-      this.range(kv, { key: toBuffer(key) }).catch(() => undefined);
+      this.range(kv, namespace.applyToRequest({ key: toBuffer(key) })).catch(() => undefined);
     });
   }
 
@@ -425,7 +526,8 @@ class SerializableTransaction extends BasicTransaction {
  */
 export class SoftwareTransaction {
   private readonly kv: RPC.KVClient;
-  private tx: BasicTransaction;
+  private active = false;
+  private tx: BasicTransaction | undefined;
 
   constructor(
     private readonly options: ISTMOptions,
@@ -436,11 +538,18 @@ export class SoftwareTransaction {
       get: (target, key) => {
         switch (key) {
           case 'range':
-            return (req: RPC.IRangeRequest) => this.tx.range(target, req);
+            return (req: RPC.IRangeRequest) => this.getTransaction().range(target, req);
           case 'put':
-            return (req: RPC.IPutRequest) => this.tx.put(req);
+            return (req: RPC.IPutRequest) => this.getTransaction().put(target, req);
           case 'deleteRange':
-            return (req: RPC.IDeleteRangeRequest) => this.tx.deleteRange(req);
+            return (req: RPC.IDeleteRangeRequest) => {
+              const isPointDelete = !req.range_end || req.range_end.length === 0;
+              const namespacedReq = this.namespace.applyToRequest(req);
+              return this.getTransaction().deleteRange(
+                isPointDelete ? { ...namespacedReq, range_end: undefined } : namespacedReq,
+                isPointDelete,
+              );
+            };
           default:
             throw new ClientRuntimeError(`Unexpected kv operation in STM: ${key.toString()}`);
         }
@@ -451,10 +560,27 @@ export class SoftwareTransaction {
   /**
    * transact runs the function with the current configuration. It will be
    * retried until the transaction succeeds, or until the maximum number of
-   * retries has been exceeded.
+   * retries has been exceeded. A SoftwareTransaction supports only one active
+   * invocation; concurrent calls reject rather than sharing transaction state.
    */
   public transact<T>(fn: (tx: this) => T | PromiseLike<T>): Promise<T> {
-    return this.transactInner(this.options.retries, fn);
+    if (this.active) {
+      return Promise.reject(
+        new ClientRuntimeError('Cannot start transact() while another transact() call is active'),
+      );
+    }
+
+    this.active = true;
+    try {
+      return this.transactInner(this.options.retries, fn).finally(() => {
+        this.tx = undefined;
+        this.active = false;
+      });
+    } catch (err) {
+      this.tx = undefined;
+      this.active = false;
+      return Promise.reject(err);
+    }
   }
 
   /**
@@ -475,17 +601,25 @@ export class SoftwareTransaction {
    * `.delete()` starts making a delete request against etcd.
    */
   public delete(): Builder.DeleteBuilder {
-    return new Builder.DeleteBuilder(this.kv, this.namespace);
+    // Apply the namespace in the proxy so an empty range_end remains identifiable as a point.
+    return new Builder.DeleteBuilder(this.kv, NSApplicator.default);
   }
 
   private transactInner<T>(retries: number, fn: (tx: this) => T | PromiseLike<T>): Promise<T> {
     this.tx =
       this.options.isolation === Isolation.Serializable ||
       this.options.isolation === Isolation.SerializableSnapshot
-        ? new SerializableTransaction(this.options, this.rawKV)
+        ? new SerializableTransaction(this.options, this.rawKV, this.namespace)
         : new BasicTransaction(this.options);
 
-    return Promise.resolve(fn(this)).then(value => {
+    let result: T | PromiseLike<T>;
+    try {
+      result = fn(this);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+
+    return Promise.resolve(result).then(value => {
       return this.commit()
         .then(() => value)
         .catch(err => {
@@ -499,18 +633,22 @@ export class SoftwareTransaction {
   }
 
   private commit(): Promise<void> {
+    const tx = this.getTransaction();
     const cmp = new Builder.ComparatorBuilder(this.rawKV, NSApplicator.default);
     switch (this.options.isolation) {
       case Isolation.SerializableSnapshot:
-        const earliestMod = this.tx.readSet.earliestModRevision().plus(1).toString();
-        this.tx.writeSet.addNotChangedChecks(cmp, earliestMod);
-        this.tx.readSet.addCurrentChecks(cmp);
+        const snapshotRevision = tx.readSet.snapshotRevision();
+        tx.writeSet.addNotChangedChecks(
+          cmp,
+          snapshotRevision === undefined ? undefined : (snapshotRevision + 1n).toString(),
+        );
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.Serializable:
-        this.tx.readSet.addCurrentChecks(cmp);
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.RepeatableReads:
-        this.tx.readSet.addCurrentChecks(cmp);
+        tx.readSet.addCurrentChecks(cmp);
         break;
       case Isolation.ReadCommitted:
         break; // none
@@ -518,7 +656,7 @@ export class SoftwareTransaction {
         throw new Error(`Unknown isolation level "${this.options.isolation}"`);
     }
 
-    this.tx.writeSet.addChanges(cmp);
+    tx.writeSet.addChanges(cmp);
 
     return cmp
       .options(this.options.callOptions)
@@ -528,5 +666,13 @@ export class SoftwareTransaction {
           throw new STMConflictError();
         }
       });
+  }
+
+  private getTransaction(): BasicTransaction {
+    if (!this.tx) {
+      throw new ClientRuntimeError('STM operations must run inside transact()');
+    }
+
+    return this.tx;
   }
 }

@@ -1,10 +1,11 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as grpc from '@grpc/grpc-js';
 
 import {
+  AuthClient,
   Etcd3,
   EtcdAuthenticationFailedError,
   EtcdPermissionDeniedError,
@@ -14,7 +15,8 @@ import {
   EtcdUserExistsError,
   EtcdUserNotFoundError,
   Role,
-} from '..';
+} from '../index.js';
+import type { ICallable, Services } from '../rpc.js';
 import {
   createTestClientAndKeys,
   expectReject,
@@ -22,11 +24,52 @@ import {
   tearDownTestClient,
   setupAuth,
   removeAuth,
-} from './util';
-import { GRPCDeadlineExceededError } from '../errors';
+} from './util.js';
+import { GRPCDeadlineExceededError } from '../errors.js';
 
 function wipeAll(things: Promise<Array<{ delete(): any }>>) {
   return things.then(items => Promise.all(items.map(item => item.delete())));
+}
+
+interface IAuthCall {
+  method: string;
+  params: unknown;
+  options: grpc.CallOptions | undefined;
+}
+
+function createRoleWithFakeClient() {
+  const calls: IAuthCall[] = [];
+  const callable: ICallable<unknown> = {
+    callOptionsFactory: undefined,
+    exec<T>(
+      _service: keyof typeof Services,
+      method: string,
+      params: unknown,
+      options?: grpc.CallOptions,
+    ): Promise<T> {
+      void _service;
+      calls.push({ method, params, options });
+      return Promise.resolve({} as T);
+    },
+    withConnection<R>(
+      _service: keyof typeof Services,
+      _fn: (args: {
+        resource: unknown;
+        client: grpc.Client;
+        metadata: grpc.Metadata;
+      }) => Promise<R> | R,
+    ): Promise<R> {
+      void _service;
+      void _fn;
+      return Promise.reject(new Error('Unexpected streaming request'));
+    },
+    markFailed(_resource: unknown, _error: Error): void {
+      void _resource;
+      void _error;
+    },
+  };
+
+  return { calls, role: new Role(new AuthClient(callable), 'test-role') };
 }
 
 describe('roles and auth', () => {
@@ -40,7 +83,7 @@ describe('roles and auth', () => {
 
     const expectRoles = async (expected: string[]) => {
       const list = await client.getRoles();
-      expect(list.map(r => r.name)).to.deep.equal(expected);
+      expect(list.map(r => r.name)).toEqual(expected);
     };
 
     it('create and deletes', async () => {
@@ -77,7 +120,7 @@ describe('roles and auth', () => {
       });
 
       const perms = await fooRole.permissions();
-      expect(perms).to.containSubset([
+      expect(perms).toMatchObject([
         {
           permission: 'Read',
           range: client.range({ prefix: '111' }),
@@ -85,7 +128,55 @@ describe('roles and auth', () => {
       ]);
 
       await fooRole.revoke(perms[0]);
-      expect(await fooRole.permissions()).to.have.length(0);
+      expect(await fooRole.permissions()).toHaveLength(0);
+    });
+  });
+
+  describe('role permission RPC forwarding', () => {
+    const readKey = { permission: 'Read' as const, key: 'read-key' };
+    const writeKey = { permission: 'Write' as const, key: 'write-key' };
+
+    it('revokes every permission when revoking an array', async () => {
+      const { calls, role } = createRoleWithFakeClient();
+
+      await role.revoke([readKey, writeKey]);
+
+      expect(calls.map(call => call.method)).toEqual([
+        'roleRevokePermission',
+        'roleRevokePermission',
+      ]);
+    });
+
+    it('forwards call options when revoking one permission', async () => {
+      const { calls, role } = createRoleWithFakeClient();
+      const options: grpc.CallOptions = { deadline: new Date(0) };
+
+      await role.revoke(readKey, options);
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toMatchObject({
+        method: 'roleRevokePermission',
+        params: {
+          role: 'test-role',
+          key: Buffer.from('read-key'),
+          range_end: Buffer.alloc(0),
+        },
+      });
+      expect(calls[0].options).toBe(options);
+    });
+
+    it('forwards call options for every permission in a grant array', async () => {
+      const { calls, role } = createRoleWithFakeClient();
+      const options: grpc.CallOptions = { deadline: new Date(0) };
+
+      await role.grant([readKey, writeKey], options);
+
+      expect(calls.map(call => call.method)).toEqual([
+        'roleGrantPermission',
+        'roleGrantPermission',
+      ]);
+      expect(calls.map(call => call.options)).toEqual([options, options]);
+      expect(calls.map(call => call.options).every(option => option === options)).toBe(true);
     });
   });
 
@@ -102,9 +193,9 @@ describe('roles and auth', () => {
     });
 
     it('creates users', async () => {
-      expect(await client.getUsers()).to.have.lengthOf(0);
+      expect(await client.getUsers()).toHaveLength(0);
       await client.user('connor').create('password');
-      expect(await client.getUsers()).to.containSubset([{ name: 'connor' }]);
+      expect(await client.getUsers()).toMatchObject([{ name: 'connor' }]);
     });
 
     it('throws on existing users', async () => {
@@ -129,9 +220,9 @@ describe('roles and auth', () => {
     it('round trips roles', async () => {
       const user = await client.user('connor').create('password');
       await user.addRole(fooRole);
-      expect(await user.roles()).to.containSubset([{ name: 'foo' }]);
+      expect(await user.roles()).toMatchObject([{ name: 'foo' }]);
       await user.removeRole(fooRole);
-      expect(await user.roles()).to.have.lengthOf(0);
+      expect(await user.roles()).toHaveLength(0);
     });
   });
 
@@ -169,9 +260,7 @@ describe('roles and auth', () => {
         }),
       );
 
-      await expect(authedClient.put('foo').value('bar')).to.be.rejectedWith(
-        GRPCDeadlineExceededError,
-      );
+      await expect(authedClient.put('foo').value('bar')).rejects.toThrow(GRPCDeadlineExceededError);
       authedClient.close();
     });
 
@@ -217,16 +306,17 @@ describe('roles and auth', () => {
           },
         }),
       );
-      const auth = (authedClient as any).pool.authenticator;
+      const pool = (authedClient as any).pool;
+      const auth = pool.authenticator;
+      const host = pool.hosts[0];
       const badMeta = new grpc.Metadata();
       badMeta.add('token', 'lol');
-      auth.awaitingMetadata = Promise.resolve(badMeta);
+      auth.awaitingMetadata.set(host.address, Promise.resolve(badMeta));
 
       await authedClient.put('foo').value('bar'); // should retry and not throw
+      const updatedMeta: grpc.Metadata = await auth.getMetadata(host.address);
+      expect(updatedMeta.get('token')).not.toEqual(badMeta.get('token'));
       authedClient.close();
-
-      const updatedMeta: grpc.Metadata = await auth.awaitingMetadata;
-      expect(updatedMeta.get('token')).to.not.deep.equal(badMeta.get('token'));
     });
   });
 });

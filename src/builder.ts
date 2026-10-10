@@ -3,9 +3,10 @@
  *--------------------------------------------------------*/
 import * as grpc from '@grpc/grpc-js';
 
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, PromiseWrap, toBuffer } from './util';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, PromiseWrap, toBuffer } from './util.js';
 
 const emptyBuffer = Buffer.from([]);
 
@@ -148,7 +149,7 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * or returns `null` if it isn't found.
    */
   public json(): Promise<unknown> {
-    return this.string().then(JSON.parse);
+    return this.string().then(value => (value === null ? null : JSON.parse(value)));
   }
 
   /**
@@ -189,7 +190,15 @@ export class SingleRangeBuilder extends RangeBuilder<string | null> {
    * Runs the built request and returns the raw response from etcd.
    */
   public exec(): Promise<RPC.IRangeResponse> {
-    return this.kv.range(this.namespace.applyToRequest(this.request), this.callOptions);
+    return this.kv
+      .range(this.namespace.applyToRequest(this.request), this.callOptions)
+      .then(res => ({
+        ...res,
+        kvs: res.kvs.map(kv => ({
+          ...kv,
+          key: this.namespace.unprefix(kv.key),
+        })),
+      }));
   }
 
   /**
@@ -331,6 +340,35 @@ export class MultiRangeBuilder extends RangeBuilder<{ [key: string]: string }> {
   }
 
   /**
+   * Runs the built range request and yields each response chunk from the server.
+   * Chunks are not merged; `header`, `more`, and `count` are only meaningful
+   * on the final chunk.
+   */
+  public async *stream(): AsyncIterable<RPC.IRangeResponse> {
+    const stream = await this.kv.rangeStream(
+      this.namespace.applyToRequest(this.request),
+      this.callOptions,
+    );
+    let completed = false;
+
+    try {
+      for await (const response of stream) {
+        for (const kv of response.range_response.kvs) {
+          kv.key = this.namespace.unprefix(kv.key);
+        }
+
+        yield response.range_response;
+      }
+
+      completed = true;
+    } finally {
+      if (!completed) {
+        stream.cancel();
+      }
+    }
+  }
+
+  /**
    * @override
    */
   protected createPromise(): Promise<{ [key: string]: string }> {
@@ -416,7 +454,12 @@ export class DeleteBuilder extends PromiseWrap<RPC.IDeleteRangeResponse> {
    */
   public getPrevious(): Promise<RPC.IKeyValue[]> {
     this.request.prev_kv = true;
-    return this.exec().then(res => res.prev_kvs);
+    return this.exec().then(res =>
+      res.prev_kvs.map(previous => ({
+        ...previous,
+        key: this.namespace.unprefix(previous.key),
+      })),
+    );
   }
 
   /**
@@ -506,14 +549,24 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
    * key before setting it. One may not always be available if a compaction
    * takes place.
    */
-  public getPrevious(): Promise<RPC.IKeyValue & { header: RPC.IResponseHeader }> {
+  public getPrevious(): Promise<(RPC.IKeyValue & { header: RPC.IResponseHeader }) | null> {
     this.request.prev_kv = true;
-    return this.exec().then(res => ({ ...res.prev_kv, header: res.header }));
+    return this.exec().then(res => {
+      if (!res.prev_kv?.key) {
+        return null;
+      }
+
+      return {
+        ...res.prev_kv,
+        key: this.namespace.unprefix(res.prev_kv.key),
+        header: res.header,
+      };
+    });
   }
 
   /**
    * Touch updates the key's revision without changing its value. This is
-   * equivalent to the etcd 'ignore value' flag.
+   * equivalent to the etcd 'ignore value' flag and requires etcd 3.2 or newer.
    */
   public touch(): Promise<RPC.IPutResponse> {
     this.request.value = undefined;
@@ -579,7 +632,7 @@ export class PutBuilder extends PromiseWrap<RPC.IPutResponse> {
  * }
  * ```
  */
-export class ComparatorBuilder {
+export class ComparatorBuilder implements PromiseLike<RPC.ITxnResponse> {
   private request: {
     compare: Promise<RPC.ICompare>[];
     success: Promise<RPC.IRequestOp>[];
@@ -629,10 +682,28 @@ export class ComparatorBuilder {
 
   /**
    * Adds one or more consequent clauses to be executed if the comparison
-   * is truthy.
+   * is truthy. When called by promise assimilation, it commits the
+   * transaction and settles with the transaction response.
    */
-  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this {
-    this.request.success = this.mapOperations(clauses);
+  public then(): Promise<RPC.ITxnResponse>;
+  public then(...clauses: (RPC.IRequestOp | IOperation)[]): this;
+  public then<TResult1 = RPC.ITxnResponse, TResult2 = never>(
+    onfulfilled?: ((value: RPC.ITxnResponse) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+  public then(...args: unknown[]): this | Promise<unknown> {
+    const [onfulfilled, onrejected] = args;
+    if (
+      (args.length === 0 || typeof onfulfilled === 'function' || onfulfilled == null) &&
+      (typeof onrejected === 'function' || onrejected == null)
+    ) {
+      return this.commit().then(
+        onfulfilled as ((value: RPC.ITxnResponse) => unknown) | null | undefined,
+        onrejected as ((reason: unknown) => unknown) | null | undefined,
+      );
+    }
+
+    this.request.success = this.mapOperations(args as (RPC.IRequestOp | IOperation)[]);
     return this;
   }
 

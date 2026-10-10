@@ -1,18 +1,18 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import BigNumber from 'bignumber.js';
-import { IBackoff, IBackoffFactory } from 'cockatiel';
-import { EventEmitter } from 'events';
+import type { IBackoff, IBackoffFactory } from 'cockatiel';
+import { EventEmitter } from 'node:events';
 import {
   castGrpcErrorMessage,
   ClientRuntimeError,
   EtcdError,
   EtcdWatchStreamEnded,
-} from './errors';
-import { Rangable, Range } from './range';
-import * as RPC from './rpc';
-import { NSApplicator, delay, onceEvent, toBuffer } from './util';
+} from './errors.js';
+import { Range } from './range.js';
+import type { Rangable } from './range.js';
+import * as RPC from './rpc.js';
+import { NSApplicator, delay, onceEvent, toBuffer } from './util.js';
 
 const enum State {
   Idle,
@@ -24,6 +24,17 @@ const enum QueueState {
   Idle,
   ReadingRevision,
   Attaching,
+}
+
+function emitSafely(watcher: Watcher, event: string, ...args: unknown[]) {
+  try {
+    watcher.emit(event, ...args);
+  } catch (e) {
+    // Match data handler behavior: listener failures must not break stream bookkeeping.
+    setImmediate(() => {
+      throw e;
+    });
+  }
 }
 
 /**
@@ -61,15 +72,18 @@ class AttachQueue {
    * Dispatches the "create" response to the waiting watcher and fires the
    * next one as necessary.
    */
-  public handleCreate(res: RPC.IWatchResponse) {
+  public handleCreate(res: RPC.IWatchResponse): Watcher {
     const watcher = this.queue.shift();
     if (!watcher) {
       throw new ClientRuntimeError('Could not find watcher corresponding to create response');
     }
 
-    (watcher as { id: string }).id = res.watch_id;
-    watcher.emit('connected', res);
-    this.readQueue();
+    if (!res.canceled) {
+      (watcher as { id: string }).id = res.watch_id;
+      emitSafely(watcher, 'connected', res);
+      this.readQueue();
+    }
+    return watcher;
   }
 
   /**
@@ -91,8 +105,9 @@ class AttachQueue {
 
     const watcher = this.queue[0];
     this.setState(QueueState.Attaching);
-    watcher.emit('connecting', watcher.request);
-    this.stream.write({ create_request: watcher.request });
+    const request = { create_request: watcher.request };
+    emitSafely(watcher, 'connecting', request);
+    this.stream.write(request);
   }
 
   private setState(state: QueueState) {
@@ -116,7 +131,7 @@ export class WatchManager {
   /**
    * The current GRPC stream, if any.
    */
-  private stream: null | RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse>;
+  private stream: RPC.IDuplexStream<RPC.IWatchRequest, RPC.IWatchResponse> | null = null;
 
   /**
    * List of attached watchers.
@@ -131,7 +146,7 @@ export class WatchManager {
   /**
    * Queue for attaching watchers. Unique and re-created per stream.
    */
-  private queue: null | AttachQueue;
+  private queue: AttachQueue | null = null;
 
   /**
    * Current backoff value.
@@ -158,7 +173,7 @@ export class WatchManager {
       case State.Connecting:
         break;
       case State.Connected:
-        this.queue!.attach(watcher);
+        this.getQueue().attach(watcher);
         break;
       default:
         throw new ClientRuntimeError(`Unknown watcher state ${this.state}`);
@@ -171,14 +186,36 @@ export class WatchManager {
   public detach(watcher: Watcher): Promise<void> {
     // If we aren't connected, just remove the watcher, easy.
     if (this.state !== State.Connected) {
+      this.expectedClosers.delete(watcher);
       this.watchers = this.watchers.filter(w => w !== watcher);
+      watcher.markTerminal();
       return Promise.resolve();
     }
 
     // If we're awaiting an ID to come back, wait for that to happen or for
     // us to lose connection, whichever happens first.
     if (watcher.id === null) {
-      return onceEvent(watcher, 'connected', 'disconnected').then(() => this.detach(watcher));
+      this.expectedClosers.add(watcher);
+      return new Promise((resolve, reject) => {
+        const removeListeners = () => {
+          watcher.removeListener('connected', detach);
+          watcher.removeListener('disconnected', detach);
+          watcher.removeListener('end', end);
+        };
+        const detach = () => {
+          removeListeners();
+          this.detach(watcher).then(resolve, reject);
+        };
+        const end = () => {
+          removeListeners();
+          resolve();
+        };
+        // These lifecycle handlers must run before user listeners, which may
+        // throw and stop EventEmitter from invoking later listeners.
+        watcher.prependOnceListener('connected', detach);
+        watcher.prependOnceListener('disconnected', detach);
+        watcher.prependOnceListener('end', end);
+      });
     }
 
     // If the watcher does have an ID, mark that we expect to close it and
@@ -210,6 +247,14 @@ export class WatchManager {
     return this.stream;
   }
 
+  private getQueue() {
+    if (this.state !== State.Connected || !this.queue) {
+      throw new ClientRuntimeError('Expected the watcher queue to exist while state == Connected');
+    }
+
+    return this.queue;
+  }
+
   /**
    * Establishes a GRPC watcher stream, if there are any active watcher.
    */
@@ -226,7 +271,8 @@ export class WatchManager {
     // clear anyone who is in the process of closing, we won't re-add them
     this.expectedClosers.forEach(watcher => {
       this.watchers = this.watchers.filter(w => w !== watcher);
-      watcher.emit('end');
+      watcher.markTerminal();
+      emitSafely(watcher, 'end');
     });
     this.expectedClosers.clear();
 
@@ -235,21 +281,30 @@ export class WatchManager {
     this.client
       .watch()
       .then(stream => {
+        let terminated = false;
+        const handleTermination = (err: Error) => {
+          if (terminated) {
+            return;
+          }
+          terminated = true;
+          this.handleError(err);
+        };
+
         this.state = State.Connected;
         this.queue = new AttachQueue(stream);
         this.stream = stream
           .on('data', res =>
             res.created ? this.handleCreatedResponse(res) : this.handleResponse(res),
           )
-          .on('error', err => this.handleError(err))
-          .on('end', () => this.handleError(new EtcdWatchStreamEnded()));
+          .on('error', handleTermination)
+          .on('end', () => handleTermination(new EtcdWatchStreamEnded()));
 
         // possible watchers are remove while we're connecting.
         if (this.watchers.length === 0) {
           return this.destroyStream();
         }
 
-        this.queue!.attach(this.watchers);
+        this.getQueue().attach(this.watchers);
       })
       .catch(err => this.handleError(err));
   }
@@ -266,7 +321,7 @@ export class WatchManager {
     }
 
     this.getStream().cancel();
-    this.queue!.destroy();
+    this.getQueue().destroy();
   }
 
   /**
@@ -275,13 +330,13 @@ export class WatchManager {
    */
   private handleError(err: Error) {
     if (this.state === State.Connected) {
-      this.queue!.destroy();
+      this.getQueue().destroy();
       this.getStream().cancel();
     }
     this.state = State.Idle;
 
     this.watchers.forEach(watcher => {
-      watcher.emit('disconnected', err);
+      emitSafely(watcher, 'disconnected', err);
       (watcher as { id: null }).id = null;
     });
 
@@ -300,14 +355,15 @@ export class WatchManager {
    */
   private handleCancelResponse(watcher: Watcher, res: RPC.IWatchResponse) {
     this.watchers = this.watchers.filter(w => w !== watcher);
+    watcher.markTerminal();
 
     if (this.expectedClosers.has(watcher)) {
       this.expectedClosers.delete(watcher);
-      watcher.emit('end');
+      emitSafely(watcher, 'end');
       return;
     }
 
-    watcher.emit('error', castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`));
+    emitSafely(watcher, 'error', castGrpcErrorMessage(`Watcher canceled: ${res.cancel_reason}`));
   }
 
   /**
@@ -330,21 +386,19 @@ export class WatchManager {
    */
   private handleCreatedResponse(res: RPC.IWatchResponse) {
     this.backoff = this.initialBackoff.next();
-    if (!res.canceled) {
-      this.queue!.handleCreate(res);
-      return;
+    const watcher = this.getQueue().handleCreate(res);
+    if (res.canceled) {
+      try {
+        this.handleCancelResponse(watcher, res);
+      } finally {
+        if (this.watchers.length === 0) {
+          this.destroyStream();
+        } else {
+          // Older etcd servers stop reading the stream after rejecting a creation.
+          this.getStream().cancel();
+        }
+      }
     }
-
-    // etcd can return both "canceled" and "created" in some cases, see #114.
-    // In this case watch_id won't have been assigned yet, so pull the first
-    // watcher that doesn't currently have an ID and assume it's the one
-    // that caused this error.
-    const watcher = this.watchers.find(w => w.id === null);
-    if (!watcher) {
-      throw new ClientRuntimeError('Got a watch creation error, but found no pending watchers');
-    }
-
-    this.handleCancelResponse(watcher, res);
   }
 
   /**
@@ -354,6 +408,9 @@ export class WatchManager {
     this.backoff = this.initialBackoff.next();
     const watcher = this.watchers.find(w => w.id === res.watch_id);
     if (!watcher) {
+      if (res.canceled) {
+        return;
+      }
       throw new ClientRuntimeError('Failed to find watcher for IWatchResponse');
     }
 
@@ -362,9 +419,12 @@ export class WatchManager {
       return;
     }
 
-    this.handleCancelResponse(watcher, res);
-    if (this.watchers.length === 0) {
-      this.destroyStream();
+    try {
+      this.handleCancelResponse(watcher, res);
+    } finally {
+      if (this.watchers.length === 0) {
+        this.destroyStream();
+      }
     }
   }
 }
@@ -426,13 +486,6 @@ export class WatchBuilder {
   }
 
   /**
-   * @deprecated this does the opposite of what it says -- use `only` instead
-   */
-  public ignore(...operations: (keyof typeof operationNames)[]): this {
-    return this.only(...operations);
-  }
-
-  /**
    * Requests only changes for the given kinds of operations.
    */
   public only(...operations: (keyof typeof operationNames)[]): this {
@@ -452,7 +505,7 @@ export class WatchBuilder {
    * Watch starting from a specific revision.
    */
   public startRevision(revision: string): this {
-    this.request.start_revision = Number(revision);
+    this.request.start_revision = revision;
     return this;
   }
 
@@ -482,12 +535,16 @@ export class WatchBuilder {
  * of keys. See {@link WatchBuilder} for a usage example.
  * @noInheritDoc
  */
-export class Watcher extends EventEmitter {
+export class Watcher extends EventEmitter implements AsyncDisposable {
   /**
    * id is the watcher's ID in etcd. This is `null` initially and during
    * reconnections, only populated while the watcher is idle.
    */
   public readonly id: string | null = null;
+
+  private terminal = false;
+  private cancelPromise: Promise<void> | undefined;
+  private resumeRevision: string | undefined;
 
   /**
    * @internal
@@ -498,6 +555,9 @@ export class Watcher extends EventEmitter {
     public readonly request: RPC.IWatchCreateRequest,
   ) {
     super();
+    if (request.start_revision !== undefined && BigInt(request.start_revision) !== 0n) {
+      this.resumeRevision = String(request.start_revision);
+    }
     this.manager.attach(this);
 
     this.on('data', changes => {
@@ -513,7 +573,13 @@ export class Watcher extends EventEmitter {
       this.updateRevision(changes);
     });
 
-    this.on('connected', changes => this.updateRevision(changes));
+    this.on('connected', changes => {
+      if (this.resumeRevision === undefined) {
+        this.updateRevision(changes);
+      } else {
+        this.request.start_revision = this.resumeRevision;
+      }
+    });
   }
 
   /**
@@ -522,7 +588,7 @@ export class Watcher extends EventEmitter {
   public on(event: 'connecting', handler: (req: RPC.IWatchRequest) => void): this;
 
   /**
-   * connected is fired after etcd knowledges the watcher is connected.
+   * connected is fired after etcd acknowledges the watcher is connected.
    * When this event is fired, `id` will already be populated.
    */
   public on(event: 'connected', handler: (res: RPC.IWatchResponse) => void): this;
@@ -573,25 +639,48 @@ export class Watcher extends EventEmitter {
   }
 
   /**
-   * lastRevision returns the latest etcd cluster revision that this
-   * watcher observed. This will be `null` if the watcher has not yet
-   * connected.
+   * lastRevision returns the lossless bigint latest/resume revision for this
+   * watcher. After observing a complete cluster revision `N`, this is `N + 1`.
+   * While etcd is sending a fragmented revision, this remains `N` until its
+   * final response. Resuming from `N` may replay already observed events, but
+   * prevents skipping later fragments from the same revision. This will be
+   * `null` until the watcher has a resume revision.
    */
-  public lastRevision(): number | null {
-    return this.request.start_revision as number;
+  public lastRevision(): bigint | null {
+    const revision = this.resumeRevision;
+    return revision === undefined ? null : BigInt(revision);
   }
 
   /**
    * Cancels the watcher.
    */
   public cancel(): Promise<void> {
-    return this.manager.detach(this);
+    if (this.terminal) {
+      return Promise.resolve();
+    }
+
+    return (this.cancelPromise ??= this.manager.detach(this));
+  }
+
+  /** Cancels this watcher when used with `await using`. */
+  public [Symbol.asyncDispose](): Promise<void> {
+    return this.cancel();
+  }
+
+  /**
+   * @internal
+   */
+  public markTerminal() {
+    this.terminal = true;
   }
 
   /**
    * Updates the current revision based on the revision in the watch header.
    */
   private updateRevision(req: RPC.IWatchResponse) {
-    this.request.start_revision = new BigNumber(req.header.revision).plus(1).toString();
+    this.resumeRevision = (
+      req.fragment ? BigInt(req.header.revision) : BigInt(req.header.revision) + 1n
+    ).toString();
+    this.request.start_revision = this.resumeRevision;
   }
 }
