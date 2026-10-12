@@ -344,11 +344,25 @@ describe('lease()', () => {
       proxy.deactivate();
     });
 
-    it('tears down if the lease gets revoked', async () => {
-      await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
-      vi.advanceTimersByTime(20000);
-      expect(await onceEvent(lease, 'lost')).toBeInstanceOf(EtcdLeaseInvalidError);
-      expect(lease.revoked()).toBe(true);
-    });
+    it.each([false, true])(
+      'tears down if the lease gets revoked (delayed RPC: %s)',
+      async delayed => {
+        const lost = onceEvent(lease, 'lost');
+        if (delayed) {
+          const revoke = client.leaseClient.leaseRevoke.bind(client.leaseClient);
+          vi.spyOn(client.leaseClient, 'leaseRevoke').mockImplementation(async (...args) => {
+            const response = await revoke(...args);
+            vi.advanceTimersByTime(20000);
+            await lost;
+            return response;
+          });
+        }
+
+        await client.leaseClient.leaseRevoke({ ID: await lease.grant() });
+        vi.advanceTimersByTime(20000);
+        expect(await lost).toBeInstanceOf(EtcdLeaseInvalidError);
+        expect(lease.revoked()).toBe(true);
+      },
+    );
   });
 });
