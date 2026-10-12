@@ -5,6 +5,10 @@ updates:
     groups:
       npm-dependencies:
         patterns: ['*']
+    ignore:
+      # Keep TypeScript within the peer ranges supported by ESLint and TypeDoc.
+      - dependency-name: 'typescript'
+        versions: ['>=6.1.0']
     schedule:
       interval: 'weekly'
     cooldown:

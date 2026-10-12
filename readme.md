@@ -62,4 +62,6 @@ $ docker compose down
 
 Running tests for this module requires Node.js 24 or later and an etcd3 server locally. The tests try to use the default port initially, and you can configure this by setting the `ETCD_ADDR` environment variable, like `export ETCD_ADDR=localhost:12345`.
 
+The development toolchain uses TypeScript 6.0.x to satisfy the ESLint and TypeDoc peer dependency ranges. When both tools support newer TypeScript versions, update the compiler range and remove the corresponding Dependabot ignore rule together.
+
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
